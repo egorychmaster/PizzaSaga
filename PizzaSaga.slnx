@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/PizzaSaga.AppHost/PizzaSaga.AppHost.csproj" />
+  <Project Path="src/PizzaSaga.ServiceDefaults/PizzaSaga.ServiceDefaults.csproj" Id="1f372f08-7976-42e1-8913-54d5da1c78ea" />
+</Solution>
