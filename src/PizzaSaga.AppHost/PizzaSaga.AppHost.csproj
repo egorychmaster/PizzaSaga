@@ -9,7 +9,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ApiGateway\ApiGateway.csproj" />
     <ProjectReference Include="..\PizzaSaga.ServiceDefaults\PizzaSaga.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Services\Auth.Service\Auth.Service.csproj" />
+    <ProjectReference Include="..\Services\Order.Service\Order.Service.csproj" />
+    <ProjectReference Include="..\Services\Payment.Service\Payment.Service.csproj" />
+    <ProjectReference Include="..\Services\Stock.Service\Stock.Service.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.MongoDB" Version="13.4.2" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.4.2" />
+    <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="13.4.2" />
   </ItemGroup>
 
 </Project>
