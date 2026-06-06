@@ -1,4 +1,11 @@
 <Solution>
+  <Folder Name="/Services/">
+    <Project Path="src/Services/Auth.Service/Auth.Service.csproj" Id="ca393b2d-a521-4b25-8a19-52243b4a0969" />
+    <Project Path="src/Services/Order.Service/Order.Service.csproj" Id="84a1b1c8-f698-4396-aea9-91a4b525921c" />
+    <Project Path="src/Services/Payment.Service/Payment.Service.csproj" Id="eab01e1e-d0b7-4057-a343-a8e92f9bc576" />
+    <Project Path="src/Services/Stock.Service/Stock.Service.csproj" Id="ee66b0ae-0a27-4d00-a6d7-40c3cd313c6b" />
+  </Folder>
+  <Project Path="src/ApiGateway/ApiGateway.csproj" Id="40494606-d503-4383-ad9e-9080cd98dc09" />
   <Project Path="src/PizzaSaga.AppHost/PizzaSaga.AppHost.csproj" />
   <Project Path="src/PizzaSaga.ServiceDefaults/PizzaSaga.ServiceDefaults.csproj" Id="1f372f08-7976-42e1-8913-54d5da1c78ea" />
 </Solution>
