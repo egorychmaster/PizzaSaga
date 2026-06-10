@@ -45,6 +45,7 @@ builder.AddProject<Projects.ApiGateway>("api-gateway")
        .WithReference(authService)
        .WithReference(orderService)
        .WithReference(stockService)
-       .WithReference(paymentService);
+       .WithReference(paymentService)
+       ;
 
 builder.Build().Run();
