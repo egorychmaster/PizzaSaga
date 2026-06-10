@@ -31,9 +31,7 @@ app.MapReverseProxy();
 //app.MapGet("/test", async (IHttpClientFactory factory) =>
 //{
 //    var client = factory.CreateClient();
-
-//    return await client.GetStringAsync(
-//        "http://order-service/api/orders");
+//    return await client.GetStringAsync("http://order-service/api/orders");
 //});
 
 
