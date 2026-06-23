@@ -1,5 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+
 // --- 1. ОПИСАНИЕ ИНФРАСТРУКТУРЫ (КОНТЕЙНЕРЫ) ---
 
 // База данных PostgreSQL для Auth.Service и Order.Service (Саги)
@@ -16,8 +17,9 @@ var mongo = builder.AddMongoDB("mongo")
 var stockDb = mongo.AddDatabase("StockDb");
 
 // Брокер сообщений RabbitMQ для MassTransit (общение между сервисами)
-var messaging = builder.AddRabbitMQ("messaging")
+var rabbitMq = builder.AddRabbitMQ("rabbitmq")
                        .WithManagementPlugin(); // Панель управления RabbitMQ
+
 
 // --- 2. ОПИСАНИЕ МИКРОСЕРВИСОВ И ЗАВИСИМОСТЕЙ ---
 
@@ -28,16 +30,16 @@ var authService = builder.AddProject<Projects.Auth_Service>("auth-service")
 // Сервис склада (управление остатками)
 var stockService = builder.AddProject<Projects.Stock_Service>("stock-service")
                           .WithReference(stockDb)
-                          .WithReference(messaging);
+                          .WithReference(rabbitMq);
 
 // Сервис оплаты
 var paymentService = builder.AddProject<Projects.Payment_Service>("payment-service")
-                            .WithReference(messaging);
+                            .WithReference(rabbitMq);
 
 // Сервис заказов (содержит бизнес-логику и MassTransit State Machine)
 var orderService = builder.AddProject<Projects.Order_Service>("order-service")
                           .WithReference(orderDb)
-                          .WithReference(messaging);
+                          .WithReference(rabbitMq);
 
 // --- 3. ШЛЮЗ МАРШРУТИЗАЦИИ (API GATEWAY) ---
 // Шлюз YARP должен знать адреса других сервисов, чтобы проксировать запросы
