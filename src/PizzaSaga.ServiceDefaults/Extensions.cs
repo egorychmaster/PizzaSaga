@@ -18,6 +18,12 @@ namespace Microsoft.Extensions.Hosting
         private const string HealthEndpointPath = "/health";
         private const string AlivenessEndpointPath = "/alive";
 
+        /// <summary>
+        /// Подключает стандартные сервисы для всех компонентов .NET Aspire: 
+        /// OpenTelemetry (трейсы, логи, метрики), health checks, service discovery и устойчивые HTTP-клиенты (Polly).
+        /// Вызывается один раз в каждом сервисе через builder.AddServiceDefaults() в Program.cs.
+        /// Является точкой входа к централизованной настройке поперечного функционала.
+        /// </summary>
         public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
         {
             builder.ConfigureOpenTelemetry();
@@ -44,7 +50,13 @@ namespace Microsoft.Extensions.Hosting
             return builder;
         }
 
-        public static TBuilder ConfigureOpenTelemetry<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+        /// <summary>
+        /// Настраивает OpenTelemetry: логирование с baggage, трейсы (ASP.NET Core, HttpClient), метрики (runtime, HTTP).
+        /// Исключает запросы к /health и /alive из трейсинга — чтобы не засорять данные.
+        /// Регистрирует OTLP-экспортер при наличии OTEL_EXPORTER_OTLP_ENDPOINT (используется Aspire Dashboard).
+        /// Вызывается из AddServiceDefaults() → централизованная настройка observability.
+        /// </summary>
+        private static TBuilder ConfigureOpenTelemetry<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
         {
             builder.Logging.AddOpenTelemetry(logging =>
             {
@@ -78,6 +90,11 @@ namespace Microsoft.Extensions.Hosting
             return builder;
         }
 
+        /// <summary>
+        /// Добавляет OTLP-экспортер для отправки трейсов/метрик в центральный collector (по умолчанию — Aspire Dashboard на порту 4317).
+        /// Активен только при заданной переменной OTEL_EXPORTER_OTLP_ENDPOINT.
+        /// Инкапсулирует выбор экспортеров: можно легко добавить Azure Monitor и др. без дублирования кода в сервисах.
+        /// </summary>
         private static TBuilder AddOpenTelemetryExporters<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
         {
             var useOtlpExporter = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
@@ -97,7 +114,13 @@ namespace Microsoft.Extensions.Hosting
             return builder;
         }
 
-        public static TBuilder AddDefaultHealthChecks<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+        /// <summary>
+        /// Добавляет базовую liveness-проверку ("self"), помеченную тегом "live".
+        /// Это минимальная гарантия, что процесс приложения работает — без проверки внешних зависимостей (БД, RabbitMQ и т.д.).
+        /// Регистрируется в DI как IHealthChecksBuilder → используется в MapDefaultEndpoints() для привязки к эндпоинту /alive.
+        /// В продакшене можно расширить добавлением проверок подключения к БД/RabbitMQ.
+        /// </summary>
+        private static TBuilder AddDefaultHealthChecks<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
         {
             builder.Services.AddHealthChecks()
                 // Add a default liveness check to ensure app is responsive
@@ -106,6 +129,12 @@ namespace Microsoft.Extensions.Hosting
             return builder;
         }
 
+        /// <summary>
+        /// Привязывает эндпоинты /health и /alive к приложению — только в Development (безопасность!).
+        /// /health: все health checks, /alive: только тег "live" → используется оркестраторами (Docker/K8s) для liveness probe.
+        /// Эндпоинты не трейсятся (исключаются через Filter в ConfigureOpenTelemetry) — избегаем шума в трейсах.
+        /// Обязателен к вызову в Program.cs после построения WebApplication.
+        /// </summary>
         public static WebApplication MapDefaultEndpoints(this WebApplication app)
         {
             // Adding health checks endpoints to applications in non-development environments has security implications.
