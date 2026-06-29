@@ -1,4 +1,4 @@
-using PizzaSaga.ServiceDefaults;
+using PizzaSaga.ServiceDefaults.Extensions;
 using PizzaSaga.ServiceDefaults.InternalServices.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);

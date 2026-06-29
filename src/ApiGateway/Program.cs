@@ -1,6 +1,6 @@
 using ApiGateway.Extensions;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using PizzaSaga.ServiceDefaults;
+using PizzaSaga.ServiceDefaults.Extensions;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -10,13 +10,6 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
-
-    builder.Host.UseSerilog((ctx, services, lc) =>
-    {
-        lc.ReadFrom.Configuration(ctx.Configuration)
-          .ReadFrom.Services(services)
-          .Enrich.FromLogContext();
-    });
 
     // Добавляем сервис-дефолты Aspire (OpenTelemetry, health checks, логирование и метрики и т.д.)
     builder.AddServiceDefaults();

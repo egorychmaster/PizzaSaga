@@ -8,12 +8,12 @@ using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
-namespace PizzaSaga.ServiceDefaults;
+namespace PizzaSaga.ServiceDefaults.Extensions;
 
 // Adds common Aspire services: service discovery, resilience, health checks, and OpenTelemetry.
 // This project should be referenced by each service project in your solution.
 // To learn more about using this project, see https://aka.ms/dotnet/aspire/service-defaults
-public static class Extensions
+public static class ServiceDefaultsExtensions
 {
     private const string HealthEndpointPath = "/health";
     private const string AlivenessEndpointPath = "/alive";
@@ -24,8 +24,10 @@ public static class Extensions
     /// Вызывается один раз в каждом сервисе через builder.AddServiceDefaults() в Program.cs.
     /// Является точкой входа к централизованной настройке поперечного функционала.
     /// </summary>
-    public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+    public static WebApplicationBuilder AddServiceDefaults(this WebApplicationBuilder builder)
     {
+        builder.AddSerilogDefaults();
+
         builder.ConfigureOpenTelemetry();
 
         builder.AddDefaultHealthChecks();
@@ -56,7 +58,7 @@ public static class Extensions
     /// Регистрирует OTLP-экспортер при наличии OTEL_EXPORTER_OTLP_ENDPOINT (используется Aspire Dashboard).
     /// Вызывается из AddServiceDefaults() → централизованная настройка observability.
     /// </summary>
-    private static TBuilder ConfigureOpenTelemetry<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+    private static WebApplicationBuilder ConfigureOpenTelemetry(this WebApplicationBuilder builder)
     {
         builder.Logging.AddOpenTelemetry(logging =>
         {
@@ -95,7 +97,7 @@ public static class Extensions
     /// Активен только при заданной переменной OTEL_EXPORTER_OTLP_ENDPOINT.
     /// Инкапсулирует выбор экспортеров: можно легко добавить Azure Monitor и др. без дублирования кода в сервисах.
     /// </summary>
-    private static TBuilder AddOpenTelemetryExporters<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+    private static WebApplicationBuilder AddOpenTelemetryExporters(this WebApplicationBuilder builder)
     {
         var useOtlpExporter = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
 
@@ -120,7 +122,7 @@ public static class Extensions
     /// Регистрируется в DI как IHealthChecksBuilder → используется в MapDefaultEndpoints() для привязки к эндпоинту /alive.
     /// В продакшене можно расширить добавлением проверок подключения к БД/RabbitMQ.
     /// </summary>
-    private static TBuilder AddDefaultHealthChecks<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+    private static WebApplicationBuilder AddDefaultHealthChecks(this WebApplicationBuilder builder)
     {
         builder.Services.AddHealthChecks()
             // Add a default liveness check to ensure app is responsive

@@ -1,6 +1,6 @@
 using Auth.Service.Extensions;
 using System.Diagnostics;
-using PizzaSaga.ServiceDefaults;
+using PizzaSaga.ServiceDefaults.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
