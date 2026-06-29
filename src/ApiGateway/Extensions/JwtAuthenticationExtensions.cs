@@ -6,8 +6,8 @@ using System.Text;
 namespace ApiGateway.Extensions;
 
 /// <summary>
-/// Расширения для централизованной настройки JWT-аутентификации в Gateway.
-/// Вынесено из Program.cs для читаемости, переиспользования и тестирования.
+/// Регистрирует сервисы аутентификации в DI-контейнере с использованием схемы JWT Bearer.
+/// Настраивает параметры валидации JWT-токенов: ключи подписи, издателя, аудиторию и время жизни.
 /// </summary>
 public static class JwtAuthenticationExtensions
 {
@@ -36,7 +36,9 @@ public static class JwtAuthenticationExtensions
             // Валидация ключа и подписи
             options.TokenValidationParameters = new TokenValidationParameters
             {
+                // Проверять подпись
                 ValidateIssuerSigningKey = true,
+                // Ключ для проверки подписи
                 IssuerSigningKey         = new SymmetricSecurityKey(key),
                 // Для локального MVP: отключены проверки issuer/audience
                 ValidateIssuer           = false,

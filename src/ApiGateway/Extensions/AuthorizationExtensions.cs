@@ -19,30 +19,28 @@ public static class AuthorizationExtensions
     /// Реализует простую, но надёжную логику: сначала проверяем путь,
     /// потом авторизуем. Это позволяет легко масштабировать список публичных путей.
     /// </summary>
-    public static IApplicationBuilder UsePublicPathAuthorization(this WebApplication app)
+    /// <param name="app"></param>
+    /// <param name="publicPaths">Cписок публичных маршрутов, не требующих JWT-токена</param>
+    /// <returns></returns>
+    public static IApplicationBuilder UsePublicPathAuthorization(this WebApplication app, PathString[] publicPaths)
     {
-        // ПУБЛИЧНЫЕ маршруты — не требуют JWT-токена
-        var publicPaths = new[]
-        {
-            new PathString("/api/auth/login"),   // Получение токена
-            new PathString("/health"),
-            new PathString("/alive")
-        };
-
         app.Use(async (ctx, next) =>
         {
+            // 1. Получаем текущий путь запроса
             var requestPath = ctx.Request.Path;
 
+            // 2. Проверяем, входит ли путь в список "публичных"
             bool isPublic = publicPaths.Any(publicPath =>
                 requestPath.StartsWithSegments(publicPath, StringComparison.OrdinalIgnoreCase));
 
             if (isPublic)
             {
-                await next(ctx); // Пропускаем авторизацию
+                // Если да — просто пропускаем дальше (без проверки авторизации)
+                await next(ctx);
                 return;
             }
 
-            // Остальные пути — через DefaultPolicy
+            // 3. Остальные пути — через DefaultPolicy
             var policy = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
                 .RequireAuthenticatedUser()
                 .Build();
@@ -52,12 +50,12 @@ public static class AuthorizationExtensions
 
             if (!authorizeResult.Succeeded)
             {
-                // Возвращаем 401 в явном виде (стандартный ASP.NET вернёт 401 при вызове challenge,
-                // но здесь мы хотим контролировать поведение — например, для YARP-прокси это важно).
+                // Если авторизация провалилась — возвращаем 401 явно
                 ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return;
             }
 
+            // 4. Если всё ок — передаём управление дальше по конвейеру
             await next(ctx);
         });
 
