@@ -1,3 +1,5 @@
+using PizzaSaga.ServiceDefaults;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Подключаем автоматический OpenTelemetry, логирование и метрики Aspire

@@ -48,17 +48,18 @@ public class CorrelationIdMiddleware
 
         if (!string.IsNullOrEmpty(cid))
         {
-            // Прописываем в baggage (для OpenTelemetry)
-            Activity.Current?.AddBaggage("correlation.id", cid);
+            // Сохраняем для логов
+            using (Serilog.Context.LogContext.PushProperty("CorrelationId", cid))
+            {
 
-            // Добавляем как span-тег — так он будет в Aspire Dashboard
-            Activity.Current?.AddTag("correlation.id", cid);
+                // Прописываем в baggage (для OpenTelemetry)
+                Activity.Current?.AddBaggage("correlation.id", cid);
 
-            // Сохраняем для логов — если используешь Serilog/LogContext
-            //using (var _ = Microsoft.Extensions.Logging.LogContext.PushProperty("CorrelationId", cid))
-            //{
+                // Добавляем как span-тег — так он будет в Aspire Dashboard
+                Activity.Current?.AddTag("correlation.id", cid);
+
                 await _next(context);
-            //}
+            }
         }
         else
         {

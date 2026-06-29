@@ -1,58 +1,85 @@
 using ApiGateway.Extensions;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using PizzaSaga.ServiceDefaults;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
-
-// Добавляем сервис-дефолты Aspire (OpenTelemetry, health checks, логирование и метрики и т.д.)
-builder.AddServiceDefaults();
-
-
-// JWT: настройка валидации (пример для MVP — без реального Issuer/Audience)
-builder.AddJwtAuthentication();
-
-
-// YARP + service discovery и связываем их с конфигурацией appsettings.json
-builder.Services.AddReverseProxy()
-    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
-    // https://www.nuget.org/packages/Microsoft.Extensions.ServiceDiscovery.Yarp/
-    // https://www.milanjovanovic.tech/blog/how-dotnet-aspire-simplifies-service-discovery
-    // Configures a destination resolver that can use service discovery
-    .AddServiceDiscoveryDestinationResolver();
-
-
-var app = builder.Build();
-
-// Корреляция: генерация + пропагация.
-app.UseCorrelationId();
-
-// Health checks — явно, с исключением из авторизации
-app.MapHealthChecks("/health").AllowAnonymous();
-app.MapHealthChecks("/alive", new HealthCheckOptions { Predicate = _ => true }).AllowAnonymous();
-
-// Мидлварь аутентификации / авторизации
-app.UseAuthentication();
-app.UseAuthorization();
-
-// Исключаем несколько публичных путей из проверки авторизации (нет JWT-токена)
-var publicPaths = new[]
+try
 {
+    var builder = WebApplication.CreateBuilder(args);
+
+    builder.Host.UseSerilog((ctx, services, lc) =>
+    {
+        lc.ReadFrom.Configuration(ctx.Configuration)
+          .ReadFrom.Services(services)
+          .Enrich.FromLogContext();
+    });
+
+    // Добавляем сервис-дефолты Aspire (OpenTelemetry, health checks, логирование и метрики и т.д.)
+    builder.AddServiceDefaults();
+
+
+    // JWT: настройка валидации (пример для MVP — без реального Issuer/Audience)
+    builder.AddJwtAuthentication();
+
+
+    // YARP + service discovery и связываем их с конфигурацией appsettings.json
+    builder.Services.AddReverseProxy()
+        .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
+        // https://www.nuget.org/packages/Microsoft.Extensions.ServiceDiscovery.Yarp/
+        // https://www.milanjovanovic.tech/blog/how-dotnet-aspire-simplifies-service-discovery
+        // Configures a destination resolver that can use service discovery
+        .AddServiceDiscoveryDestinationResolver();
+
+
+    var app = builder.Build();
+
+    // Корреляция: генерация + пропагация.
+    app.UseCorrelationId();
+
+
+    // Health checks — явно, с исключением из авторизации
+    app.MapHealthChecks("/health").AllowAnonymous();
+    app.MapHealthChecks("/alive", new HealthCheckOptions { Predicate = _ => true }).AllowAnonymous();
+
+    // Мидлварь аутентификации / авторизации
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    // Исключаем несколько публичных путей из проверки авторизации (нет JWT-токена)
+    var publicPaths = new[]
+    {
     new PathString("/api/auth/login"),   // Получение токена
+    new PathString("/test"),
     new PathString("/health"),
     new PathString("/alive")
 };
-app.UsePublicPathAuthorization(publicPaths);
+    app.UsePublicPathAuthorization(publicPaths);
 
-// 4. YARP — последним
-app.MapReverseProxy();
-
-
-//app.MapGet("/test", async (IHttpClientFactory factory) =>
-//{
-//    var client = factory.CreateClient();
-//    return await client.GetStringAsync("http://order-service/api/orders");
-//});
+    // 4. YARP — последним
+    app.MapReverseProxy();
 
 
-app.Run();
+    app.MapGet("/test", async (IHttpClientFactory factory) =>
+    {
+        throw new Exception("Тестовая ошибка для цвета");
 
+        var client = factory.CreateClient();
+        return await client.GetStringAsync("http://order-service/api/orders");
+    });
+
+
+    app.Run();
+
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
