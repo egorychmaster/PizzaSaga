@@ -45,7 +45,7 @@ public static class CorrelationIdExtensions
             Activity.Current?.AddTag("correlation.id", correlationId);
 
             // 🔍 Отладочный лог для разработки (в продакшене можно убрать)
-            Console.WriteLine($"[Gateway] {ctx.Request.Method} {ctx.Request.Path}, Corr={correlationId}");
+            Console.WriteLine($"[Gateway] {ctx.Request.Method} {ctx.Request.Path}, CorrelationId={correlationId}");            
 
             await next(ctx);
         });

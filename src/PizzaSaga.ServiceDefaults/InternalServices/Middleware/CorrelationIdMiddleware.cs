@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
 namespace PizzaSaga.ServiceDefaults.InternalServices.Middleware;
@@ -24,10 +25,12 @@ public static class CorrelationIdMiddlewareExtensions
 public class CorrelationIdMiddleware
 {
     private readonly RequestDelegate _next;
+    private readonly ILogger<CorrelationIdMiddleware> _logger;
 
-    public CorrelationIdMiddleware(RequestDelegate next)
+    public CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     /// <summary>
@@ -44,21 +47,25 @@ public class CorrelationIdMiddleware
     /// <returns></returns>
     public async Task InvokeAsync(HttpContext context)
     {
-        var cid = GetCorrelationId(context);
+        var correlationId = GetCorrelationId(context);
 
-        if (!string.IsNullOrEmpty(cid))
+        if (!string.IsNullOrEmpty(correlationId))
         {
             // Сохраняем для логов
-            using (Serilog.Context.LogContext.PushProperty("CorrelationId", cid))
+            using (Serilog.Context.LogContext.PushProperty("CorrelationId", correlationId))
             {
 
                 // Прописываем в baggage (для OpenTelemetry)
-                Activity.Current?.AddBaggage("correlation.id", cid);
+                Activity.Current?.AddBaggage("correlation.id", correlationId);
 
                 // Добавляем как span-тег — так он будет в Aspire Dashboard
-                Activity.Current?.AddTag("correlation.id", cid);
+                Activity.Current?.AddTag("correlation.id", correlationId);
 
-                await _next(context);
+                using (_logger.BeginScope(new Dictionary<string, object?> { ["CorrelationId"] = correlationId }))
+                {
+                    _logger.LogInformation("CorrelationId middleware. CorrelationId={CorrelationId}", correlationId);
+                    await _next(context);
+                }
             }
         }
         else

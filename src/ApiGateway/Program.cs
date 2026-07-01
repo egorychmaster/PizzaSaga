@@ -3,9 +3,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using PizzaSaga.ServiceDefaults.Extensions;
 using Serilog;
 
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .CreateBootstrapLogger();
+Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
 try
 {
