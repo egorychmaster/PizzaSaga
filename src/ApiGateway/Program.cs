@@ -43,11 +43,11 @@ try
     // Исключаем несколько публичных путей из проверки авторизации (нет JWT-токена)
     var publicPaths = new[]
     {
-    new PathString("/api/auth/login"),   // Получение токена
-    new PathString("/test"),
-    new PathString("/health"),
-    new PathString("/alive")
-};
+        new PathString("/api/auth/login"),   // Получение токена
+        new PathString("/test"),
+        new PathString("/health"),
+        new PathString("/alive")
+    };
     app.UsePublicPathAuthorization(publicPaths);
 
     // 4. YARP — последним
