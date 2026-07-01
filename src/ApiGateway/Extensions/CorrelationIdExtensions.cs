@@ -58,7 +58,7 @@ public static class CorrelationIdExtensions
             Activity.Current?.AddTag("correlation.id", correlationId);
 
             // 🟢 Продакшен-дружелюбное логирование
-            _logger.LogInformation("[Gateway] {Method} {Path}, CorrelationId={CorrelationId}",
+            _logger.LogInformation("[Gateway] {Method} {Path} (correlationId={correlationId})",
                 context.Request.Method, context.Request.Path, correlationId);
 
             await _next(context);

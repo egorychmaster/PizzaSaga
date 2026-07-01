@@ -1,4 +1,5 @@
 using PizzaSaga.ServiceDefaults.Extensions;
+using PizzaSaga.ServiceDefaults.InternalServices.Middleware;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
@@ -12,7 +13,11 @@ try
 
     // ... твои стандартные сервисы ...
 
+
     var app = builder.Build();
+
+    // Пропагирует уже установленный CorrelationId: берёт из baggage или заголовка и добавляет в span-теги + логи.
+    app.UseCorrelationId();
 
     // Настраиваем эндпоинты для проверки работоспособности (Health Checks)
     app.MapDefaultEndpoints();

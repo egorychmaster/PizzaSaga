@@ -1,5 +1,6 @@
 using Auth.Service.Extensions;
 using PizzaSaga.ServiceDefaults.Extensions;
+using PizzaSaga.ServiceDefaults.InternalServices.Middleware;
 using Serilog;
 using System.Diagnostics;
 
@@ -15,6 +16,9 @@ try
     // ... твои стандартные сервисы ...
 
     var app = builder.Build();
+
+    // Пропагирует уже установленный CorrelationId: берёт из baggage или заголовка и добавляет в span-теги + логи.
+    app.UseCorrelationId();
 
     // Настраиваем эндпоинты для проверки работоспособности (Health Checks)
     app.MapDefaultEndpoints();
@@ -38,7 +42,7 @@ try
         var secretKey = config["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
         var token = AuthExtensions.GenerateJwtToken(req.Email, secretKey);
 
-        logger.LogInformation("Login success for {Email}, correlation={Corr}",
+        logger.LogInformation("Login success for {Email} (correlationId={correlationId})",
             req.Email,
             GetCorrelationIdFromContext());
 

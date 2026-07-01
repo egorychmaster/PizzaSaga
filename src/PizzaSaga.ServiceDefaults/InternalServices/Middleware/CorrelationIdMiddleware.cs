@@ -63,7 +63,7 @@ public class CorrelationIdMiddleware
 
                 using (_logger.BeginScope(new Dictionary<string, object?> { ["CorrelationId"] = correlationId }))
                 {
-                    _logger.LogInformation("CorrelationId middleware. CorrelationId={CorrelationId}", correlationId);
+                    _logger.LogInformation("CorrelationId middleware (correlationId={correlationId}).", correlationId);
                     await _next(context);
                 }
             }
