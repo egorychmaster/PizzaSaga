@@ -1,54 +1,67 @@
 using Auth.Service.Extensions;
-using System.Diagnostics;
 using PizzaSaga.ServiceDefaults.Extensions;
+using Serilog;
+using System.Diagnostics;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
-// Подключаем автоматический OpenTelemetry, логирование и метрики Aspire
-builder.AddServiceDefaults();
-
-// ... твои стандартные сервисы ...
-
-var app = builder.Build();
-
-// Настраиваем эндпоинты для проверки работоспособности (Health Checks)
-app.MapDefaultEndpoints();
-
-
-app.MapPost("/api/auth/login",
-    async (LoginRequest req, IConfiguration config, ILogger<Program> logger) =>
+try
 {
-    // MVP: жёстко заданный юзер для теста
-    const string validEmail = "admin@test.com";
-    const string validPassword = "password123";
+    var builder = WebApplication.CreateBuilder(args);
 
-    if (!string.Equals(req.Email, validEmail, StringComparison.Ordinal) ||
-        !string.Equals(req.Password, validPassword, StringComparison.Ordinal))
+    // Подключаем автоматический OpenTelemetry, логирование и метрики Aspire
+    builder.AddServiceDefaults();
+
+    // ... твои стандартные сервисы ...
+
+    var app = builder.Build();
+
+    // Настраиваем эндпоинты для проверки работоспособности (Health Checks)
+    app.MapDefaultEndpoints();
+
+
+    app.MapPost("/api/auth/login",
+        async (LoginRequest req, IConfiguration config, ILogger<Program> logger) =>
     {
-        logger.LogInformation("Login failed for user: {Email}", req.Email);
-        return Results.Unauthorized(); // → 401
-    }
+        // MVP: жёстко заданный юзер для теста
+        const string validEmail = "admin@test.com";
+        const string validPassword = "password123";
 
-    // Читается из конфига (appsettings.json или User Secrets)
-    var secretKey = config["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
-    var token = AuthExtensions.GenerateJwtToken(req.Email, secretKey);
+        if (!string.Equals(req.Email, validEmail, StringComparison.Ordinal) ||
+            !string.Equals(req.Password, validPassword, StringComparison.Ordinal))
+        {
+            logger.LogInformation("Login failed for user: {Email}", req.Email);
+            return Results.Unauthorized(); // → 401
+        }
 
-    logger.LogInformation("Login success for {Email}, correlation={Corr}",
-        req.Email,
-        GetCorrelationIdFromContext());
+        // Читается из конфига (appsettings.json или User Secrets)
+        var secretKey = config["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
+        var token = AuthExtensions.GenerateJwtToken(req.Email, secretKey);
 
-    return Results.Ok(new { Token = token });
+        logger.LogInformation("Login success for {Email}, correlation={Corr}",
+            req.Email,
+            GetCorrelationIdFromContext());
 
-    static string? GetCorrelationIdFromContext() =>
-        Activity.Current?.Baggage.FirstOrDefault(x => x.Key == "correlation.id").Value;
-})
-.WithName("Login")
-.Produces<Dictionary<string, object>>(StatusCodes.Status200OK)
-.Produces(StatusCodes.Status401Unauthorized);
+        return Results.Ok(new { Token = token });
+
+        static string? GetCorrelationIdFromContext() =>
+            Activity.Current?.Baggage.FirstOrDefault(x => x.Key == "correlation.id").Value;
+    })
+    .WithName("Login")
+    .Produces<Dictionary<string, object>>(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status401Unauthorized);
 
 
-app.Run();
-
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 
 public record LoginRequest(string Email, string Password);

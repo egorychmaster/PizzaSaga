@@ -1,15 +1,29 @@
 using PizzaSaga.ServiceDefaults.Extensions;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
-// Подключаем автоматический OpenTelemetry, логирование и метрики Aspire
-builder.AddServiceDefaults();
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
 
-// ... твои стандартные сервисы ...
+    // Подключаем автоматический OpenTelemetry, логирование и метрики Aspire
+    builder.AddServiceDefaults();
 
-var app = builder.Build();
+    // ... твои стандартные сервисы ...
 
-// Настраиваем эндпоинты для проверки работоспособности (Health Checks)
-app.MapDefaultEndpoints();
+    var app = builder.Build();
 
-app.Run();
+    // Настраиваем эндпоинты для проверки работоспособности (Health Checks)
+    app.MapDefaultEndpoints();
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
