@@ -1310,12 +1310,12 @@ Saga представляет собой последовательность л
                 Initial
                     │
                     ▼
-			AwaitingInventory
+			AwaitingInventoryReservation
           │                 │
           │                 ▼
           │            Cancelled
           ▼
-			AwaitingPayment
+			AwaitingPaymentReservation
           │                 │
           │                 ▼
           │            Cancelled
