@@ -1,0 +1,193 @@
+🚀 Sprint 0: Инфраструктурный MVP, API Gateway и Observability SDK
+Цель: Развернуть базовый каркас распределенной системы с настроенным API Gateway, централизованной аутентификацией и сквозным OpenTelemetry-трейсингом для контроля CorrelationId с первого дня.
+
+📋 Задачи:
+1. Решение и оркестрация: Создать файл нового формата решений PizzaSaga.slnx и базовую структуру каталогов согласно architecture.md (src/Gateway, src/Services, src/Shared).
+
+2. .NET Aspire: Настроить PizzaSaga.AppHost и PizzaSaga.ServiceDefaults. Подключить контейнеры PostgreSQL и RabbitMQ. Включить OpenTelemetry (Tracing, Metrics, Logs) в ServiceDefaults.
+
+3. API Gateway (YARP): Создать проект PizzaSaga.Gateway. Настроить проксирование маршрутов /api/v1/orders/ на Order Service и /api/v1/auth/ на Auth Service. Реализовать middleware, которое обеспечивает CorrelationId propagation (извлечение/генерация и проброс в заголовках downstream-запросов). TraceId создаётся OpenTelemetry автоматически на базе Activity.
+
+4. Auth Service: Создать каркас сервиса. Реализовать эндпоинт POST /api/v1/auth/login (выдача JWT access_token и refresh_token). На первом этапе — in-memory проверка учетных данных.
+
+5. Order Service (Начальный срез): Создать проект PizzaSaga.Services.Order.Api. Настроить валидацию JWT-токенов от Gateway. Сервис заказов принимает уже аутентифицированный запрос. Добавить базовый эндпоинт POST /api/v1/orders, возвращающий 201 Accepted со структурой ответа согласно api.md.
+
+6. Инфраструктурная обвязка: Настроить Health Checks (/health/live, /health/ready). Инфраструктурная обвязка, сквозное логирование и обработка ошибок:
+- Serilog Integration: Интегрировать Serilog во все микросервисы и API Gateway. Настроить структурированное логирование (Structured Logging) в консоль в формате JSON. Добавить в конфигурацию логгера обязательное обогащение контекста свойствами TraceId, SpanId и CorrelationId (через Serilog.Enrichers.Span / Serilog.Formatting.Compact).
+- Глобальный ExceptionHandler: Реализовать централизованный обработчик исключений, используя современный интерфейс IExceptionHandler (введенный в .NET 8/9/10), во всех создаваемых сервисах.
+- Конфигурация ProblemDetails: Настроить глобальный ProblemDetails (builder.Services.AddProblemDetails()) согласно спецификации RFC 9457 и требованиям api.md. Любое необработанное исключение (500 Internal Server Error) на уровне инфраструктуры должно перехватываться, логироваться через Serilog с сохранением TraceId, а клиенту должен возвращаться чистый JSON-ответ, скрывающий внутренние детали реализации бэкенда, но содержащий публичный traceId для разбора инцидентов.
+
+7. Автоматические миграции и Seed данных (Auth & Order): Реализовать стратегию наката миграций через расширение .NET Aspire (DbContext.ApplyMigrations()) или с помощью IHostedService (DatabaseMigrationHostedService), гарантирующего вызов Database.Migrate() строго до старта веб-хоста. Добавить в метод инициализации сидирование (Seed Data) дефолтного пользователя (test_user/password) в БД Auth.
+
+✅ Критерии приемки:
+- Команда dotnet run --project PizzaSaga.AppHost поднимает Gateway, Auth, Order, базы данных и брокер сообщений.
+- Запрос POST /api/v1/auth/login через Gateway возвращает валидный JWT.
+- Запрос POST /api/v1/orders с валидным JWT возвращает 202 Accepted. В .NET Aspire Dashboard виден сквозной трейс: Gateway -> Order.Api.
+
+⚠️ Технические риски: Настройка конфигурации маршрутизации YARP и генерации заголовков.
+
+🧱 Sprint 1: Domain Model, CQRS и Vertical Slice Architecture в Order Service
+Цель: Реализовать полноценную доменную логику Order Service по принципам Tactical DDD, изолировать домен от инфраструктуры с помощью CQRS (MediatR) и настроить строгое соответствие спецификации ошибок.
+
+📋 Задачи:
+1. Domain Layer (Order.Domain): Создать изолированный слой. Реализовать корень агрегата Order (поля: Id, CustomerId, Status, Items, TotalPrice, Version для оптимистичной блокировки). Реализовать доменное событие OrderCreatedDomainEvent.
+
+2. Application Layer (Order.Application): Организовать структуру по Vertical Slices. Папка Features/Orders/CreateOrder. Реализовать CreateOrderCommand, CreateOrderCommandHandler, входные DTO и валидатор на FluentValidation.
+2.1. Безопасное извлечение идентичности (Secure Identity Propagation):
+- Полностью удалить поле CustomerId из публичного JSON-тела запроса CreateOrderRequest (клиент не должен иметь возможности подделать ID пользователя).
+- Настроить аутентификацию в Order.Api (валидация JWT-токенов, выпущенных Auth-сервисом).
+- В минимальном API / контроллере эндпоинта POST /api/v1/orders извлекать UserId из токена авторизованного пользователя через HttpContext.User.FindFirst(ClaimTypes.NameIdentifier) (или использовать аналогичный claim sub).
+- Сконструировать CreateOrderCommand, обогатив её извлеченным UserId (передав его в конструктор команды как CustomerId), и только после этого отправлять команду в Mediator.
+
+3. Pipeline Behaviors: Интегрировать компиляционный Mediator (через генератор исходного кода, например, пакет Mediator.SourceGenerator вместо reflection-based MediatR).
+- Зарегистрировать Mediator в DI-контейнере.
+- Настроить глобальные Pipeline Behaviors на уровне компиляции: ValidationBehavior (автоматическая валидация команд перед выполнением) и LoggingBehavior (структурированное логирование входящих команд).
+
+4. Infrastructure Layer (Order.Infrastructure): Настроить EF Core с PostgreSQL. Настроить маппинг агрегата Order без утечки инфраструктурных зависимостей в домен. Настроить Optimistic Concurrency с использованием явного свойства Version (через .IsConcurrencyToken() в Fluent API EF Core), инкрементируемого при каждом изменении агрегата, как это определено в архитектуре.
+
+5. Централизованная обработка ошибок: Реализовать IExceptionHandler (или Middleware), который перехватывает ValidationException и DbUpdateConcurrencyException, преобразуя их в строгий формат RFC 9457 (ProblemDetails), включая статус-коды 400 Bad Request и 409 Conflict согласно api.md.
+
+6. HTTP Idempotency (PostgreSQL-based): Реализовать IdempotencyFilter (или Middleware) для эндпоинта создания заказа.
+- Создать таблицу IdempotencyKeys в БД Order Service (колонки: IdempotencyKey (primary key), ResponseStatusCode, ResponseBody, CreatedAt).
+- При получении запроса с заголовком Idempotency-Key выполнять атомарную проверку и вставку ключа в БД в рамках единой транзакции с созданием заказа.
+- Если ключ уже существует — прерывать пайплайн и возвращать сохраненный в таблице ответ (201 Created / ResponseBody) без повторного запуска доменной логики. Если заказ в процессе обработки — возвращать соответствующий промежуточный статус согласно api.md.
+
+✅ Критерии приемки:
+- Эндпоинт POST /api/v1/orders вызывает IMediator.Send(). Напрямую DbContext в контроллерах/минималках не используется.
+- При отправке некорректных данных API возвращает 400 Bad Request в формате ProblemDetails со списком нарушенных бизнес-правил.
+- Повторный запрос с тем же Idempotency-Key не создает новую запись в БД, а возвращает 201 Created из кэша/таблицы идемпотентности.
+
+🔗 Sprint 2: Saga Orchestration & Messaging Skeleton (Скелет распределенной системы)
+Цель: Развернуть инфраструктуру обмена сообщениями, запустить Transactional Outbox паттерн и реализовать стейт-машину Саги, взаимодействующую со «скелетами» зависимых сервисов.
+
+📋 Задачи:
+1. Создание каркасов Stock и Payment: Создать проекты PizzaSaga.Services.Stock и PizzaSaga.Services.Payment. Настроить для каждого сервиса свою изолированную базу данных PostgreSQL. Полноценной бизнес-логики в них пока нет.
+1.b. Автоматизация БД и Seed-данные (Stock & Payment): Подключить DatabaseMigrationHostedService к сервисам Stock и Payment. Реализовать инициализацию Seed Data: для БД Stock — наполнение каталога (минимум 5 видов пиццы с фиксированными ID и остатками), для БД Payment — инициализация базовых лимитов или настроек тестового платежного аккаунта.
+
+2. MassTransit & RabbitMQ Setup: Интегрировать MassTransit во все три сервиса (Order, Stock, Payment). Настроить транспорт через RabbitMQ в ServiceDefaults.
+
+3. Реализация Контрактов Саги: В проекте PizzaSaga.Shared (или PizzaSaga.Contracts) определить неизменяемые типы данных (public record) для полного графа состояний Саги согласно architecture.md. Использовать строгие суффиксы для разделения типов сообщений на команды (point-to-point) и события (pub-sub):
+- Инициирующие сообщения: SubmitOrderCommand, OrderSubmittedEvent.
+- Шаг проверки инвентаря (Stock): ReserveInventoryCommand, InventoryReservedEvent, InventoryReservationFailedEvent.
+- Шаг авторизации оплаты (Payment): AuthorizePaymentCommand, PaymentAuthorizedEvent, PaymentAuthorizationFailedEvent.
+- Компенсирующие команды (Откат/Rollback): ReleaseInventoryCommand (расформирование резерва товара), CancelPaymentCommand (возврат/отмена транзакции авторизации).
+- Финальные (Терминальные) события Саги: OrderCompletedEvent, OrderCancelledEvent.
+
+4. Saga State Machine (Order Service): Создать OrderStateMachine и OrderState (Saga Instance) с использованием MassTransit State Machine. Определить состояния: Submitted, InventoryReserved, Completed, Cancelled.
+4. Saga State Machine (Order Service): Создать класс OrderStateMachine и сущность OrderStateData (Saga Instance) с использованием MassTransit State Machine.
+- Реализовать внутренний граф технических состояний Саги согласно разделу 7.4 architecture.md: Initial, AwaitingInventoryReservation, AwaitingPaymentReservation, Completed, Cancelled.
+- Заложить логику маппинга внутренних состояний во внешние статусы согласно разделу 8 api.md:
+- Внутренние состояния Initial, AwaitingInventoryReservation, AwaitingPaymentReservation маппятся в публичный статус Pending («Заказ обрабатывается системой»).
+- Внутреннее состояние Completed маппится в публичный статус Completed.
+- Внутреннее состояние Cancelled маппится в публичный статус Cancelled.
+- Настроить персистентность инстансов Саги в базе данных Order через EF Core (Saga Repository).
+
+5. Создание Заглушек Потребителей (Consumers):
+- В Stock Service создать ReserveInventoryConsumer. На этом этапе он просто логирует получение команды и сразу публикует в ответ событие InventoryReserved.
+- В Payment Service создать AuthorizePaymentConsumer. Он логирует команду и сразу публикует в ответ PaymentAuthorized.
+
+6. Transactional Outbox & Inbox для всех сервисов:
+- Настроить встроенный Transactional Outbox MassTransit в Order Service (в связке с EF Core DbContext). Гарантировать, что создание/обновление заказа и сохранение событий Саги в таблицу OutboxMessages происходят в единой транзакции PostgreSQL.
+- Настроить Transactional Outbox в Stock Service и Payment Service. При обработке входящих команд консьюмеры-заглушки должны записывать свои исходящие интеграционные события-ответы в свои локальные таблицы Outbox в рамках транзакций собственных БД.
+- Настроить паттерн Inbox (Idempotent Consumer) на стороне потребителей во всех трех сервисах для автоматической дедупликации сообщений на уровне инфраструктуры MassTransit.
+
+✅ Критерии приемки:
+- При вызове POST /api/v1/orders заказ сохраняется в БД Order, а в таблицу OutboxMessages пишется событие. Фоновый воркер MassTransit отправляет его в RabbitMQ.
+- Стейт-машина Саги подхватывает событие, переходит в состояние Submitted и отправляет команду в Stock.
+- Заглушки в Stock и Payment автоматически отвечают "Успех". Сага доходит до состояния Completed.
+- В .NET Aspire Dashboard виден полный асинхронный трейс распределенной транзакции через RabbitMQ.
+
+🛡️ Sprint 3: Реальная бизнес-логика Саги, Конкурентность и Компенсации (Резильентность)
+Цель: Заменить заглушки в Stock и Payment сервисах на реальную бизнес-логику работы с данными, реализовать обработку отказов и логику компенсирующих транзакций Саги.
+
+📋 Задачи:
+1. Бизнес-идемпотентность на уровне Домена (Idempotent Consumers / Business Level):
+- Внедрить проверку состояния доменного агрегата/сущности перед выполнением мутирующих операций в Stock и Payment сервисах (state-based idempotency).
+- Для Stock Service: перед резервированием товара проверять, не был ли этот конкретный OrderId уже успешно обработан в данной системе (например, через связь один-к-одному «Заказ-Резерв» или через сохранение бизнес-билетов операций). Повторная обработка команды на резерв для уже зарезервированного заказа должна быть идемпотентным no-op (просто возвращать успешный ответ, не списывая остатки повторно).
+- Для Payment Service: перед транзакцией проверять статус оплаты этого OrderId в БД. Если оплата уже прошла успешно (или завершилась отказом) — повторная команда на авторизацию платежа не должна повторно дергать логику эквайринга, а должна сразу возвращать зафиксированный ранее доменный результат.
+
+2. Бизнес-логика Stock Service: Реализовать сущность Inventory. При получении команды ReserveInventory консьюмер уменьшает количество товара в БД Stock. Использовать Optimistic Concurrency на уровне сущности товара для защиты от состояния гонки (Race Condition) при одновременных заказах. Если товара недостаточно — публиковать InventoryReservationFailed.
+
+3. Бизнес-логика Payment Service: Реализовать симуляцию списания средств. Добавить в конфигурацию сервиса управляемый флаг SimulateFailure. Если флаг активен — консьюмер публикует PaymentAuthorizationFailed, имитируя ошибку банка.
+
+4. Компенсационные сценарии Саги: Расширить OrderStateMachine.
+- Если Stock прислал InventoryReservationFailed -> перевести заказ в статус Cancelled.
+- Если Payment прислал PaymentAuthorizationFailed -> Сага должна отправить в Stock компенсирующую команду ReleaseInventory (расформировать резерв), и только после этого перевести заказ в статус Cancelled.
+
+5. Политики устойчивости (Resilience) и DLQ: Настроить MassTransit Retries (политика повторных попыток при дедлоках БД или временных сбоях сети). Настроить Dead Letter Queue (DLQ) для сообщений, которые не удалось обработать после всех повторов.
+
+✅ Критерии приемки:
+- При успешном прохождении (флаг сбоя отключен) остатки в БД Stock уменьшаются, Сага переходит в Completed.
+- При симуляции ошибки оплаты Сага автоматически посылает команду отмены резерва в Stock. В БД Stock остатки возвращаются в исходное состояние, статус заказа в БД Order становится Cancelled.
+- При возникновении исключений в консьюмере MassTransit делает 3 попытки, после чего перемещает сообщение в очередь *_error (DLQ).
+
+📊 Sprint 4: Чтение, Отмена заказов (Queries & Cancellations) и Эволюция API
+Цель: Реализовать внешние эндпоинты чтения информации о заказах с сокрытием внутренних состояний Саги, добавить функционал ручной отмены заказа пользователем с запуском компенсирующих транзакций, а также выделить контракты взаимодействия в отдельную общую библиотеку.
+
+📋 Задачи:
+1. Выделение PizzaSaga.Contracts:
+- Создать в решении проект PizzaSaga.Contracts (Class Library).
+- Перенести в него все общие контракты интеграционных сообщений (команд и событий) MassTransit, а также общие API DTO.
+- Подключить ссылку на этот проект в Order, Stock и Payment сервисы. Это гарантирует контрактную безопасность и исключает дублирование кода.
+
+2. API Versioning:
+- Интегрировать пакет Asp.Versioning.Http в API Gateway (PizzaSaga.Gateway) и Order Service.
+- Сконфигурировать версионирование через URL. Настроить базовые маршруты под /api/v1/... и подготовить заглушку для будущих версий под /api/v2/....
+
+3. GET /api/v1/orders/{id} (Детализация заказа):
+- Реализовать Query-обработчик в Order Service.
+- Важно: Написать маппер, который трансформирует детальное внутреннее состояние Саги (Submitted, InventoryReserved, PaymentAuthorized и т.д.) во внешние публичные статусы: Pending, Completed или Cancelled согласно api.md.
+- Возвращать строго структуру из спецификации: status, totalAmount, currency, createdAt, updatedAt (никаких деталей о шагах резервирования или транзакционных идентификаторах наружу не отдавать).
+
+4. GET /api/v1/orders (Списки):
+- Реализовать запрос на получение списка заказов текущего пользователя.
+- Добавить строго обязательную пагинацию параметров (pageNumber, pageSize) и базовую фильтрацию по публичному статусу согласно требованиям api.md.
+
+5. POST /api/v1/orders/{id}/cancel (Ручная отмена заказа):
+- Реализовать эндпоинт ручной отмены заказа. Он принимает OrderId и отправляет через MassTransit команду (или событие) CancelOrder в стейт-машину Саги.
+- Логика Саги (Saga Transitions): В OrderStateMachine настроить триггер на это событие.
+-- Если Сага находится в состоянии, допускающем отмену (например, Submitted или InventoryReserved), она должна запустить компенсирующие шаги (отмена брони в Stock, возврат средств в Payment, если они были списаны) и перейти в финальное состояние Cancelled.
+-- Если Сага уже находится в состоянии Completed или Cancelled — запрос должен игнорироваться (идемпотентный no-op) либо возвращать ошибку бизнес-правил (400 Bad Request / ProblemDetails) в соответствии с api.md.
+
+✅ Критерии приемки:
+- Все общие сообщения и DTO находятся исключительно в PizzaSaga.Contracts. Сервисы не ссылаются друг на друга напрямую.
+- Запрос GET /api/v1/orders/{id} возвращает только публичные статусы (Pending / Completed / Cancelled). Промежуточные технические статусы Саги скрыты.
+- Вызов POST /api/v1/orders/{id}/cancel для активного (в процессе обработки) заказа успешно инициирует компенсирующие транзакции в Stock и Payment. Статус заказа меняется на Cancelled.
+- Попытка отменить уже выполненный/доставленный заказ возвращает корректную ошибку бизнес-правил в формате ProblemDetails (RFC 9457).
+- В .NET Aspire Dashboard наглядно виден распределенный трейс ручной отмены: Gateway -> Order.Api (HTTP POST) -> MassTransit (Saga) -> Stock.Consumer (Компенсация остатков).
+
+🧪 Sprint 5: Стратегия тестирования (Тесты Архитектуры, Интеграции и Сквозные Сценарии)
+Цель: Обеспечить 100% уверенность в надежности архитектурных границ и работы распределенной транзакции с помощью автоматизированных тестов (Unit, Architecture, System/E2E).
+
+📋 Задачи:
+1. Architecture Tests: Создать проект PizzaSaga.ArchitectureTests. Используя библиотеку NetArchTest, написать тесты, проверяющие изоляцию слоев: слой Domain не должен иметь ссылок на Infrastructure, Application не зависит от API, контроллеры не инжектят DbContext.
+
+2. Unit & Integration Tests (MassTransit TestHarness): Написать тесты для валидаторов, обработчиков команд MediatR и стейт-машины Саги с использованием MassTransit.Testing.ITestHarness. Проверить, что Сага корректно реагирует на события и переключает состояния в изолированной среде.
+
+3. System / End-to-End Tests (Интеграция всей системы): Создать проект PizzaSaga.SystemTests. Используя Microsoft.AspNetCore.Mvc.Testing и официальный пакет .NET Aspire AppHost Testing (или паттерн Testcontainers), реализовать тесты для 3 ключевых пользовательских сценариев, описанных в architecture.md:
+- Сценарий 1: Успешное сквозное создание и выполнение заказа через Gateway.
+- Сценарий 2: Автоматическая компенсация и отмена резервов при сбое оплаты.
+- Сценарий 3: Проверка доступности Health Checks всех систем через API Gateway.
+
+✅ Критерии приемки:
+- Запуск dotnet test успешно прогоняет все три типа тестов.
+- Архитектурный тест падает, если разработчик случайно нарушает границы чистой архитектуры (например, обращается к инфраструктуре из домена).
+- Системный тест поднимает контекст приложения, отправляет реальный HTTP-запрос в YARP Gateway и проверяет, что финальные статусы в БД Order и БД Stock согласованы.
+
+📝 Sprint 6: Финализация, OpenAPI документация и Документ для собеседования (Polish)
+Цель: Подготовить проект к демонстрации менторам или потенциальным работодателям, оформить техническую документацию высокого уровня.
+
+📋 Задачи:
+1. Изолированный OpenAPI (Swagger): Настроить генерацию Swagger JSON локально для каждого микросервиса (Order, Stock, Payment, Auth) на уровне их процессов. Как требует api.md, API Gateway не занимается динамической сборкой схем — каждый сервис отвечает за свои контракты сам.
+
+2. Оформление README.md (Senior-level): Написать структурированный файл README:
+- Архитектурная диаграмма системы.
+- Описание выбранного стека и обоснование паттернов (Почему Saga? Почему Outbox? Какую проблему решает Inbox?).
+- Инструкция по запуску в один клик через .NET Aspire / CLI.
+- Описание компромиссов (Trade-offs) проекта (например, почему отказались от Event Sourcing в пользу State Machine).
+
+3. Инструкция по демонстрации сценариев: Написать пошаговый гайд (с curl-запросами), как воспроизвести успешный заказ, как спровоцировать ошибку оплаты, и где именно в .NET Aspire Dashboard смотреть распределенные трейсы и графики метрик.
+
+✅ Критерии приемки:
+- Каждый сервис отдает свою валидную страницу Swagger UI.
+- README.md содержит исчерпывающее архитектурное описание проекта, готовое к демонстрации Staff/Principal инженерам на интервью.
