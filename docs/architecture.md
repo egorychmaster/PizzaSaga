@@ -131,7 +131,6 @@ ORM					Entity Framework Core			Работа с PostgreSQL
 Основная БД			PostgreSQL						Транзакционные данные
 Observability		OpenTelemetry					Трейсинг, метрики, логирование
 Dashboard			.NET Aspire Dashboard			Наблюдаемость системы
-Resilience			Microsoft.Extensions.Resilience (Polly) Retry, Timeout, Circuit Breaker
 Контейнеризация		Docker Compose					Локальный запуск инфраструктуры
 Документация API	Swagger / OpenAPI				Документирование HTTP API
 API Versioning		ASP.NET API Versioning			Поддержка эволюции HTTP API
@@ -493,7 +492,7 @@ Business Logic
 
 API Gateway отвечает за:
 маршрутизацию запросов;
-проверку JWT-токенов и передачу информации о пользователе во внутренние сервисы;
+выполняет предварительную аутентификацию, но downstream тоже независимо валидирует JWT;
 централизованную обработку версий API;
 обеспечение обратной совместимости при развитии публичного API;
 унифицированное представление ошибок (ProblemDetails);
@@ -775,11 +774,10 @@ API Gateway построен на основе YARP Reverse Proxy и не сод
 авторизация;
 API Versioning;
 ProblemDetails;
-Rate Limiting;
 распространение CorrelationId;
 публикация Health Endpoints.
 
-Клиенты взаимодействуют только с API Gateway и не обращаются к внутренним сервисам напрямую.
+API Gateway выполняет первичную аутентификацию, авторизацию и маршрутизацию запросов. Оригинальный Bearer JWT передаётся в downstream-сервисы без изменений. Каждый защищённый микросервис самостоятельно валидирует JWT локально с использованием общей конфигурации аутентификации (AddJwtBearer), не обращаясь к Auth Service во время обработки запросов. Такой подход соответствует принципу Zero Trust и позволяет сервисам безопасно работать независимо от API Gateway.
 
 ## 4.5 Shared
 Каталог содержит библиотеки, используемые несколькими сервисами.
@@ -1813,7 +1811,6 @@ Complete Order
 Architecture Validation Tests автоматически контролируют соблюдение архитектурных ограничений проекта.
 
 Планируется реализовать следующие проверки:
-
 слой Domain не зависит от других слоёв;
 Application не зависит от Infrastructure;
 слой API не обращается напрямую к инфраструктурному слою.

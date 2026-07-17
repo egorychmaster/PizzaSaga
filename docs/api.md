@@ -87,7 +87,6 @@ POST /api/v1/orders
 
 Request:
 {
-  "customerId": "...",
   "items": [
     {
       "productId": "...",
