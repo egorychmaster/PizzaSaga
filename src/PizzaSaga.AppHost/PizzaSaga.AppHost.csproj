@@ -9,8 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ApiGateway\ApiGateway.csproj" />
-    <ProjectReference Include="..\PizzaSaga.ServiceDefaults\PizzaSaga.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Gateway\PizzaSaga.ApiGateway\ApiGateway\PizzaSaga.ApiGateway.csproj" />
     <ProjectReference Include="..\Services\Auth.Service\Auth.Service.csproj" />
     <ProjectReference Include="..\Services\Order.Service\Order.Service.csproj" />
     <ProjectReference Include="..\Services\Payment.Service\Payment.Service.csproj" />

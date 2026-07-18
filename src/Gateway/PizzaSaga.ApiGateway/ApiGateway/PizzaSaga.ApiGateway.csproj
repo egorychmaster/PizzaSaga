@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PizzaSaga.ServiceDefaults\PizzaSaga.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\..\PizzaSaga.ServiceDefaults\PizzaSaga.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

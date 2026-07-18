@@ -3,6 +3,10 @@
     <File Path="docs/api.md" />
     <File Path="docs/architecture.md" />
   </Folder>
+  <Folder Name="/Gateway/">
+    <Project Path="src/Gateway/PizzaSaga.ApiGateway/ApiGateway/PizzaSaga.ApiGateway.csproj" />
+  </Folder>
+  <Folder Name="/Host/" />
   <Folder Name="/Services/">
     <Project Path="src/Services/Auth.Service/Auth.Service.csproj" Id="ca393b2d-a521-4b25-8a19-52243b4a0969" />
     <Project Path="src/Services/Order.Service/Order.Service.csproj" Id="84a1b1c8-f698-4396-aea9-91a4b525921c" />
@@ -12,7 +16,6 @@
   <Folder Name="/Shared/">
     <Project Path="src/Shared/PizzaSaga.Contracts/PizzaSaga.Contracts.csproj" Id="2dccb056-58fc-4269-be79-afed26c5578e" />
   </Folder>
-  <Project Path="src/ApiGateway/ApiGateway.csproj" Id="40494606-d503-4383-ad9e-9080cd98dc09" />
   <Project Path="src/PizzaSaga.AppHost/PizzaSaga.AppHost.csproj" />
-  <Project Path="src/PizzaSaga.ServiceDefaults/PizzaSaga.ServiceDefaults.csproj" Id="1f372f08-7976-42e1-8913-54d5da1c78ea" />
+  <Project Path="src/PizzaSaga.ServiceDefaults/PizzaSaga.ServiceDefaults.csproj" />
 </Solution>

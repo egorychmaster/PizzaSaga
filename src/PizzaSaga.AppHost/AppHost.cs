@@ -43,7 +43,7 @@ var orderService = builder.AddProject<Projects.Order_Service>("order-service")
 
 // --- 3. ШЛЮЗ МАРШРУТИЗАЦИИ (API GATEWAY) ---
 // Шлюз YARP должен знать адреса других сервисов, чтобы проксировать запросы
-builder.AddProject<Projects.ApiGateway>("api-gateway")
+builder.AddProject<Projects.PizzaSaga_ApiGateway>("api-gateway")
        .WithReference(authService)
        .WithReference(orderService)
        .WithReference(stockService)
