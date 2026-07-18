@@ -120,7 +120,9 @@ TransactionBehavior — автоматическое открытие транз
 - Подключить ссылку на этот проект в Order, Stock и Payment сервисы. Это гарантирует контрактную безопасность и исключает дублирование кода.
 
 Реализация Контрактов Саги: В проекте Shared/PizzaSaga.Contracts определить неизменяемые типы данных (public record) для полного графа состояний Саги согласно architecture.md. Использовать строгие суффиксы для разделения типов сообщений на команды (point-to-point) и события (pub-sub):
-- Инициирующие сообщения: SubmitOrderCommand, OrderSubmittedEvent.
+- Инициирующим сообщением распределенной транзакции:
+-- При созданиии заказа CreateOrderCommand, при сохранении заказа генерируется OrderCreatedIntegrationEvent.
+-- При отмене заказа (через POST /api/v1/orders/{orderId}/cancel) запускается компенсация командой CancelPaymentCommand.
 - Шаг проверки инвентаря (Stock): ReserveInventoryCommand, InventoryReservedEvent, InventoryReservationFailedEvent.
 - Шаг авторизации оплаты (Payment): AuthorizePaymentCommand, PaymentAuthorizedEvent, PaymentAuthorizationFailedEvent.
 - Компенсирующие команды (Откат/Rollback): ReleaseInventoryCommand (расформирование резерва товара), CancelPaymentCommand (возврат/отмена транзакции авторизации).
@@ -206,7 +208,7 @@ Stock Service использует "Parse, Don't Validate" для управле
 - Добавить строго обязательную пагинацию параметров (pageNumber, pageSize) и базовую фильтрацию по публичному статусу согласно требованиям api.md.
 
 4. POST /api/v1/orders/{id}/cancel (Ручная отмена заказа):
-- Реализовать эндпоинт ручной отмены заказа. Он принимает OrderId и отправляет через MassTransit команду (или событие) CancelOrder в стейт-машину Саги.
+- Реализовать эндпоинт ручной отмены заказа. Он принимает OrderId и отправляет через MassTransit команду CancelOrderCommand в стейт-машину Саги.
 - Логика Саги (Saga Transitions): В OrderStateMachine настроить триггер на это событие.
 -- Если Сага находится в состоянии, допускающем отмену (например, Submitted или InventoryReserved), она должна запустить компенсирующие шаги (отмена брони в Stock, возврат средств в Payment, если они были списаны) и перейти в финальное состояние Cancelled.
 -- Если Сага уже находится в состоянии Completed или Cancelled — запрос должен игнорироваться (идемпотентный no-op) либо возвращать ошибку бизнес-правил (400 Bad Request / ProblemDetails) в соответствии с api.md.
