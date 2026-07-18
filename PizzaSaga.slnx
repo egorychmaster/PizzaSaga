@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/Docs/">
+    <File Path="docs/api.md" />
+    <File Path="docs/architecture.md" />
+  </Folder>
   <Folder Name="/Services/">
     <Project Path="src/Services/Auth.Service/Auth.Service.csproj" Id="ca393b2d-a521-4b25-8a19-52243b4a0969" />
     <Project Path="src/Services/Order.Service/Order.Service.csproj" Id="84a1b1c8-f698-4396-aea9-91a4b525921c" />
