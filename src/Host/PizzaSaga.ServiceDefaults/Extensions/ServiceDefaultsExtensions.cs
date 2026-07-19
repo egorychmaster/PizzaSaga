@@ -60,6 +60,7 @@ public static class ServiceDefaultsExtensions
     /// </summary>
     private static WebApplicationBuilder ConfigureOpenTelemetry(this WebApplicationBuilder builder)
     {
+        // --- Логи ---
         builder.Logging.AddOpenTelemetry(logging =>
         {
             logging.IncludeFormattedMessage = true;
@@ -67,12 +68,14 @@ public static class ServiceDefaultsExtensions
         });
 
         builder.Services.AddOpenTelemetry()
+            // --- Метрики ---
             .WithMetrics(metrics =>
             {
                 metrics.AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation();
             })
+            // --- Трейсы ---
             .WithTracing(tracing =>
             {
                 tracing.AddSource(builder.Environment.ApplicationName)
@@ -87,6 +90,7 @@ public static class ServiceDefaultsExtensions
                     .AddHttpClientInstrumentation();
             });
 
+        // --- Экспорт ---
         builder.AddOpenTelemetryExporters();
 
         return builder;
@@ -105,13 +109,6 @@ public static class ServiceDefaultsExtensions
         {
             builder.Services.AddOpenTelemetry().UseOtlpExporter();
         }
-
-        // Uncomment the following lines to enable the Azure Monitor exporter (requires the Azure.Monitor.OpenTelemetry.AspNetCore package)
-        //if (!string.IsNullOrEmpty(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
-        //{
-        //    builder.Services.AddOpenTelemetry()
-        //       .UseAzureMonitor();
-        //}
 
         return builder;
     }
