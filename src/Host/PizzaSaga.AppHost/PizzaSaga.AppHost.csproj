@@ -9,11 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Gateway\PizzaSaga.ApiGateway\ApiGateway\PizzaSaga.ApiGateway.csproj" />
-    <ProjectReference Include="..\Services\Auth.Service\Auth.Service.csproj" />
-    <ProjectReference Include="..\Services\Order.Service\Order.Service.csproj" />
-    <ProjectReference Include="..\Services\Payment.Service\Payment.Service.csproj" />
-    <ProjectReference Include="..\Services\Stock.Service\Stock.Service.csproj" />
+    <ProjectReference Include="..\..\Gateway\PizzaSaga.ApiGateway\ApiGateway\PizzaSaga.ApiGateway.csproj" />
+    <ProjectReference Include="..\..\Services\Auth.Service\Auth.Service.csproj" />
+    <ProjectReference Include="..\..\Services\Order.Service\Order.Service.csproj" />
+    <ProjectReference Include="..\..\Services\Payment.Service\Payment.Service.csproj" />
+    <ProjectReference Include="..\..\Services\Stock.Service\Stock.Service.csproj" />
   </ItemGroup>
 
   <ItemGroup>
