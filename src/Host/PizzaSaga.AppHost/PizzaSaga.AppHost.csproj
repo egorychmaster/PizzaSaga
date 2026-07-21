@@ -10,10 +10,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Gateway\PizzaSaga.ApiGateway\ApiGateway\PizzaSaga.ApiGateway.csproj" />
-    <ProjectReference Include="..\..\Services\Auth.Service\Auth.Service.csproj" />
-    <ProjectReference Include="..\..\Services\Order.Service\Order.Service.csproj" />
-    <ProjectReference Include="..\..\Services\Payment.Service\Payment.Service.csproj" />
-    <ProjectReference Include="..\..\Services\Stock.Service\Stock.Service.csproj" />
+    <ProjectReference Include="..\..\Services\Auth\Auth.Api\Auth.Api.csproj" />
+    <ProjectReference Include="..\..\Services\Order\Order.Api\Order.Api.csproj" />
+    <ProjectReference Include="..\..\Services\Payment\Payment.Api\Payment.Api.csproj" />
+    <ProjectReference Include="..\..\Services\Stock\Stock.Api\Stock.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,7 +22,7 @@
     <PackageReference Include="Aspire.Hosting.RabbitMQ" />
     <PackageReference Include="MessagePack" />
     <PackageReference Include="SharpCompress" />
-    <PackageReference Include="Snappier"  />
+    <PackageReference Include="Snappier" />
   </ItemGroup>
 
 </Project>

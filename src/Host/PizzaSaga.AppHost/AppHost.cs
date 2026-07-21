@@ -24,20 +24,20 @@ var rabbitMq = builder.AddRabbitMQ("rabbitmq")
 // --- 2. ОПИСАНИЕ МИКРОСЕРВИСОВ И ЗАВИСИМОСТЕЙ ---
 
 // Сервис аутентификации
-var authService = builder.AddProject<Projects.Auth_Service>("auth-service")
+var authService = builder.AddProject<Projects.Auth_Api>("auth-api")
                          .WithReference(authDb);
 
 // Сервис склада (управление остатками)
-var stockService = builder.AddProject<Projects.Stock_Service>("stock-service")
+var stockService = builder.AddProject<Projects.Stock_Api>("stock-api")
                           .WithReference(stockDb)
                           .WithReference(rabbitMq);
 
 // Сервис оплаты
-var paymentService = builder.AddProject<Projects.Payment_Service>("payment-service")
+var paymentService = builder.AddProject<Projects.Payment_Api>("payment-api")
                             .WithReference(rabbitMq);
 
 // Сервис заказов (содержит бизнес-логику и MassTransit State Machine)
-var orderService = builder.AddProject<Projects.Order_Service>("order-service")
+var orderService = builder.AddProject<Projects.Order_Api>("order-api")
                           .WithReference(orderDb)
                           .WithReference(rabbitMq);
 

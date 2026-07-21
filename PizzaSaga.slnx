@@ -10,11 +10,18 @@
     <Project Path="src/Host/PizzaSaga.AppHost/PizzaSaga.AppHost.csproj" />
     <Project Path="src/Host/PizzaSaga.ServiceDefaults/PizzaSaga.ServiceDefaults.csproj" />
   </Folder>
-  <Folder Name="/Services/">
-    <Project Path="src/Services/Auth.Service/Auth.Service.csproj" Id="ca393b2d-a521-4b25-8a19-52243b4a0969" />
-    <Project Path="src/Services/Order.Service/Order.Service.csproj" Id="84a1b1c8-f698-4396-aea9-91a4b525921c" />
-    <Project Path="src/Services/Payment.Service/Payment.Service.csproj" Id="eab01e1e-d0b7-4057-a343-a8e92f9bc576" />
-    <Project Path="src/Services/Stock.Service/Stock.Service.csproj" Id="ee66b0ae-0a27-4d00-a6d7-40c3cd313c6b" />
+  <Folder Name="/Services/" />
+  <Folder Name="/Services/Auth/">
+    <Project Path="src/Services/Auth/Auth.Api/Auth.Api.csproj" />
+  </Folder>
+  <Folder Name="/Services/Order/">
+    <Project Path="src/Services/Order/Order.Api/Order.Api.csproj" />
+  </Folder>
+  <Folder Name="/Services/Payment/">
+    <Project Path="src/Services/Payment/Payment.Api/Payment.Api.csproj" />
+  </Folder>
+  <Folder Name="/Services/Stock/">
+    <Project Path="src/Services/Stock/Stock.Api/Stock.Api.csproj" />
   </Folder>
   <Folder Name="/Shared/">
     <Project Path="src/Shared/PizzaSaga.Contracts/PizzaSaga.Contracts.csproj" Id="2dccb056-58fc-4269-be79-afed26c5578e" />
