@@ -66,8 +66,7 @@ Request
 Response (200 OK):
 {
   "accessToken": "...",
-  "expiresIn": 3600,
-  "refreshToken": "..."
+  "tokenType": "Bearer"
 }
 
 Ошибки:

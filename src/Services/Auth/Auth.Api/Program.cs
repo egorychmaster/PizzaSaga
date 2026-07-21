@@ -1,3 +1,4 @@
+using Auth.Api.Endpoints;
 using Auth.Service.Extensions;
 using PizzaSaga.ServiceDefaults.Extensions;
 using PizzaSaga.ServiceDefaults.InternalServices.Middleware;
@@ -24,36 +25,11 @@ try
     app.MapDefaultEndpoints();
 
 
-    app.MapPost("/api/auth/login",
-        async (LoginRequest req, IConfiguration config, ILogger<Program> logger) =>
-    {
-        // MVP: жёстко заданный юзер для теста
-        const string validEmail = "admin@test.com";
-        const string validPassword = "password123";
+    app.MapLoginEndpoint();
 
-        if (!string.Equals(req.Email, validEmail, StringComparison.Ordinal) ||
-            !string.Equals(req.Password, validPassword, StringComparison.Ordinal))
-        {
-            logger.LogInformation("Login failed for user: {Email}", req.Email);
-            return Results.Unauthorized(); // → 401
-        }
-
-        // Читается из конфига (appsettings.json или User Secrets)
-        var secretKey = config["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
-        var token = AuthExtensions.GenerateJwtToken(req.Email, secretKey);
-
-        logger.LogInformation("Login success for {Email} (correlationId={correlationId})",
-            req.Email,
-            GetCorrelationIdFromContext());
-
-        return Results.Ok(new { Token = token });
-
-        static string? GetCorrelationIdFromContext() =>
-            Activity.Current?.Baggage.FirstOrDefault(x => x.Key == "correlation.id").Value;
-    })
-    .WithName("Login")
-    .Produces<Dictionary<string, object>>(StatusCodes.Status200OK)
-    .Produces(StatusCodes.Status401Unauthorized);
+    // Быстрый способ узнать точный хеш для любого пароля:
+    string validHash = BCrypt.Net.BCrypt.HashPassword("password123", workFactor: 11);
+    Console.WriteLine($"Generated Hash: {validHash}");
 
 
     app.Run();

@@ -23,7 +23,7 @@ try
     app.MapDefaultEndpoints();
 
 
-    app.MapGet("/api/orders", () =>
+    app.MapGet("/api/v1/orders", () =>
     {
         //Console.WriteLine("=== ORDER ENDPOINT /api/orders ===");
 
