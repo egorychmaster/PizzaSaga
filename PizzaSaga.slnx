@@ -19,4 +19,7 @@
   <Folder Name="/Shared/">
     <Project Path="src/Shared/PizzaSaga.Contracts/PizzaSaga.Contracts.csproj" Id="2dccb056-58fc-4269-be79-afed26c5578e" />
   </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Packages.props" />
+  </Folder>
 </Solution>
