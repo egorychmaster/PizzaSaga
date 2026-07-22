@@ -1,6 +1,8 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 
+var jwtSecret = builder.AddParameter("JwtSecretKey", secret: true);
+
 // --- 1. ОПИСАНИЕ ИНФРАСТРУКТУРЫ (КОНТЕЙНЕРЫ) ---
 
 // База данных PostgreSQL для Auth.Service и Order.Service (Саги)
@@ -25,7 +27,8 @@ var rabbitMq = builder.AddRabbitMQ("rabbitmq")
 
 // Сервис аутентификации
 var authService = builder.AddProject<Projects.Auth_Api>("auth-api")
-                         .WithReference(authDb);
+    .WithEnvironment("Jwt__SecretKey", jwtSecret)
+    .WithReference(authDb);
 
 // Сервис склада (управление остатками)
 var stockService = builder.AddProject<Projects.Stock_Api>("stock-api")
@@ -44,10 +47,11 @@ var orderService = builder.AddProject<Projects.Order_Api>("order-api")
 // --- 3. ШЛЮЗ МАРШРУТИЗАЦИИ (API GATEWAY) ---
 // Шлюз YARP должен знать адреса других сервисов, чтобы проксировать запросы
 builder.AddProject<Projects.PizzaSaga_ApiGateway>("api-gateway")
-       .WithReference(authService)
-       .WithReference(orderService)
-       .WithReference(stockService)
-       .WithReference(paymentService)
-       ;
+        .WithEnvironment("Jwt__SecretKey", jwtSecret)
+        .WithReference(authService)
+        .WithReference(orderService)
+        .WithReference(stockService)
+        .WithReference(paymentService)
+        ;
 
 builder.Build().Run();

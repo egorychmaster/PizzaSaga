@@ -42,6 +42,8 @@ public static class JwtAuthenticationExtensions
                 IssuerSigningKey         = new SymmetricSecurityKey(key),
                 // Для локального MVP: отключены проверки issuer/audience
                 ValidateIssuer           = false,
+                // Отключаем обязательную проверку срока годности токена
+                ValidateLifetime         = false,
                 ValidateAudience         = false,
                 ClockSkew                = TimeSpan.Zero
             };
