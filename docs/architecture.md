@@ -924,16 +924,19 @@ Endpoint принимает HTTP-запрос, преобразует его в 
 
 Типичная структура проекта:
 Order.Api
+│
+├── Endpoints
+│   └── Orders
+│       ├── CreateOrder
+│       │   ├── CreateOrderEndpoint.cs  <-- Endpoint<CreateOrderRequest, CreateOrderResponse>
+│       │   ├── CreateOrderRequest.cs
+│       │   └── CreateOrderResponse.cs
+│       └── GetOrders
+│           └── GetOrdersEndpoint.cs
 
-Endpoints/
-Middleware/
-Configuration/
-Extensions/
-Program.cs
 
 ## 5.4 Order.Application
 Application реализует сценарии использования системы (Use Cases).
-
 Внутри проекта используется подход Vertical Slice Architecture, при котором код организуется вокруг бизнес-функций (Use Cases / Features), а не технических слоёв (Commands, Queries, DTOs, Handlers в разных папках).
 
 Основные обязанности:
@@ -945,22 +948,22 @@ Pipeline Behaviors;
 DTO;
 Application Services (при необходимости).
 
-Пример организации:
+Пример организации проекта:
 
 Order.Application
-
-Features
-│
-├── CreateOrder
-│   ├── CreateOrderCommand
-│   ├── CreateOrderHandler
-│   ├── CreateOrderValidator
-│   ├── CreateOrderRequest
-│   └── CreateOrderResponse
-│
-├── CancelOrder
-│
-└── GetOrder
+└── Features
+    └── Orders
+        ├── CreateOrder
+        │   ├── CreateOrderCommand.cs          <-- Входные параметры команды (IRequest<CreateOrderResult>)
+        │   ├── CreateOrderCommandHandler.cs   <-- Бизнес-логика создания
+        │   ├── CreateOrderCommandValidator.cs <-- FluentValidation
+        │   └── CreateOrderResult.cs           <-- DTO результата выполнения
+        │
+        └── GetOrders
+            ├── GetOrdersQuery.cs              <-- Параметры фильтрации/пагинации (IRequest<GetOrdersResult>)
+            ├── GetOrdersQueryHandler.cs       <-- Логика чтения из БД (Dapper или NoTracking EF)
+            ├── GetOrdersValidator.cs          <-- Валидация фильтров (например, MaxPageSize)
+            └── GetOrdersResult.cs             <-- DTO со списком заказов (или PagedResult<OrderDto>)
 
 Каждая функциональная область полностью инкапсулирует реализацию одного пользовательского сценария.
 
