@@ -14,10 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Host\PizzaSaga.ServiceDefaults\PizzaSaga.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Order.Application\Order.Application.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Endpoints\" />
+    <ProjectReference Include="..\Order.Infrastructure\Order.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

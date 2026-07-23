@@ -17,6 +17,8 @@
   <Folder Name="/Services/Order/">
     <Project Path="src/Services/Order/Order.Api/Order.Api.csproj" />
     <Project Path="src/Services/Order/Order.Application/Order.Application.csproj" Id="3055e8dc-3b96-45ac-9968-405f069f991b" />
+    <Project Path="src/Services/Order/Order.Domain/Order.Domain.csproj" Id="0c6220c7-19eb-4580-bc3b-0a2d9fd0a235" />
+    <Project Path="src/Services/Order/Order.Infrastructure/Order.Infrastructure.csproj" Id="3856716c-6b71-413c-9e13-c9709cd07191" />
   </Folder>
   <Folder Name="/Services/Payment/">
     <Project Path="src/Services/Payment/Payment.Api/Payment.Api.csproj" />
