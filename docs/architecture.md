@@ -934,7 +934,7 @@ Program.cs
 ## 5.4 Order.Application
 Application реализует сценарии использования системы (Use Cases).
 
-Внутри проекта используется подход Vertical Slice Architecture, при котором код организуется вокруг бизнес-функций, а не технических слоёв.
+Внутри проекта используется подход Vertical Slice Architecture, при котором код организуется вокруг бизнес-функций (Use Cases / Features), а не технических слоёв (Commands, Queries, DTOs, Handlers в разных папках).
 
 Основные обязанности:
 Commands;
