@@ -1,17 +1,17 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace ApiGateway.Extensions;
 
-/// <summary>
-/// Регистрирует сервисы аутентификации в DI-контейнере с использованием схемы JWT Bearer.
-/// Настраивает параметры валидации JWT-токенов: ключи подписи, издателя, аудиторию и время жизни.
-/// </summary>
+namespace PizzaSaga.ServiceDefaults.Extensions;
+
 public static class JwtAuthenticationExtensions
 {
     /// <summary>
+    /// Единая точка настройки JWT Bearer аутентификации для всех сервисов системы (Zero Trust).
     /// Добавляет конфигурацию JWT Bearer-аутентификации.
     /// Использует конфигурационную секцию "Jwt" → SecretKey.
     /// </summary>
@@ -22,8 +22,8 @@ public static class JwtAuthenticationExtensions
         var secretKey = jwtSettings["SecretKey"];
 
         if (string.IsNullOrEmpty(secretKey))
-            throw new Exception("Не задан секретный ключ для генерации Jwt токена.");
-        
+            throw new Exception("The secret key for generating the JWT token has not been set.");
+
         var key = Encoding.UTF8.GetBytes(secretKey);
 
         builder.Services.AddAuthentication(options =>

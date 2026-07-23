@@ -13,7 +13,7 @@ try
     builder.AddServiceDefaults();
 
 
-    // JWT: настройка валидации (пример для MVP — без реального Issuer/Audience)
+    // JWT: настройка валидации
     builder.AddJwtAuthentication();
 
 
