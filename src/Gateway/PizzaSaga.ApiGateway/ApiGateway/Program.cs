@@ -28,6 +28,8 @@ try
 
     var app = builder.Build();
 
+    app.UseGlobalExceptionHandling();
+
     // Корреляция: генерация + пропагация.
     app.UseCorrelationId();
 
@@ -56,7 +58,7 @@ try
 
     app.MapGet("/test", async (IHttpClientFactory factory) =>
     {
-        throw new Exception("Тестовая ошибка для цвета");
+        throw new Exception("My test mistake.");
 
         var client = factory.CreateClient();
         return await client.GetStringAsync("http://order-service/api/orders");

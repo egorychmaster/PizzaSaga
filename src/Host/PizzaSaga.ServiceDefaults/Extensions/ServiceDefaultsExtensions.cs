@@ -49,6 +49,8 @@ public static class ServiceDefaultsExtensions
         //     options.AllowedSchemes = ["https"];
         // });
 
+        builder.Services.AddGlobalExceptionHandling();
+
         return builder;
     }
 
