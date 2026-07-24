@@ -14,7 +14,7 @@ public class GlobalExceptionHandler : IExceptionHandler
 
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        // Логируем с correlation.id и traceId (они уже в Serilog scope через CorrelationIdMiddleware + Activity.Current)
+        // Логируем с correlationid и traceId (они уже в Serilog scope через CorrelationIdMiddleware + Activity.Current)
         _logger.LogError(exception, "Unhandled exception occurred while processing request {Path}", httpContext.Request.Path);
 
         // Возвращаем ProblemDetails без деталей

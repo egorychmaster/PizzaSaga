@@ -52,10 +52,10 @@ public static class CorrelationIdExtensions
             }
 
             // Прописываем в baggage (для исходящих запросов)
-            Activity.Current?.AddBaggage("correlation.id", correlationId);
+            Activity.Current?.AddBaggage("correlationid", correlationId);
 
             // Добавляем как span-тег — так ID будет виден в Aspire Dashboard
-            Activity.Current?.AddTag("correlation.id", correlationId);
+            Activity.Current?.AddTag("correlationid", correlationId);
 
             // 🟢 Продакшен-дружелюбное логирование
             _logger.LogInformation("[Gateway] {Method} {Path} (correlationId={correlationId})",
@@ -70,7 +70,7 @@ public static class CorrelationIdExtensions
         private static string? GetCorrelationId(HttpContext context)
         {
             // Приоритет 1: baggage — он пропагируется автоматически через HttpClient/YARP
-            var baggage = Activity.Current?.Baggage.FirstOrDefault(x => x.Key == "correlation.id").Value;
+            var baggage = Activity.Current?.Baggage.FirstOrDefault(x => x.Key == "correlationid").Value;
             if (!string.IsNullOrEmpty(baggage))
                 return baggage;
 
