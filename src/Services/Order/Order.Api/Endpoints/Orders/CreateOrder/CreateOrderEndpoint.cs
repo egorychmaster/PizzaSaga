@@ -6,8 +6,7 @@ namespace Order.Api.Endpoints.Orders.CreateOrder;
 
 public static class CreateOrderEndpoint
 {
-    public static IEndpointRouteBuilder MapCreateOrderEndpoint(
-        this IEndpointRouteBuilder endpoints)
+    public static IEndpointRouteBuilder MapCreateOrderEndpoint(this IEndpointRouteBuilder endpoints)
     {
         endpoints.MapPost(
                 "/api/v1/orders",
@@ -15,14 +14,10 @@ public static class CreateOrderEndpoint
             .WithName("CreateOrder")
             .WithTags("Orders")
             .RequireAuthorization()
-            .Produces<CreateOrderResponse>(
-                StatusCodes.Status201Created)
-            .ProducesProblem(
-                StatusCodes.Status400BadRequest)
-            .ProducesProblem(
-                StatusCodes.Status401Unauthorized)
-            .ProducesProblem(
-                StatusCodes.Status409Conflict);
+            .Produces<CreateOrderResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
         return endpoints;
     }
@@ -33,32 +28,19 @@ public static class CreateOrderEndpoint
         IMediator mediator,
         CancellationToken cancellationToken)
     {
-        var customerIdClaim =
-            httpContext.User.FindFirst(
-                ClaimTypes.NameIdentifier)
-            ?? httpContext.User.FindFirst("sub");
-
-        if (customerIdClaim is null ||
-            !Guid.TryParse(
-                customerIdClaim.Value,
-                out var customerId))
-        {
+        var customerIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier) ?? httpContext.User.FindFirst("sub");
+        if (customerIdClaim is null || !Guid.TryParse(customerIdClaim.Value, out var customerId))
             return Results.Unauthorized();
-        }
 
         var command = new CreateOrderCommand(
             CustomerId: customerId,
-            Items: request.Items
-                .Select(item => new CreateOrderItem(
+            Items: request.Items.Select(item => new CreateOrderItem(
                     ProductId: item.ProductId,
-                    Quantity: item.Quantity))
-                .ToArray(),
+                    Quantity: item.Quantity)).ToArray(),
             PaymentMethod: request.PaymentMethod,
             Currency: request.Currency);
 
-        var result = await mediator.Send(
-            command,
-            cancellationToken);
+        var result = await mediator.Send(command, cancellationToken);
 
         var response = new CreateOrderResponse(
             OrderId: result.OrderId,

@@ -1,4 +1,5 @@
 using Order.Api.Endpoints.Orders.CreateOrder;
+using Order.Api.Endpoints.Orders.GetOrders;
 using PizzaSaga.ServiceDefaults.Extensions;
 using PizzaSaga.ServiceDefaults.InternalServices.Middleware;
 using Serilog;
@@ -33,17 +34,7 @@ try
 
     // Зарегистрировать endpoint
     app.MapCreateOrderEndpoint();
-
-    app.MapGet("/api/v1/orders", () =>
-    {
-        //Console.WriteLine("=== ORDER ENDPOINT /api/orders ===");
-
-        return new[]
-        {
-        new { Id = 1, CakeName = "Margarita", Status = "Pending" },
-        new { Id = 2, CakeName = "Pepperoni", Status = "Baking" }
-        };
-    });
+    app.MapGetOrdersEndpoint();
 
 
     app.Run();

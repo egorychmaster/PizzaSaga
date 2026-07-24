@@ -2,8 +2,7 @@
 
 namespace Order.Application.Features.Orders.CreateOrder;
 
-public sealed class CreateOrderCommandHandler
-    : ICommandHandler<CreateOrderCommand, CreateOrderResult>
+public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, CreateOrderResult>
 {
     public ValueTask<CreateOrderResult> Handle(
         CreateOrderCommand command,
