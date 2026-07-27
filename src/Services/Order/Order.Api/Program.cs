@@ -1,5 +1,8 @@
 using Order.Api.Endpoints.Orders.CreateOrder;
 using Order.Api.Endpoints.Orders.GetOrders;
+using Order.Infrastructure.Persistence;
+using Order.Infrastructure.Persistence.Seeding;
+using PizzaSaga.BuildingBlocks.Infrastructure.Persistence;
 using PizzaSaga.ServiceDefaults.Extensions;
 using PizzaSaga.ServiceDefaults.InternalServices.Middleware;
 using Serilog;
@@ -17,9 +20,18 @@ try
 
     builder.Services.AddMediator();
 
-    // ... твои стандартные сервисы ...
+    // Стандартные сервисы 
+
+    builder.Services.AddScoped<IDatabaseSeeder<OrderDbContext>, OrderDatabaseSeeder>();
+
+    // Регистрация DbContext. Название "OrderDb" должно СТРОГО совпадать с именем ресурса в AppHost
+    builder.AddNpgsqlDbContext<OrderDbContext>("OrderDb");
+
 
     var app = builder.Build();
+
+    // Автоматические миграции и идемпотентный Seed данных. Вызов после app = builder.Build():
+    await app.ApplyMigrationsAsync<OrderDbContext>();
 
     // Мидлварь аутентификации / авторизации
     app.UseAuthentication();
