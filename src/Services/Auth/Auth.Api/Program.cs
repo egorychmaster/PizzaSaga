@@ -13,10 +13,14 @@ try
 
     // Подключаем автоматический OpenTelemetry, логирование и метрики Aspire
     builder.AddServiceDefaults();
+    builder.AddProjectOpenApi();
 
-    // ... твои стандартные сервисы ...
+    // ... Стандартные сервисы ...
 
     var app = builder.Build();
+
+    // Только UseSwagger(), не UseSwaggerUI(), потому что service не обязан иметь собственный UI. Его задача — публиковать: /swagger/v1/swagger.json
+    app.UseSwagger();
 
     // Пропагирует уже установленный CorrelationId: берёт из baggage или заголовка и добавляет в span-теги + логи.
     app.UseCorrelationId();

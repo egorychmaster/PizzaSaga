@@ -15,6 +15,7 @@ try
 
     // Подключаем автоматический OpenTelemetry, логирование и метрики Aspire
     builder.AddServiceDefaults();
+    builder.AddProjectOpenApi();
 
     builder.AddJwtAuthentication();
 
@@ -29,6 +30,9 @@ try
 
 
     var app = builder.Build();
+
+    // Только UseSwagger(), не UseSwaggerUI(), потому что service не обязан иметь собственный UI. Его задача — публиковать: /swagger/v1/swagger.json
+    app.UseSwagger();
 
     // Автоматические миграции и идемпотентный Seed данных. Вызов после app = builder.Build():
     await app.ApplyMigrationsAsync<OrderDbContext>();

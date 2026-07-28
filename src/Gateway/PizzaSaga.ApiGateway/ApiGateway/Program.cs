@@ -33,6 +33,14 @@ try
     // Корреляция: генерация + пропагация.
     app.UseCorrelationId();
 
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/auth/v1/swagger.json", "Auth Service API");
+        options.SwaggerEndpoint("/swagger/order/v1/swagger.json", "Order Service API");
+
+        // Доступен по адресу /swagger
+        options.RoutePrefix = "swagger";
+    });
 
     // Health checks — явно, с исключением из авторизации
     app.MapHealthChecks("/health").AllowAnonymous();
@@ -47,8 +55,11 @@ try
     {
         new PathString("/api/v1/auth/login"),   // Получение токена
         new PathString("/test"),
+
+        new PathString("/swagger"),
+
         new PathString("/health"),
-        new PathString("/alive")
+        new PathString("/alive")        
     };
     app.UsePublicPathAuthorization(publicPaths);
 

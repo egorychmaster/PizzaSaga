@@ -14,7 +14,11 @@ public static class GlobalExceptionHandlerExtensions
         return services;
     }
 
-    // Для app builder — добавляем middleware
+    /// <summary>
+    /// Для app builder — добавляем middleware.
+    /// </summary>
+    /// <param name="app"></param>
+    /// <returns></returns>
     public static IApplicationBuilder UseGlobalExceptionHandling(this IApplicationBuilder app)
     {
         app.UseExceptionHandler(options => options.Run(async context =>
