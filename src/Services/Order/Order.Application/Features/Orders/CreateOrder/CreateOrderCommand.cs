@@ -1,9 +1,10 @@
 ﻿using Mediator;
+using Order.Domain.ValueObjects;
 
 namespace Order.Application.Features.Orders.CreateOrder;
 
 public sealed record CreateOrderCommand(
-    Guid CustomerId,
+    CustomerIdentity CustomerId,
     IReadOnlyCollection<CreateOrderItem> Items,
     string PaymentMethod,
     string Currency)
@@ -11,4 +12,4 @@ public sealed record CreateOrderCommand(
 
 public sealed record CreateOrderItem(
     Guid ProductId,
-    int Quantity);
+    PizzaQuantity Quantity);

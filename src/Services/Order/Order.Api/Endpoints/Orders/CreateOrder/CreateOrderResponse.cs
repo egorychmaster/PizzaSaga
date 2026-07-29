@@ -3,4 +3,6 @@
 public sealed record CreateOrderResponse(
     Guid OrderId,
     string Status,
+    decimal TotalAmount,
+    string Currency,
     DateTimeOffset CreatedAt);

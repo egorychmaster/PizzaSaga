@@ -1,5 +1,6 @@
 using Order.Api.Endpoints.Orders.CreateOrder;
 using Order.Api.Endpoints.Orders.GetOrders;
+using Order.Application.DependencyInjection;
 using Order.Infrastructure.Persistence;
 using Order.Infrastructure.Persistence.Seeding;
 using PizzaSaga.BuildingBlocks.Infrastructure.Persistence;
@@ -19,9 +20,9 @@ try
 
     builder.AddJwtAuthentication();
 
-    builder.Services.AddMediator();
-
     // Стандартные сервисы 
+
+    builder.Services.AddOrderApplication();
 
     builder.Services.AddScoped<IDatabaseSeeder<OrderDbContext>, OrderDatabaseSeeder>();
 
