@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Order.Domain.ValueObjects;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,14 +11,25 @@ public class Order
     public string Status { get; private set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; private set; } = DateTimeOffset.UtcNow;
 
+    public CustomerIdentity CustomerId { get; private set; }
 
     // Пустой конструктор для EF Core
     private Order() { }
 
-    public Order(Guid id, string status)
+    /// <summary>
+    /// Создаёт новый заказ с указанным идентификатором и клиентом.
+    /// </summary>
+    public Order(Guid id, CustomerIdentity customerId)
     {
         Id = id;
-        Status = status;
+        CustomerId = customerId ?? throw new ArgumentNullException(nameof(customerId));
+        Status = "Pending";
         CreatedAt = DateTimeOffset.UtcNow;
     }
+
+    /// <summary>
+    /// Фабрика для создания нового заказа.
+    /// </summary>
+    public static Order Create(Guid id, CustomerIdentity customerId)
+        => new(id, customerId);
 }
