@@ -20,6 +20,13 @@ public static class ApplicationServiceCollectionExtensions
         // Регистрирует Mediator и application pipeline behaviors.
         services.AddMediator(options =>
         {
+            // Mediator и связанные с ним handlers/behaviors
+            // регистрируются как Scoped.
+            //
+            // Это необходимо, поскольку ValidationBehavior
+            // использует scoped IValidator<TMessage>.
+            //
+            // Кроме того, Scoped lifetime хорошо соответствует HTTP request scope и пригодится для TransactionBehavior с EF Core DbContext.
             options.ServiceLifetime = ServiceLifetime.Scoped;
 
             options.PipelineBehaviors =
