@@ -1,8 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Reflection.Emit;
-using System.Text;
+using OrderAggregate = Order.Domain.AggregatesModel.OrderAggregate.Order;
 
 namespace Order.Infrastructure.Persistence;
 
@@ -14,7 +11,7 @@ public sealed class OrderDbContext : DbContext
     }
 
     // DbSet сущности/агрегата Заказа
-    //public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderAggregate> Orders => Set<OrderAggregate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

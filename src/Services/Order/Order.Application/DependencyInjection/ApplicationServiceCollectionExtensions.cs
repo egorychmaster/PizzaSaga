@@ -35,7 +35,10 @@ public static class ApplicationServiceCollectionExtensions
                 typeof(LoggingBehavior<,>),
 
                 // Валидация только сообщений, реализующих ICommand<TResponse>.
-                typeof(ValidationBehavior<,>)
+                typeof(ValidationBehavior<,>),
+
+                // Автоматическое управление транзакциями БД для команд.
+                typeof(TransactionBehavior<,>)
             ];
         });
 

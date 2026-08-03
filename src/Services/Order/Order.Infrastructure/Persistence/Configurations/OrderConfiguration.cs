@@ -8,11 +8,23 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<OrderAggrega
 {
     public void Configure(EntityTypeBuilder<OrderAggregate> builder)
     {
-        builder.ToTable("orders");
-
+        // Primary key
         builder.HasKey(o => o.Id);
 
-        // Настройка сопоставления полей, когда появится доменная модель Order
-        // builder.Property(o => o.Status).IsRequired();
+        builder.Property(o => o.Status).IsRequired();
+
+        // Настройка CustomerId — CustomerIdentity как owned-тип (вложенный тип) в EF
+        builder.OwnsOne(o => o.CustomerId, customer =>
+        {
+            // Это в sql: "CustomerId" UUID NOT NULL
+            customer.Property(c => c.Value).HasColumnName("CustomerId").IsRequired();
+
+            // Запрещаем использование конструктора — используем только свойство Value
+            customer.UsePropertyAccessMode(PropertyAccessMode.Field);
+        });
+
+
+        // Maps to table
+        builder.ToTable("orders");
     }
 }
