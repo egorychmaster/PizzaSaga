@@ -6,8 +6,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Shared\PizzaSaga.SharedKernel\PizzaSaga.SharedKernel.csproj" />
-  </ItemGroup>
-
 </Project>

@@ -3,8 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-
-namespace PizzaSaga.BuildingBlocks.Infrastructure.Persistence;
+namespace PizzaSaga.Shared.Infrastructure.Persistence;
 
 public static class DatabaseMigrationExtensions
 {

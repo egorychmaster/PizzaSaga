@@ -4,9 +4,9 @@ using Order.Application.DependencyInjection;
 using Order.Infrastructure.DependencyInjection;
 using Order.Infrastructure.Persistence;
 using Order.Infrastructure.Persistence.Seeding;
-using PizzaSaga.BuildingBlocks.Infrastructure.Persistence;
 using PizzaSaga.ServiceDefaults.Extensions;
 using PizzaSaga.ServiceDefaults.InternalServices.Middleware;
+using PizzaSaga.Shared.Infrastructure.Persistence;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();

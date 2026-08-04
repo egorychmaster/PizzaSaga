@@ -1,9 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace PizzaSaga.BuildingBlocks.Infrastructure.Persistence;
+namespace PizzaSaga.Shared.Infrastructure.Persistence;
 
 /// <summary>
 /// Определяет контракт для идемпотентного заполнения базы данных начальными данными.

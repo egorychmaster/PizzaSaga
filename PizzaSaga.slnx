@@ -27,8 +27,9 @@
     <Project Path="src/Services/Stock/Stock.Api/Stock.Api.csproj" />
   </Folder>
   <Folder Name="/Shared/">
-    <Project Path="src/Shared/PizzaSaga.BuildingBlocks/PizzaSaga.BuildingBlocks.csproj" Id="94429033-f625-479a-be34-bf0bf26758d7" />
     <Project Path="src/Shared/PizzaSaga.Contracts/PizzaSaga.Contracts.csproj" Id="2dccb056-58fc-4269-be79-afed26c5578e" />
+    <Project Path="src/Shared/PizzaSaga.Shared.Infrastructure/PizzaSaga.Shared.Infrastructure.csproj" Id="e53ec605-2c9f-4edb-b911-c791bd47d61a" />
+    <Project Path="src/Shared/PizzaSaga.SharedKernel/PizzaSaga.SharedKernel.csproj" Id="36562cc7-c244-4009-b554-07d5d833a657" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="Directory.Packages.props" />

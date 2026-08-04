@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Order.Application.Abstractions.Persistence;
 using Order.Infrastructure.Persistence;
 using Order.Infrastructure.Persistence.Seeding;
-using PizzaSaga.BuildingBlocks.Infrastructure.Persistence;
+using PizzaSaga.Shared.Infrastructure.Persistence;
 
 namespace Order.Infrastructure.DependencyInjection;
 

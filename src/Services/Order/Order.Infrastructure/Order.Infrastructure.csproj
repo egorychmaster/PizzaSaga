@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Shared\PizzaSaga.BuildingBlocks\PizzaSaga.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\..\Shared\PizzaSaga.Shared.Infrastructure\PizzaSaga.Shared.Infrastructure.csproj" />
     <ProjectReference Include="..\Order.Application\Order.Application.csproj" />
     <ProjectReference Include="..\Order.Domain\Order.Domain.csproj" />
   </ItemGroup>

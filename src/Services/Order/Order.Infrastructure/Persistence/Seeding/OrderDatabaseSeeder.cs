@@ -1,7 +1,4 @@
-﻿using PizzaSaga.BuildingBlocks.Infrastructure.Persistence;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using PizzaSaga.Shared.Infrastructure.Persistence;
 
 namespace Order.Infrastructure.Persistence.Seeding;
 
