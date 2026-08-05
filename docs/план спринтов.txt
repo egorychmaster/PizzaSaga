@@ -91,7 +91,18 @@ TransactionBehavior — автоматическое открытие транз
 - DomainParsingException или DomainException (возникающий, когда доменный фабричный метод не смог распарсить сырые данные, например NegativeMoneyException) -> преобразуется в 400 Bad Request с типом ошибки "Нарушение бизнес-правил" (семантика).
 - DbUpdateConcurrencyException -> преобразуется в 409 Conflict.
 
-6. HTTP Idempotency (PostgreSQL-based): Реализовать IdempotencyFilter (или Middleware) для эндпоинта создания заказа.
+6. Persistence создания заказа в Order Service (POST /api/v1/orders)
+Цель: реализовать фактическое сохранение агрегата Order в PostgreSQL.
+- В CreateOrderCommandHandler создать агрегат через фабричный метод домена Order.Create(...).
+- Создать необходимые Value Objects и передать их в агрегат.
+- При создании установить начальный статус Pending.
+- Зарегистрировать OrderCreatedDomainEvent.
+- Сохранить агрегат через IOrderRepository.AddAsync(...).
+- SaveChangesAsync() и Commit выполняются автоматически через TransactionBehavior.
+- После успешного сохранения вернуть CreateOrderResult.
+- Order.Api возвращает 201 Created, Location: /api/v1/orders/{orderId} и DTO созданного заказа.
+
+7. HTTP Idempotency (PostgreSQL-based): Реализовать IdempotencyFilter (или Middleware) для эндпоинта создания заказа.
 - Создать таблицу IdempotencyKeys в БД Order Service (колонки: IdempotencyKey (primary key), ResponseStatusCode, ResponseBody, CreatedAt).
 - При получении запроса с заголовком Idempotency-Key выполнять атомарную проверку и вставку ключа в БД в рамках единой транзакции с созданием заказа.
 - Если ключ уже существует — прерывать пайплайн и возвращать сохраненный в таблице ответ (201 Created / ResponseBody) без повторного запуска доменной логики. Если заказ в процессе обработки — возвращать соответствующий промежуточный статус согласно api.md.
@@ -101,8 +112,9 @@ TransactionBehavior — автоматическое открытие транз
 - Сделать повторный запрос в таблицу идемпотентности, чтобы забрать тот ответ, который сгенерировала параллельная (успешная) транзакция, либо вернуть статус 409 Conflict / 423 Locked (если первый запрос еще обрабатывается).
 
 ✅ Критерии приемки:
-- Эндпоинт POST /api/v1/orders вызывает IMediator.Send(). Напрямую DbContext в контроллерах/минималках не используется.
+- Выполнение HTTP-запроса POST /api/v1/orders сохраняет запись в таблицы orders и order_items в PostgreSQL.
 - При отправке некорректных данных API возвращает 400 Bad Request в формате ProblemDetails со списком нарушенных бизнес-правил.
+- В случае ошибки в процессе транзакции TransactionBehavior делает Rollback, данные в БД не попадают.
 - Повторный запрос с тем же Idempotency-Key не создает новую запись в БД, а возвращает 201 Created из кэша/таблицы идемпотентности.
 
 
