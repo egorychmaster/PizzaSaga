@@ -1,4 +1,4 @@
-﻿using Order.Domain.Exceptions;
+﻿using Order.Domain.Exceptions.PizzaQuantities;
 
 namespace Order.Domain.ValueObjects;
 

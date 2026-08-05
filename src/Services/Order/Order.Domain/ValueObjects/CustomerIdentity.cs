@@ -1,4 +1,6 @@
-﻿namespace Order.Domain.ValueObjects;
+﻿using Order.Domain.Exceptions.CustomerIdentities;
+
+namespace Order.Domain.ValueObjects;
 
 /// <summary>
 /// Идентификатор клиента (GUID), исключающий пустое значение.
@@ -13,7 +15,7 @@ public sealed class CustomerIdentity
     private CustomerIdentity(Guid value)
     {
         if (value == Guid.Empty)
-            throw new ArgumentException("Customer ID cannot be empty.", nameof(value));
+            throw new EmptyCustomerIdentityException();
 
         Value = value;
     }

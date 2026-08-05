@@ -1,4 +1,4 @@
-﻿using Order.Domain.Exceptions;
+﻿using Order.Domain.Exceptions.Monies;
 using System.Globalization;
 
 namespace Order.Domain.ValueObjects;
@@ -30,10 +30,10 @@ public sealed class Money
             throw new NegativeMoneyException(amount);
 
         if (!IsValidCurrencyCode(currencyCode))
-            throw new ArgumentException($"Invalid currency code: '{currencyCode}'. Must be a 3-letter ISO 4217 code.", nameof(currencyCode));
+            throw new InvalidCurrencyCodeException(currencyCode);
 
         if (!AllowedCurrencies.Contains(currencyCode))
-            throw new ArgumentException($"Currency '{currencyCode}' is not supported or invalid.", nameof(currencyCode));
+            throw new UnsupportedCurrencyException(currencyCode);
 
         Amount = amount;
         CurrencyCode = currencyCode.ToUpperInvariant();
@@ -51,7 +51,7 @@ public sealed class Money
     public static Money Parse(string rawAmount, string currencyCode)
     {
         if (!decimal.TryParse(rawAmount, NumberStyles.Any, CultureInfo.InvariantCulture, out var amount))
-            throw new FormatException($"Invalid amount format: '{rawAmount}'.");
+            throw new MoneyParsingException(rawAmount);
 
         return Create(amount, currencyCode);
     }
