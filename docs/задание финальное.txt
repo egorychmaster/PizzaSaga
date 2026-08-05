@@ -1,0 +1,285 @@
+✅ Финальное задание пет-проекта
+Распределенная платформа обработки заказов (Distributed Order Processing Platform).
+
+ASP.NET Core • MassTransit Saga • Transactional Outbox • RabbitMQ • PostgreSQL • OpenTelemetry • .NET Aspire
+
+
+📌 Цель проекта
+Спроектировать и реализовать распределённую систему обработки заказов (например, заказов пиццы), максимально приближенную к production-разработке.
+
+Проект ориентирован не на демонстрацию большого количества технологий, а на применение зрелых архитектурных решений и инженерных практик, характерных для современных распределённых .NET-систем.
+
+Основные цели проекта:
+оркестрация распределённого бизнес-процесса через MassTransit Saga State Machine;
+обеспечение согласованности между сервисами с помощью Saga Pattern;
+гарантированная публикация интеграционных событий посредством Transactional Outbox Pattern;
+устойчивость к повторной доставке сообщений благодаря Idempotent Consumers;
+end-to-end observability (Tracing, Metrics, Structured Logs, CorrelationId);
+централизованная аутентификация через JWT;
+Health Checks и Readiness/Liveness endpoints;
+эволюционная архитектура без избыточной сложности.
+
+Проект должен выглядеть как небольшая production-система, которую могла бы разрабатывать команда из нескольких backend-разработчиков.
+
+
+🔧 Архитектура
+                           ┌─────────────────────────┐
+                           │      Auth Service       │
+                           │       Issue JWT         │
+                           └──────────▲──────────────┘
+                                      │
+                               POST /login
+                                      │
+Client ───────────────────────────────┘
+        HTTPS + JWT
+                    │
+                    ▼
+
+┌──────────────────────────────────────────────┐
+│                 API Gateway                  │
+│----------------------------------------------│
+│ • YARP Reverse Proxy                         │
+│ • JWT Validation                             │
+│ • API Versioning                             │
+│ • ProblemDetails                             │
+│ • CorrelationId Propagation                  │
+│ • Health / Alive                             │
+└─────────────────────┬────────────────────────┘
+                      │
+                      │ HTTP
+                      ▼
+
+┌──────────────────────────────────────────────┐
+│                Order Service                 │
+│----------------------------------------------│
+│ • REST API                                   │
+│ • Vertical Slice Architecture                │
+│ • Saga Orchestrator                          │
+│ • EF Core                                    │
+│ • Transactional Outbox                       │
+│ • Optimistic Concurrency                     │
+└─────────────────────┬────────────────────────┘
+                      ▲
+                      │ Publish / Consume Events
+                      ▼
+                ┌───────────────┐
+                │   RabbitMQ    │
+                └───────────────┘
+                      ▲
+          ┌───────────┴────────────┐
+          ▼                        ▼
+
+┌──────────────────────┐   ┌──────────────────────┐
+│    Stock Service     │   │   Payment Service    │
+│----------------------│   │----------------------│
+│ • Inventory          │   │ • Payment            │
+│ • Reservations       │   │ • Authorization      │
+│ • Transactional      │   │ • Capture / Cancel   │
+│   Outbox             │   │ • Transactional      │
+│ • Idempotent         │   │   Outbox             │
+│   Consumers          │   │ • Idempotent         │
+│ • PostgreSQL         │   │   Consumers          │
+└──────────────────────┘   └──────────────────────┘
+
+
+📦 Состав проекта
+PizzaSaga.slnx
+│
+├── docs
+│
+├── src
+│   ├── Host
+│   │	├── PizzaSaga.AppHost
+│   │	└── PizzaSaga.ServiceDefaults
+│	│
+│   ├── Gateway
+│   │	└── PizzaSaga.ApiGateway
+│	│
+│   ├── Shared
+│   │	├── PizzaSaga.Contracts
+│   │   ├── PizzaSaga.SharedKernel
+│   │   ├── PizzaSaga.Shared.Application
+│   │   └── PizzaSaga.Shared.Infrastructure
+│	│
+│   └── Services
+│       ├── Order						
+│       │	├── Order.Api
+│       │	├── Order.Application
+│       │	├── Order.Domain
+│       │	├── Order.Infrastructure
+│       │	│
+│       │	├── Order.ArchitectureTests
+│       │	├── Order.UnitTests
+│       │	└── Order.IntegrationTests
+│       │
+│       ├── Stock
+│       ├── Payment
+│       └── Auth
+│
+└── tests
+
+
+📐 Архитектурные принципы
+
+Проект строится вокруг следующих принципов:
+
+Vertical Slice Architecture;
+Clean Architecture;
+Domain-Driven Design (только там, где бизнес-логика действительно этого требует);
+Command/Query Separation (без разделения read/write баз данных);
+Event-Driven Integration;
+Saga Orchestration;
+Transactional Outbox;
+Idempotent Consumers;
+Optimistic Concurrency;
+API Versioning;
+ProblemDetails;
+CorrelationId Propagation;
+OpenTelemetry;
+Health Checks.
+
+
+🔄 Основной бизнес-процесс
+Жизненный цикл заказа:
+
+HTTP POST /orders
+        │
+        ▼
+OrderCreated (Domain Event)
+        │
+        ▼
+ReserveInventoryCommand
+        │
+        ▼
+InventoryReservedEvent
+        │
+        ▼
+ReservePaymentCommand
+        │
+        ▼
+PaymentReservedEvent
+        │
+        ▼
+OrderCompleted (Domain Event)
+        │
+        ▼
+OrderCompletedEvent
+
+Оркестратором бизнес-процесса является Order Service.
+
+После получения ожидаемых интеграционных событий Saga переводит заказ между состояниями и выполняет необходимые компенсационные действия при возникновении ошибок.
+
+🔐 Безопасность
+Auth Service
+Отвечает за:
+выдачу JWT;
+Refresh Tokens;
+в будущем возможно (роли; claims; scopes).
+
+API Gateway
+Выполняет:
+проверку JWT;
+авторизацию запросов;
+маршрутизацию в downstream-сервисы;
+в дальнейшем может передавать пользовательские claims во внутренние сервисы.
+
+
+📊 Observability
+Во всех сервисах реализована единая система наблюдаемости.
+
+Включает:
+OpenTelemetry Tracing;
+OpenTelemetry Metrics;
+Structured Logging;
+CorrelationId;
+Distributed Tracing;
+.NET Aspire Dashboard.
+
+Любая пользовательская операция должна прослеживаться от HTTP-запроса до завершения распределённой бизнес-транзакции.
+
+
+⚙ Надёжность
+Система демонстрирует production-подходы к отказоустойчивости.
+
+Используются:
+Transactional Outbox;
+Idempotent Consumers;
+Dead Letter Queue;
+Delayed Retry (отложенных попыток);
+Optimistic Concurrency;
+Health Checks;
+Readiness/Liveness endpoints.
+
+Каждый сервис, публикующий интеграционные события, использует Transactional Outbox.
+Каждый обработчик сообщений должен быть идемпотентным, чтобы повторная доставка событий не приводила к повторному выполнению бизнес-операций.
+
+
+🧪 Тестирование
+Для каждого сервиса предусмотрены:
+Unit Tests;
+Integration Tests;
+Architecture Tests.
+
+Основные сценарии тестирования:
+успешное выполнение Saga;
+компенсационные сценарии;
+повторная доставка сообщений;
+работа Transactional Outbox;
+идемпотентность обработчиков;
+optimistic concurrency.
+
+
+📚 Что демонстрирует проект
+Архитектура:
+проектирование распределённых систем;
+декомпозиция по bounded contexts;
+событийное взаимодействие между сервисами;
+оркестрация распределённых бизнес-процессов;
+эволюционная архитектура.
+
+Backend:
+ASP.NET Core;
+EF Core;
+PostgreSQL;
+RabbitMQ;
+MassTransit;
+JWT Authentication;
+YARP Reverse Proxy.
+
+Надёжность:
+Saga Pattern;
+Transactional Outbox;
+Idempotent Consumers;
+Retry Policies;
+Dead Letter Queue;
+Optimistic Concurrency.
+
+Observability:
+OpenTelemetry;
+Distributed Tracing;
+Structured Logging;
+Metrics;
+CorrelationId;
+.NET Aspire Dashboard.
+
+
+💼 Что можно указать в резюме
+Спроектировал распределённую систему обработки заказов на ASP.NET Core с использованием Vertical Slice Architecture и Event-Driven Integration.
+Реализовал оркестрацию распределённых бизнес-процессов через MassTransit Saga State Machine.
+Обеспечил гарантированную публикацию интеграционных событий с использованием Transactional Outbox Pattern.
+Реализовал идемпотентные обработчики сообщений и компенсационные сценарии для обеспечения согласованности распределённых транзакций.
+Настроил end-to-end observability с использованием OpenTelemetry, Distributed Tracing, CorrelationId и .NET Aspire Dashboard.
+Реализовал production-практики: API Versioning, ProblemDetails, Health Checks, Retry Policies, Optimistic Concurrency и централизованную JWT-аутентификацию.
+
+
+🚫 Что сознательно не реализуется
+Чтобы проект оставался реалистичным по объёму и мог быть полностью завершён одним разработчиком, в него сознательно не включаются:
+Event Sourcing;
+CQRS с отдельными read/write моделями и отдельными базами данных;
+Kubernetes;
+Service Mesh;
+Redis и распределённые кэши;
+UI (используется только Swagger/OpenAPI);
+реальные интеграции с платёжными системами;
+сложные workflow-движки;
+микросервисная инфраструктура, не имеющая практической ценности для демонстрации основных архитектурных решений.
