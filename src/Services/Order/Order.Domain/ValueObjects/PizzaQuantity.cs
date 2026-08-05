@@ -1,4 +1,6 @@
-﻿namespace Order.Domain.ValueObjects;
+﻿using Order.Domain.Exceptions;
+
+namespace Order.Domain.ValueObjects;
 
 /// <summary>
 /// Количество пиццы в заказе (от 1 до 10).
@@ -18,7 +20,7 @@ public sealed class PizzaQuantity
     {
 
         if (value < MinQuantity || value > MaxQuantity)
-            throw new ArgumentException($"Quantity must be between {MinQuantity} and {MaxQuantity}. Given: {value}");
+            throw new InvalidPizzaQuantityException(value, MinQuantity, MaxQuantity);
 
         Value = value;
     }

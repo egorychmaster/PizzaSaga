@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using Order.Domain.Exceptions;
+using System.Globalization;
 
 namespace Order.Domain.ValueObjects;
 
@@ -26,7 +27,7 @@ public sealed class Money
     private Money(decimal amount, string currencyCode)
     {
         if (amount < 0)
-            throw new ArgumentException("Amount cannot be negative.", nameof(amount));
+            throw new NegativeMoneyException(amount);
 
         if (!IsValidCurrencyCode(currencyCode))
             throw new ArgumentException($"Invalid currency code: '{currencyCode}'. Must be a 3-letter ISO 4217 code.", nameof(currencyCode));

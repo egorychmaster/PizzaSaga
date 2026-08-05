@@ -28,6 +28,7 @@
   </Folder>
   <Folder Name="/Shared/">
     <Project Path="src/Shared/PizzaSaga.Contracts/PizzaSaga.Contracts.csproj" Id="2dccb056-58fc-4269-be79-afed26c5578e" />
+    <Project Path="src/Shared/PizzaSaga.Shared.ErrorHandling/PizzaSaga.Shared.ErrorHandling.csproj" Id="0610c167-53b6-4850-92d0-1ad46b611615" />
     <Project Path="src/Shared/PizzaSaga.Shared.Infrastructure/PizzaSaga.Shared.Infrastructure.csproj" Id="e53ec605-2c9f-4edb-b911-c791bd47d61a" />
     <Project Path="src/Shared/PizzaSaga.SharedKernel/PizzaSaga.SharedKernel.csproj" Id="36562cc7-c244-4009-b554-07d5d833a657" />
   </Folder>

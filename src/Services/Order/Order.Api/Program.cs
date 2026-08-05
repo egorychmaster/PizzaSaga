@@ -8,6 +8,7 @@ using PizzaSaga.ServiceDefaults.Extensions;
 using PizzaSaga.ServiceDefaults.InternalServices.Middleware;
 using PizzaSaga.Shared.Infrastructure.Persistence;
 using Serilog;
+using PizzaSaga.Shared.ErrorHandling;
 
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
@@ -20,6 +21,8 @@ try
     builder.AddProjectOpenApi();
 
     builder.AddJwtAuthentication();
+
+    builder.Services.AddGlobalProblemDetailsExceptionHandling();
 
     // Стандартные сервисы 
 
@@ -36,6 +39,7 @@ try
 
 
     var app = builder.Build();
+    app.UseExceptionHandler();
 
     // Только UseSwagger(), не UseSwaggerUI(), потому что service не обязан иметь собственный UI. Его задача — публиковать: /swagger/v1/swagger.json
     app.UseSwagger();

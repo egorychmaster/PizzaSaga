@@ -2,6 +2,7 @@ using ApiGateway.Extensions;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using PizzaSaga.ServiceDefaults.Extensions;
 using Serilog;
+using PizzaSaga.Shared.ErrorHandling;
 
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
@@ -12,9 +13,10 @@ try
     // Добавляем сервис-дефолты Aspire (OpenTelemetry, health checks, логирование и метрики и т.д.)
     builder.AddServiceDefaults();
 
-
     // JWT: настройка валидации
     builder.AddJwtAuthentication();
+
+    builder.Services.AddGlobalProblemDetailsExceptionHandling();
 
 
     // YARP + service discovery и связываем их с конфигурацией appsettings.json
@@ -28,7 +30,7 @@ try
 
     var app = builder.Build();
 
-    app.UseGlobalExceptionHandling();
+    app.UseExceptionHandler();
 
     // Корреляция: генерация + пропагация.
     app.UseCorrelationId();
