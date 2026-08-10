@@ -52,6 +52,7 @@ Idempotency-Key		Идемпотентность операций создани�
 Каждый входящий HTTP-запрос получает TraceId, используемый для распределённой трассировки. Для объединения всех операций, относящихся к одному пользовательскому запросу, используется CorrelationId. Если клиент не передаёт CorrelationId, API Gateway генерирует его автоматически.
 
 # 4. Аутентификация
+Service: Auth Service
 Защита периметра осуществляется на базе централизованной JWT-аутентификации.
 
 ## 4.1 Аутентификация пользователя (Выпуск токена)
@@ -77,6 +78,8 @@ Response (200 OK):
 Authorization: Bearer <token>
 
 # 5. Заказ (Orders)
+Service: Order Service
+
 ## 5.1 Создание заказа
 Реализует паттерн Asynchronous Request-Reply. Так как процесс оформления заказа является распределенным (требует резервирования остатков и проверки оплаты), API не блокирует поток до завершения всех проверок, а мгновенно регистрирует намерение и возвращает статус Pending.
 
@@ -118,6 +121,13 @@ Response (200 OK):
   "orderId": "...",
   "customerId": "...",
   "status": "Completed",
+  "items": [
+    {
+      "productId": "019131d2-7b1f-7988-886d-091a03975002",
+      "quantity": 2,
+      "unitPrice": 12.70
+    }
+  ],
   "totalAmount": 2450,
   "currency": "EUR",
   "createdAt": "...",
@@ -159,6 +169,8 @@ Response (202 Accepted)
 401 Unauthorized
 
 # 6. Продукты (Products)
+Service: Catalog Service
+
 ## 6.1 Получение информации о товаре
 Endpoint:
 GET /api/v1/products/{productId}
@@ -178,23 +190,6 @@ Response (200 OK):
   "pageSize": 20,
   "totalCount": 100
 }
-
-# 7. Платежи (Payments)
-## 7.1 Получение информации о платеже заказа
-Endpoint:
-GET /api/v1/orders/{orderId}/payment
-
-Response (200 OK):
-{
-  "paymentStatus":"Reserved",
-  "amount":25.4,
-  "orderId": "",
-  "currency":"EUR",
-  "method":"Card"
-}
-
-Ошибки:
-404 Not Found — заказ или платёж не найден
 
 # 8. Жизненный цикл заказа
 Для внешних клиентов (API/UI) жизненный цикл заказа намеренно упрощен до трех детерминированных состояний:

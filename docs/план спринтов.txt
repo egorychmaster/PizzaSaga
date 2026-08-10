@@ -122,13 +122,21 @@ TransactionBehavior — автоматическое открытие транз
 Цель: Развернуть инфраструктуру обмена сообщениями, запустить Transactional Outbox паттерн и реализовать стейт-машину Саги, взаимодействующую со «скелетами» зависимых сервисов.
 
 📋 Задачи:
-1. Создание каркасов Stock и Payment: Создать проекты PizzaSaga.Services.Stock и PizzaSaga.Services.Payment. Настроить для каждого сервиса свою изолированную базу данных PostgreSQL. Полноценной бизнес-логики в них пока нет.
-- Автоматизация БД и Seed-данные (Stock & Payment): Подключить DatabaseMigrationHostedService к сервисам Stock и Payment. Реализовать инициализацию Seed Data: для БД Stock — наполнение каталога (минимум 5 видов пиццы с фиксированными ID и остатками), для БД Payment — инициализация базовых лимитов или настроек тестового платежного аккаунта.
+1. Добавить создание Catalog Service:
+добавить seed каталога;
+добавить публикацию ProductCreatedIntegrationEvent;
+добавить локальную таблицу ProductCatalog (или CatalogCache) в Order Service;
+реализовать consumer'ы для синхронизации локального каталога.
+
+Это позволит уже в Sprint 2 иметь готовую инфраструктуру для расчета TotalAmount.
+
+2. Создание каркасов Stock и Payment: Создать проекты PizzaSaga.Services.Stock и PizzaSaga.Services.Payment. Настроить для каждого сервиса свою изолированную базу данных PostgreSQL. Полноценной бизнес-логики в них пока нет.
+- Автоматизация БД и Seed-данные (Stock & Payment): Подключить DatabaseMigrationHostedService к сервисам Stock и Payment. Реализовать инициализацию Seed Data: для БД Stock — инициализация остатков для продуктов из фиксированного набора ProductId.
 - Подключить к проектам Stock и Payment метод расширения AddProjectOpenApi() из ServiceDefaults. Сразу после создания каркасов убедиться, что их Swagger-схемы доступны и проксируются через API Gateway.
 
-2. MassTransit & RabbitMQ Setup: Интегрировать MassTransit во все три сервиса (Order, Stock, Payment). Настроить транспорт через RabbitMQ в ServiceDefaults.
+3. MassTransit & RabbitMQ Setup: Интегрировать MassTransit во все три сервиса (Order, Stock, Payment). Настроить транспорт через RabbitMQ в ServiceDefaults.
 
-3. Выделение PizzaSaga.Contracts:
+4. Выделение PizzaSaga.Contracts:
 - Создать в решении проект PizzaSaga.Contracts (Class Library).
 - Перенести в него все общие контракты интеграционных сообщений (команд и событий) MassTransit.
 - Подключить ссылку на этот проект в Order, Stock и Payment сервисы. Это гарантирует контрактную безопасность и исключает дублирование кода.
@@ -136,14 +144,14 @@ TransactionBehavior — автоматическое открытие транз
 Реализация Контрактов Саги: В проекте Shared/PizzaSaga.Contracts определить неизменяемые типы данных (public record) для полного графа состояний Саги согласно architecture.md. Использовать строгие суффиксы для разделения типов сообщений на команды (point-to-point) и события (pub-sub):
 - Инициирующим сообщением распределенной транзакции:
 -- При созданиии заказа CreateOrderCommand, при сохранении заказа генерируется OrderCreatedIntegrationEvent.
--- При отмене заказа (через POST /api/v1/orders/{orderId}/cancel) запускается компенсация командой CancelPaymentCommand.
-- Шаг проверки инвентаря (Stock): ReserveInventoryCommand, InventoryReservedEvent, InventoryReservationFailedEvent.
+-- При отмене заказа (через POST /api/v1/orders/{orderId}/cancel) запускается компенсация командой CancelPaymentIntegrationCommand.
+- Шаг проверки инвентаря (Stock): ReserveInventoryIntegrationCommand, InventoryReservedIntegrationEvent, InventoryReservationFailedIntegrationEvent.
 - Шаг авторизации оплаты (Payment): AuthorizePaymentCommand, PaymentAuthorizedEvent, PaymentAuthorizationFailedEvent.
-- Компенсирующие команды (Откат/Rollback): ReleaseInventoryCommand (расформирование резерва товара), CancelPaymentCommand (возврат/отмена транзакции авторизации).
-- Финальные (Терминальные) события Саги: OrderCompletedEvent, OrderCancelledEvent.
+- Компенсирующие команды (Откат/Rollback): ReleaseInventoryIntegrationCommand (расформирование резерва товара), CancelPaymentIntegrationCommand (возврат/отмена транзакции авторизации).
+- Финальные (Терминальные) события Саги: OrderCompletedIntegrationEvent, OrderCancelledIntegrationEvent.
 Интеграционные контракты (Contracts) остаются плоскими DTO. Но при получении сообщения потребителем (Consumer) в Stock Service или Payment Service, сырые данные сразу же парсятся во внутренние Value Objects этих доменов (например, Quantity преобразуется в InventoryStockQuantity в Stock-сервисе). Консьюмеры не работают с сырыми int или string в своей бизнес-логике (концепция Parse, Don't Validate).
 
-4. Saga State Machine (Order Service): Создать класс OrderStateMachine и сущность OrderStateData (Saga Instance) с использованием MassTransit State Machine.
+5. Saga State Machine (Order Service): Создать класс OrderStateMachine и сущность OrderStateData (Saga Instance) с использованием MassTransit State Machine.
 - Реализовать внутренний граф технических состояний Саги согласно разделу 7.4 architecture.md: Initial, AwaitingInventoryReservation, AwaitingPaymentReservation, Completed, Cancelled.
 - Заложить логику маппинга внутренних состояний во внешние статусы согласно разделу 8 api.md:
 - Внутренние состояния Initial, AwaitingInventoryReservation, AwaitingPaymentReservation маппятся в публичный статус Pending («Заказ обрабатывается системой»).
@@ -152,16 +160,16 @@ TransactionBehavior — автоматическое открытие транз
 - Настроить персистентность инстансов Саги в базе данных Order через EF Core (Saga Repository).
 - OrderStateMachine при переходе в терминальные состояния (Completed, Cancelled) публикует локальную команду MassTransit (или доменное событие), которую слушает консьюмер в Order Service и обновляет поле Status у сущности Order. Либо Сага напрямую использует DbContext для обновления заказа (что допустимо, если они делят одну БД, но первый вариант чище).
 
-5. Создание Заглушек Потребителей (Consumers):
-- В Stock Service создать ReserveInventoryConsumer. На этом этапе он просто логирует получение команды и сразу публикует в ответ событие InventoryReservedEvent.
+6. Создание Заглушек Потребителей (Consumers):
+- В Stock Service создать ReserveInventoryConsumer. На этом этапе он просто логирует получение команды и сразу публикует в ответ событие InventoryReservedIntegrationEvent.
 - В Payment Service создать AuthorizePaymentConsumer. Он логирует команду и сразу публикует в ответ PaymentAuthorized.
 
-6. Transactional Outbox & Inbox для всех сервисов:
+7. Transactional Outbox & Inbox для всех сервисов:
 - Настроить встроенный Transactional Outbox MassTransit в Order Service (в связке с EF Core DbContext). Гарантировать, что создание/обновление заказа и сохранение событий Саги в таблицу OutboxMessages происходят в единой транзакции PostgreSQL.
 - Настроить Transactional Outbox в Stock Service и Payment Service. При обработке входящих команд консьюмеры-заглушки должны записывать свои исходящие интеграционные события-ответы в свои локальные таблицы Outbox в рамках транзакций собственных БД.
 - Настроить паттерн Inbox (Idempotent Consumer) на стороне потребителей во всех трех сервисах для автоматической дедупликации сообщений на уровне инфраструктуры MassTransit.
 - Реализовать диспетчеризацию Domain Events в Integration Events перед публикацией через Outbox.
-6.1 Реализовать сохранение доменных событий в EF Core DbContext перегрузкой метода SaveChangesAsync. События пишутся в таблицу OutboxMessages в той же транзакции. MassTransit Outbox автоматически подхватит их и опубликует в RabbitMQ как интеграционные сообщения после успешного коммита.
+7.1 Реализовать сохранение доменных событий в EF Core DbContext перегрузкой метода SaveChangesAsync. События пишутся в таблицу OutboxMessages в той же транзакции. MassTransit Outbox автоматически подхватит их и опубликует в RabbitMQ как интеграционные сообщения после успешного коммита.
 
 ✅ Критерии приемки:
 - При вызове POST /api/v1/orders заказ сохраняется в БД Order, а в таблицу OutboxMessages пишется событие. Фоновый воркер MassTransit отправляет его в RabbitMQ.
@@ -179,19 +187,19 @@ TransactionBehavior — автоматическое открытие транз
 - Для Stock Service: перед резервированием товара проверять, не был ли этот конкретный OrderId уже успешно обработан в данной системе (например, через связь один-к-одному «Заказ-Резерв» или через сохранение бизнес-билетов операций). Повторная обработка команды на резерв для уже зарезервированного заказа должна быть идемпотентным no-op (просто возвращать успешный ответ, не списывая остатки повторно).
 - Для Payment Service: перед транзакцией проверять статус оплаты этого OrderId в БД. Если оплата уже прошла успешно (или завершилась отказом) — повторная команда на авторизацию платежа не должна повторно дергать логику эквайринга, а должна сразу возвращать зафиксированный ранее доменный результат.
 
-2. Бизнес-логика Stock Service: Реализовать сущность Inventory. При получении команды ReserveInventoryCommand консьюмер уменьшает количество товара в БД Stock. Использовать Optimistic Concurrency на уровне сущности товара для защиты от состояния гонки (Race Condition) при одновременных заказах. Если товара недостаточно — публиковать InventoryReservationFailed.
-При возникновении DbUpdateConcurrencyException в консьюмере, транзакция падает, и сообщение должно уходить на Retry (настраивается через MassTransit UseMessageRetry). Это инфраструктурная transient-ошибка, а не бизнес-отказ. Бизнес-отказ (InventoryReservationFailedEvent) публикуется только в том случае, если физически на складе StockLevel меньше запрошенного.
-Stock Service использует "Parse, Don't Validate" для управления остатками: сущность Inventory (агрегат) инкапсулирует бизнес-метод ReduceStock(Quantity quantity). Если запрашиваемое количество превышает остаток, агрегат генерирует ошибку бизнес-логики (DomainException), что приводит к публикации InventoryReservationFailedEvent.
+2. Бизнес-логика Stock Service: Реализовать сущность Inventory. При получении команды ReserveInventoryIntegrationCommand консьюмер уменьшает количество товара в БД Stock. Использовать Optimistic Concurrency на уровне сущности товара для защиты от состояния гонки (Race Condition) при одновременных заказах. Если товара недостаточно — публиковать InventoryReservationFailed.
+При возникновении DbUpdateConcurrencyException в консьюмере, транзакция падает, и сообщение должно уходить на Retry (настраивается через MassTransit UseMessageRetry). Это инфраструктурная transient-ошибка, а не бизнес-отказ. Бизнес-отказ (InventoryReservationFailedIntegrationEvent) публикуется только в том случае, если физически на складе StockLevel меньше запрошенного.
+Stock Service использует "Parse, Don't Validate" для управления остатками: сущность Inventory (агрегат) инкапсулирует бизнес-метод ReduceStock(Quantity quantity). Если запрашиваемое количество превышает остаток, агрегат генерирует ошибку бизнес-логики (DomainException), что приводит к публикации InventoryReservationFailedIntegrationEvent.
 
 
 3. Бизнес-логика Payment Service: Реализовать симуляцию списания средств. Добавить в конфигурацию сервиса управляемый флаг SimulateFailure. Если флаг активен — консьюмер публикует PaymentAuthorizationFailed, имитируя ошибку банка.
 
 4. Компенсационные сценарии Саги: Расширить OrderStateMachine.
-- Если Stock прислал InventoryReservationFailedEvent -> перевести заказ в статус Cancelled.
-- Если Payment прислал PaymentAuthorizationFailedEvent -> Сага должна отправить в Stock компенсирующую команду ReleaseInventoryCommand (расформировать резерв), и только после этого перевести заказ в статус Cancelled.
+- Если Stock прислал InventoryReservationFailedIntegrationEvent -> перевести заказ в статус Cancelled.
+- Если Payment прислал PaymentAuthorizationFailedEvent -> Сага должна отправить в Stock компенсирующую команду ReleaseInventoryIntegrationCommand (расформировать резерв), и только после этого перевести заказ в статус Cancelled.
  
 5. Реализовать ReleaseInventoryConsumer:
-    • обработать команду ReleaseInventoryCommand;
+    • обработать команду ReleaseInventoryIntegrationCommand;
     • освободить ранее зарезервированный товар;
     • опубликовать InventoryReleasedEvent;
     • обеспечить идемпотентность обработки.
@@ -287,7 +295,7 @@ Application не зависит от API,
 
 Технические требования:
 - MassTransit TestHarness: Настроить InMemoryTestHarness или ITestHarness для тестирования OrderStateMachine и консьюмеров. Проверить полный граф переходов Саги (Initial -> AwaitingInventory -> AwaitingPayment -> Completed/Cancelled).
-- Сценарий "Idempotent Consumer Testing" (Inbox): Симулировать повторную доставку одного и того же сообщения InventoryReservedEvent в Сагу (путем отправки дубликата сообщения с тем же MessageId / CorrelationId). Убедиться, что встроенный Inbox MassTransit отрабатывает дедупликацию, Сага игнорирует дубликат и не падает в ошибочное состояние.
+- Сценарий "Idempotent Consumer Testing" (Inbox): Симулировать повторную доставку одного и того же сообщения InventoryReservedIntegrationEvent в Сагу (путем отправки дубликата сообщения с тем же MessageId / CorrelationId). Убедиться, что встроенный Inbox MassTransit отрабатывает дедупликацию, Сага игнорирует дубликат и не падает в ошибочное состояние.
 - Пайплайны и Транзакции (Pipeline Behaviors): Проверить совместную работу ValidationBehavior, LoggingBehavior и TransactionBehavior. Тест должен подтвердить, что при падении хэндлера команды транзакция в PostgreSQL действительно откатывается, а в БД не остается «грязных» данных.
 - Бизнес-метрики (System.Diagnostics.Metrics.Meter): Интегрировать счетчики в OrderStateMachine и доменные обработчики. В рамках интеграционных тестов с помощью класса MeterListener программно перехватывать и валидировать кастомные метрики:
 -- Количество созданных заказов (orders-created-count).

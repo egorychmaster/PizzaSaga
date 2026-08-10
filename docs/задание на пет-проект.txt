@@ -44,42 +44,39 @@ Client ────────────────────────�
 │ • ProblemDetails                             │
 │ • CorrelationId Propagation                  │
 │ • Health / Alive                             │
-└─────────────────────┬────────────────────────┘
-                      │
-                      │ HTTP
-                      ▼
-
-┌──────────────────────────────────────────────┐
-│                Order Service                 │
-│----------------------------------------------│
-│ • REST API                                   │
-│ • Vertical Slice Architecture                │
-│ • Saga Orchestrator                          │
-│ • EF Core                                    │
-│ • Transactional Outbox                       │
-│ • Optimistic Concurrency                     │
-└─────────────────────┬────────────────────────┘
-                      ▲
-                      │ Publish / Consume Events
-                      ▼
-                ┌───────────────┐
-                │   RabbitMQ    │
-                └───────────────┘
-                      ▲
-          ┌───────────┴────────────┐
-          ▼                        ▼
-
-┌──────────────────────┐   ┌──────────────────────┐
-│    Stock Service     │   │   Payment Service    │
-│----------------------│   │----------------------│
-│ • Inventory          │   │ • Payment            │
-│ • Reservations       │   │ • Authorization      │
-│ • Transactional      │   │ • Capture / Cancel   │
-│   Outbox             │   │ • Transactional      │
-│ • Idempotent         │   │   Outbox             │
-│   Consumers          │   │ • Idempotent         │
-│ • PostgreSQL         │   │   Consumers          │
-└──────────────────────┘   └──────────────────────┘
+└───────────────┬───────────────────┬──────────┘
+                │ HTTP              │ HTTP
+                ▼                   ▼
+┌──────────────────────────────┐   ┌──────────────────────────────┐
+│        Order Service         │   │       Catalog Service        │
+│------------------------------│   │------------------------------│
+│ • REST API                   │   │ • REST API                   │
+│ • Vertical Slice Architecture│   │ • Product Catalog            │
+│ • Saga Orchestrator          │   │ • Product Prices             │
+│ • EF Core                    │   │ • Product Information        │
+│ • Transactional Outbox       │   │ • Transactional Outbox       │
+│ • Optimistic Concurrency     │   │ • PostgreSQL                 │
+└──────────────┬───────────────┘   └──────────────┬───────────────┘
+               │                                  │
+               │ Publish / Consume Events         │ Publish Events
+               │                                  │
+               └────────────────┐  ┌──────────────┘
+                                ▼  ▼
+                         ┌───────────────┐
+                         │   RabbitMQ    │
+                         └───────┬───────┘
+                                 │
+                    ┌────────────┴────────────┐
+                    ▼                         ▼
+┌──────────────────────────┐   ┌──────────────────────────┐
+│      Stock Service       │   │     Payment Service      │
+│--------------------------│   │--------------------------│
+│ • Inventory              │   │ • Payment                │
+│ • Reservations           │   │ • Authorization          │
+│ • Transactional Outbox   │   │ • Capture / Cancel       │
+│ • Idempotent Consumers   │   │ • Transactional Outbox   │
+│ • PostgreSQL             │   │ • Idempotent Consumers   │
+└──────────────────────────┘   └──────────────────────────┘
 
 
 📦 Состав проекта
@@ -112,6 +109,7 @@ PizzaSaga.slnx
 │       │	├── Order.UnitTests
 │       │	└── Order.IntegrationTests
 │       │
+│       ├── Catalog 
 │       ├── Stock
 │       ├── Payment
 │       └── Auth
@@ -145,25 +143,25 @@ Health Checks.
 HTTP POST /orders
         │
         ▼
-OrderCreated (Domain Event)
+OrderCreatedDomainEvent (Domain Event)
         │
         ▼
-ReserveInventoryCommand
+ReserveInventoryIntegrationCommand
         │
         ▼
-InventoryReservedEvent
+InventoryReservedIntegrationEvent
         │
         ▼
-ReservePaymentCommand
+ReservePaymentIntegrationCommand
         │
         ▼
-PaymentReservedEvent
+PaymentReservedIntegrationEvent
         │
         ▼
-OrderCompleted (Domain Event)
+OrderCompletedDomainEvent (Domain Event)
         │
         ▼
-OrderCompletedEvent
+OrderCompletedIntegrationEvent (Integration Event)
 
 Оркестратором бизнес-процесса является Order Service.
 
@@ -278,7 +276,7 @@ Event Sourcing;
 CQRS с отдельными read/write моделями и отдельными базами данных;
 Kubernetes;
 Service Mesh;
-Redis и распределённые кэши;
+локальное представление каталога;
 UI (используется только Swagger/OpenAPI);
 реальные интеграции с платёжными системами;
 сложные workflow-движки;
