@@ -101,6 +101,8 @@ TransactionBehavior — автоматическое открытие транз
 - SaveChangesAsync() и Commit выполняются автоматически через TransactionBehavior.
 - После успешного сохранения вернуть CreateOrderResult.
 - Order.Api возвращает 201 Created, Location: /api/v1/orders/{orderId} и DTO созданного заказа.
+- Временно использовать фиктивную цену для подсчета TotalAmount (например, 10 EUR за позицию), согласно TODO комментарию в коде.
+- Убедиться, что OrderCreatedDomainEvent преобразуется в OrderCreatedIntegrationEvent и попадает в таблицу OutboxMessages.
 
 7. HTTP Idempotency (PostgreSQL-based): Реализовать IdempotencyFilter (или Middleware) для эндпоинта создания заказа.
 - Создать таблицу IdempotencyKeys в БД Order Service (колонки: IdempotencyKey (primary key), ResponseStatusCode, ResponseBody, CreatedAt).
@@ -129,6 +131,7 @@ TransactionBehavior — автоматическое открытие транз
 реализовать consumer'ы для синхронизации локального каталога.
 
 Это позволит уже в Sprint 2 иметь готовую инфраструктуру для расчета TotalAmount.
+Завершить метод создания заказа в Order Service (POST /api/v1/orders) - получать TotalAmount из локальной таблицы ProductCatalog.
 
 2. Создание каркасов Stock и Payment: Создать проекты PizzaSaga.Services.Stock и PizzaSaga.Services.Payment. Настроить для каждого сервиса свою изолированную базу данных PostgreSQL. Полноценной бизнес-логики в них пока нет.
 - Автоматизация БД и Seed-данные (Stock & Payment): Подключить DatabaseMigrationHostedService к сервисам Stock и Payment. Реализовать инициализацию Seed Data: для БД Stock — инициализация остатков для продуктов из фиксированного набора ProductId.
