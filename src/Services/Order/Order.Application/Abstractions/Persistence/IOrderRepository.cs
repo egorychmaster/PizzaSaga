@@ -4,6 +4,7 @@ using System.Text;
 
 namespace Order.Application.Abstractions.Persistence;
 
-internal class IOrderRepository
+public interface IOrderRepository
 {
+    //Task AddAsync(Order order, CancellationToken cancellationToken = default);
 }
