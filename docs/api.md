@@ -114,8 +114,10 @@ Location /api/v1/orders/{orderId}
 500 Internal Server Error — неожиданные ошибки (ProblemDetails)
 
 ## 5.2 Получение заказа
+После создания ресурса клиент может получить его текущее состояние.
+
 Endpoint:
-GET /api/v1/orders/{orderId}
+GET /api/v1/orders/{Id}
 Response (200 OK):
 {
   "orderId": "...",
@@ -132,6 +134,24 @@ Response (200 OK):
   "currency": "EUR",
   "createdAt": "...",
   "updatedAt": "..."
+}
+
+Ответ во время выполнения процесса:
+{
+    "orderId": "8e24b5d2",
+    "status": "Pending"
+}
+
+После успешного завершения:
+{
+    "orderId": "8e24b5d2",
+    "status": "Completed"
+}
+
+При невозможности завершить процесс:
+{
+    "orderId": "8e24b5d2",
+    "status": "Cancelled"
 }
 
 # 5.3 Список заказов (Пагинация и фильтрация)
