@@ -5,7 +5,7 @@ namespace Order.Domain.AggregatesModel.OrderAggregate;
 public class Order
 {
     public Guid Id { get; private set; }
-    public string Status { get; private set; } = string.Empty;
+    public OrderStatus Status { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; } = DateTimeOffset.UtcNow;
 
     public CustomerIdentity CustomerId { get; private set; }
@@ -27,7 +27,7 @@ public class Order
     {
         Id = id;
         CustomerId = customerId ?? throw new ArgumentNullException(nameof(customerId));
-        Status = "Pending";
+        Status = OrderStatus.Pending;
         CreatedAt = DateTimeOffset.UtcNow;
         // Начальная версия
         Version = 1; 
