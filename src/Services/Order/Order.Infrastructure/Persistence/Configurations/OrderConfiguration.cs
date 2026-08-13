@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Order.Domain.ValueObjects;
 using OrderAggregate = Order.Domain.AggregatesModel.OrderAggregate.Order;
 
 namespace Order.Infrastructure.Persistence.Configurations;
@@ -14,10 +15,26 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<OrderAggrega
         // index
 
         // Limit the size of columns to use efficient database types
-        builder.Property(o => o.Status).HasMaxLength(50).IsRequired();
+        builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
         builder.Property(o => o.CreatedAt).IsRequired();
         // Оптимистичная блокировка (Optimistic Concurrency Control). EF Core при выполнении UPDATE будет добавлять условие: WHERE "Id" = @id AND "Version" = @oldVersion
         builder.Property(o => o.Version).IsConcurrencyToken().IsRequired();
+
+        // Money маппим как два поля: TotalAmount, TotalCurrency.
+        builder.OwnsOne(
+            o => o.TotalAmount,
+            money =>
+            {
+                money.Property(x => x.Amount)
+                    .HasColumnName("TotalAmount")
+                    .HasPrecision(18, 2)
+                    .IsRequired();
+
+                money.Property(x => x.CurrencyCode)
+                    .HasColumnName("TotalCurrency")
+                    .HasMaxLength(3)
+                    .IsRequired();
+            });
 
         // Настройка CustomerId — CustomerIdentity как owned-тип (вложенный тип) в EF.
         builder.OwnsOne(o => o.CustomerId, customer =>
@@ -31,7 +48,10 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<OrderAggrega
 
 
         // Relationships
-
+        builder.HasMany(o => o.Items)
+            .WithOne()
+            .HasForeignKey("OrderId")
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Maps to table
         builder.ToTable("orders");

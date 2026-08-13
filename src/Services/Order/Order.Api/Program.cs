@@ -26,11 +26,12 @@ try
 
     // Стандартные сервисы 
 
+    // Регистрирует зависимости слоя Order.Application.
     builder.Services.AddOrderApplication();
 
     builder.Services.AddScoped<IDatabaseSeeder<OrderDbContext>, OrderDatabaseSeeder>();
 
-    // Настройка Order.Infrastructure
+    // Регистрирует зависимости слоя Order.Infrastructure.
     // Регистрация DbContext. Название "OrderDb" должно СТРОГО совпадать с именем ресурса в AppHost
     var connectionString = builder.Configuration.GetConnectionString("OrderDb");
     if (string.IsNullOrEmpty(connectionString))

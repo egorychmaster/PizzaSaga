@@ -1,10 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using OrderAggregate = Order.Domain.AggregatesModel.OrderAggregate.Order;
 
 namespace Order.Application.Abstractions.Persistence;
 
+/// <summary>
+/// Репозиторий агрегата Order.
+/// </summary>
 public interface IOrderRepository
 {
-    //Task AddAsync(Order order, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Добавляет новый заказ в текущий Unit of Work.
+    /// </summary>
+    Task AddAsync(OrderAggregate order, CancellationToken cancellationToken = default);
 }

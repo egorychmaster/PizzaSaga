@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Order.Application.Abstractions.Persistence;
 using Order.Infrastructure.Persistence;
+using Order.Infrastructure.Persistence.Repositories;
 using Order.Infrastructure.Persistence.Seeding;
 using PizzaSaga.Shared.Infrastructure.Persistence;
 
@@ -31,6 +32,8 @@ public static class InfrastructureServiceCollectionExtensions
             // Опционально: логирование SQL через ILogger из DI
             // options.UseLoggerFactory(sp.GetRequiredService<ILoggerFactory>());
         });
+
+        services.AddScoped<IOrderRepository, OrderRepository>();
 
         // Регистрируем UnitOfWork — реализация IUnitOfWork для EF Core.
         // Lifetime = Scoped (соответствует HTTP-запросу и DbContext).
