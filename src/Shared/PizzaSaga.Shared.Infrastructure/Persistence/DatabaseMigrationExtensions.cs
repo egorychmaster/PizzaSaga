@@ -29,17 +29,17 @@ public static class DatabaseMigrationExtensions
             var contextName = typeof(TContext).Name;
             logger.LogInformation("Checking database state for {DbContext}...", contextName);
 
-            //var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
-            //if (pendingMigrations.Any())
-            //{
-            //    logger.LogInformation("Found {Count} pending migration(s). Applying database migrations...",
-            //        pendingMigrations.Count());
+            var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+            if (pendingMigrations.Any())
+            {
+                logger.LogInformation("Found {Count} pending migration(s). Applying database migrations...",
+                    pendingMigrations.Count());
 
-            //    await dbContext.Database.MigrateAsync(cancellationToken);
+                await dbContext.Database.MigrateAsync(cancellationToken);
 
-            //    logger.LogInformation("Database migrations successfully applied for {DbContext}.", contextName);
-            //}
-            //else
+                logger.LogInformation("Database migrations successfully applied for {DbContext}.", contextName);
+            }
+            else
             {
                 logger.LogInformation("Database {DbContext} is up to date.", contextName);
             }
