@@ -64,10 +64,6 @@ public sealed class Order : AggregateRoot
             throw new ArgumentException("Order ID cannot be empty.", nameof(id));
 
         ArgumentNullException.ThrowIfNull(customerId);
-        ArgumentNullException.ThrowIfNull(items);
-
-        if (items.Count == 0)
-            throw new InvalidOperationException("Order must contain at least one item.");
 
         Id = id;
         CustomerId = customerId;
@@ -76,21 +72,8 @@ public sealed class Order : AggregateRoot
         // Начальная версия
         Version = 1;
 
-        _items.AddRange(items);
-
-        // Все позиции одного заказа должны иметь одну валюту.
-        //var currency = items
-        //    .Select(x => x.UnitPrice.CurrencyCode)
-        //    .Distinct(StringComparer.OrdinalIgnoreCase)
-        //    .Single();
-        var currency = items.First().UnitPrice.CurrencyCode;
-        if (items.Any(x => !string.Equals(x.UnitPrice.CurrencyCode, currency, StringComparison.OrdinalIgnoreCase)))
-            throw new InvalidOperationException(
-                "All order items must use the same currency.");
-
-        var total = items.Sum(x => x.UnitPrice.Amount * x.Quantity.Value);
-
-        TotalAmount = Money.Create(total, currency);
+        AddItems(items);
+        RecalculateTotal();
 
         //AddDomainEvent(
         //    new OrderCreatedDomainEvent(
@@ -121,4 +104,27 @@ public sealed class Order : AggregateRoot
     //    Status = newStatus;
     //    Version++;
     //}
+
+
+    private void AddItems(IReadOnlyCollection<OrderItem> items)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+
+        if (items.Count == 0)
+            throw new InvalidOperationException("Order must contain at least one item.");
+
+        _items.AddRange(items);
+    }
+
+    private void RecalculateTotal()
+    {
+        // Все позиции одного заказа должны иметь одну валюту.
+        var currency = _items.First().UnitPrice.CurrencyCode;
+        if (_items.Any(x => !string.Equals(x.UnitPrice.CurrencyCode, currency, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("All order items must use the same currency.");
+
+        var total = _items.Sum(x => x.UnitPrice.Amount * x.Quantity.Value);
+
+        TotalAmount = Money.Create(total, currency);
+    }
 }
