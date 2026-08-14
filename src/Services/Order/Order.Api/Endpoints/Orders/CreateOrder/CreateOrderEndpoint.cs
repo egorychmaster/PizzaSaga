@@ -44,20 +44,17 @@ public static class CreateOrderEndpoint
 
         // Преобразуем транспортные DTO в application/domain-типы. ProductId и Quantity больше не попадут в Command как сырые значения.
         var items = request.Items.Select(item => new CreateOrderItem(
-            ProductId: item.ProductId,
-            Quantity: PizzaQuantity.Create(item.Quantity)))
-            .ToArray();
+                ProductId: item.ProductId,
+                Quantity: PizzaQuantity.Create(item.Quantity))
+            ).ToArray();
 
-        // Формируем Application Command.
-        // Command не содержит CustomerId из HTTP-запроса — он уже обогащён identity из JWT.
         var command = new CreateOrderCommand(
             CustomerId: customerIdentity,
             Items: items,
             PaymentMethod: request.PaymentMethod,
             Currency: request.Currency);
 
-        // Передаём команду в Mediator. 
-        // Дальше управление перейдёт в pipeline behaviors, // а затем в CreateOrderCommandHandler.
+        // Передаём команду в Mediator. Дальше управление перейдёт в pipeline behaviors, а затем в CreateOrderCommandHandler.
         var result = await mediator.Send(command, cancellationToken);
 
         // Application Result преобразуется в HTTP Response DTO.

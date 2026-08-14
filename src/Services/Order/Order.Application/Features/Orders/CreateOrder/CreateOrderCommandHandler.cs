@@ -26,8 +26,7 @@ public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderComma
     {
         ArgumentNullException.ThrowIfNull(command);
 
-        var customerIdentity =
-            CustomerIdentity.Create(command.CustomerId.Value);
+        var customerIdentity = CustomerIdentity.Create(command.CustomerId.Value);
 
         var items = command.Items
             .Select(item =>
