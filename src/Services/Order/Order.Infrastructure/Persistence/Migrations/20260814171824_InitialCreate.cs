@@ -54,6 +54,11 @@ namespace Order.Infrastructure.Persistence.Migrations
                 name: "IX_order_items_OrderId",
                 table: "order_items",
                 column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_orders_Status",
+                table: "orders",
+                column: "Status");
         }
 
         /// <inheritdoc />

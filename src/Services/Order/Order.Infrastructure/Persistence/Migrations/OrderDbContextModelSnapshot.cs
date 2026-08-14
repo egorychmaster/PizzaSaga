@@ -42,6 +42,8 @@ namespace Order.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Status");
+
                     b.ToTable("orders", (string)null);
                 });
 

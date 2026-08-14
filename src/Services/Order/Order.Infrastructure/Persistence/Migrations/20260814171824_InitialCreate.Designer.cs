@@ -12,7 +12,7 @@ using Order.Infrastructure.Persistence;
 namespace Order.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(OrderDbContext))]
-    [Migration("20260813203149_InitialCreate")]
+    [Migration("20260814171824_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -44,6 +44,8 @@ namespace Order.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Status");
 
                     b.ToTable("orders", (string)null);
                 });

@@ -26,13 +26,13 @@ public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderComma
     {
         ArgumentNullException.ThrowIfNull(command);
 
+        // 1. Создаём Value Objects
         var customerIdentity = CustomerIdentity.Create(command.CustomerId.Value);
 
         var items = command.Items
             .Select(item =>
             {
                 var quantity = PizzaQuantity.Create(item.Quantity.Value);
-
                 var unitPrice = Money.Create(TemporaryUnitPrice, command.Currency);
 
                 return new OrderItem(
@@ -43,31 +43,21 @@ public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderComma
             })
             .ToArray();
 
+        // 2. Создаём агрегат Order
         var order = OrderAggregate.Create(
             id: Guid.CreateVersion7(),
             customerId: customerIdentity,
             items: items);
 
-        await _orderRepository.AddAsync(
-            order,
-            cancellationToken);
+        // 3. Сохраняем через репозиторий (в рамках транзакции TransactionBehavior)
+        await _orderRepository.AddAsync(order, cancellationToken);
 
-        CreateOrderResult response = new CreateOrderResult(
+        // 4. Возвращаем DTO — берём данные из агрегата
+        return new CreateOrderResult(
             OrderId: order.Id,
             Status: order.Status.ToString(),
             TotalAmount: order.TotalAmount.Amount,
             Currency: order.TotalAmount.CurrencyCode,
             CreatedAt: order.CreatedAt);
-
-        //var orderId = Guid.CreateVersion7();
-        //var response = new CreateOrderResult(
-        //     OrderId: orderId,
-        //     Status: "Pending",
-        //     TotalAmount: 0m,
-        //     Currency: command.Currency,
-        //     CreatedAt: DateTimeOffset.UtcNow);
-
-        //return ValueTask.FromResult(response);
-        return response;
     }
 }
