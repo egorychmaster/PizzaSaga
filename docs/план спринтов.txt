@@ -105,7 +105,7 @@ TransactionBehavior — автоматическое открытие транз
 - Убедиться, что OrderCreatedDomainEvent преобразуется в OrderCreatedIntegrationEvent и попадает в таблицу OutboxMessages.
 
 7. HTTP Idempotency (PostgreSQL-based): Реализовать IdempotencyFilter (или Middleware) для эндпоинта создания заказа.
-- Создать таблицу IdempotencyKeys в БД Order Service (колонки: IdempotencyKey (primary key), ResponseStatusCode, ResponseBody, CreatedAt).
+- Создать таблицу IdempotencyKeys в БД Order Service (колонки: IdempotencyKey (primary key), RequestHash, ResponseStatusCode, ResponseBody, CreatedAt).
 - При получении запроса с заголовком Idempotency-Key выполнять атомарную проверку и вставку ключа в БД в рамках единой транзакции с созданием заказа.
 - Если ключ уже существует — прерывать пайплайн и возвращать сохраненный в таблице ответ (201 Created / ResponseBody) без повторного запуска доменной логики. Если заказ в процессе обработки — возвращать соответствующий промежуточный статус согласно api.md.
 - При повторном использовании существующего Idempotency-Key необходимо сравнить hash тела запроса. Если тело отличается — вернуть 409 Conflict.

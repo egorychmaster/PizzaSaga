@@ -111,6 +111,7 @@ Vertical Slice				организация Application слоя по бизнес-
 Event-Driven Architecture	взаимодействие сервисов
 Saga						координация распределённой бизнес-операции
 Transactional Outbox		гарантированная публикация сообщений
+HTTP Idempotency    		предотвращение повторного выполнения одной и той же клиентской HTTP-операции
 
 ## 1.5 Технологический стек
 Компонент			Технология						Назначение
@@ -1155,6 +1156,7 @@ Queries;
 Handlers;
 Validators;
 Pipeline Behaviors;
+интерфейсы инфраструктуры;
 DTO;
 Application Services (при необходимости).
 
@@ -1184,6 +1186,9 @@ Pipeline Behaviors используются для вынесения общей
 измерение производительности.
 
 Прикладной слой координирует выполнение бизнес-сценариев и управляет последовательностью выполнения операций.
+
+Технические механизмы HTTP Idempotency относятся к инфраструктуре взаимодействия с внешним API и не являются частью бизнес-логики доменных сущностей.
+Application может предоставлять абстракции, необходимые для работы с состоянием идемпотентности, но не зависит от конкретного способа его хранения.
 
 ## 5.5 Order.Domain
 Domain содержит бизнес-модель сервиса.
@@ -1218,6 +1223,7 @@ PostgreSQL;
 RabbitMQ;
 MassTransit;
 Transactional Outbox;
+Idempotency persistence;
 Consumers;
 миграции базы данных;
 репозитории;
@@ -1236,6 +1242,10 @@ Order.Infrastructure
 │   ├── Migrations
 │   └── Interceptors
 │
+├── Idempotency
+│   ├── IdempotencyKey.cs
+│   └── ...
+│
 ├── Messaging
 │   ├── Consumers
 │   ├── Sagas
@@ -1247,6 +1257,17 @@ Order.Infrastructure
 └── Extensions
 
 Разделение проекта на подсистемы Persistence и Messaging позволяет изолировать различные инфраструктурные аспекты и упрощает дальнейшее развитие сервиса.
+
+Хранилище идемпотентности является частью локального состояния Order Service и реализуется через PostgreSQL.
+
+Idempotency record содержит:
+- IdempotencyKey;
+- RequestHash;
+- ResponseStatusCode;
+- ResponseBody;
+- CreatedAt.
+
+Для IdempotencyKey используется уникальное ограничение.
 
 ## 5.7 Тестирование сервиса
 Каждый сервис сопровождается собственным набором тестовых проектов.
@@ -1416,33 +1437,71 @@ Api не обращается напрямую к Domain;
 В качестве брокера сообщений используется RabbitMQ.
 Для построения обмена сообщениями применяется библиотека MassTransit.
 
-                HTTP
-                  │
-                  ▼
-           PizzaSaga.ApiGateway
-                  │
-                  ▼
-             Order.Api
-                  │
-                  ▼
-        Order.Application
-                  │
-                  ▼
-          Order State Machine
-                  │
-        ┌─────────┴─────────┐
-        ▼                   ▼
-Reserve Inventory     Reserve Payment
-        │                   │
-        ▼                   ▼
-Stock Service        Payment Service
-        │                   │
-        └─────────┬─────────┘
-                  ▼
-          Order State Machine
-                  │
-                  ▼
-            Order Completed
+Общая схема взаимодействия
+					HTTP POST /orders
+							│
+							▼
+					PizzaSaga.ApiGateway
+							│
+							▼
+						Order.Api
+							│
+							▼
+					HTTP Idempotency
+							│
+							▼
+					Order.Application
+							│
+							▼
+					Order Aggregate
+							│
+							▼
+					OrderCreatedDomainEvent
+							│
+							▼
+			 ┌──────────────────────────┐
+			 │ Local PostgreSQL         │
+			 │ Transaction              │
+			 │                          │
+			 │ Order                    │
+			 │ OrderItems               │
+			 │ Idempotency Record       │
+			 │ OutboxMessage            │
+			 └────────────┬─────────────┘
+						  │
+						COMMIT
+						  │
+						  ▼
+					   RabbitMQ
+						  │
+						  ▼
+			   Order Saga State Machine
+						  │
+				┌─────────┴─────────┐
+				▼                   ▼
+	  ReserveInventory      ReservePayment
+				│                   │
+				▼                   ▼
+		  Stock Service       Payment Service
+				│                   │
+				└─────────┬─────────┘
+						  ▼
+				 Order Saga State
+						  │
+				┌─────────┴─────────┐
+				▼                   ▼
+			Completed           Cancelled
+				│                   │
+				▼                   ▼
+	  Order.MarkCompleted()  Order.MarkCancelled()
+
+Схема показывает три разных механизма, которые в проекте выполняют разные задачи:
+1. HTTP Idempotency 
+Защищает от повторной отправки одного и того же HTTP-запроса.
+2. Local PostgreSQL Transaction
+Локальная PostgreSQL-транзакция обеспечивает атомарное сохранение Order, OrderItems и OutboxMessage.
+3. После успешного COMMIT OutboxMessage становится источником интеграционного сообщения для RabbitMQ.
+4. Saga Координирует уже распределённую бизнес-операцию между Stock и Payment.
 
 Что такое State Machine
 State Machine (машина состояний) — это обычный класс, который хранит описание жизненного цикла Saga.
@@ -1462,20 +1521,21 @@ Order.Application
 Она находится внутри Order Service:
 
                Order Service
-+------------------------------------------+
-|                API                       |
-|                    │                     |
-|                    ▼                     |
-|             Application                  |
-|                    │                     |
-|                    ▼                     |
-|         Order State Machine              |
-|                    │                     |
-|		Saga (MassTransit State Machine)   |
-|      ┌─────────────┴─────────────┐       |
-|      ▼                           ▼       |
-| Publish ReserveInventoryIntegrationCommand   Publish ReservePaymentIntegrationCommand
-+------------------------------------------+
++-----------------------------------------------+
+|                   API                    		|
+|                    │                     		|
+|                    ▼                     		|
+|             Application                  		|
+|                    │                     		|
+|                    ▼                     		|
+|         Order State Machine              		|
+|                    │                     		|
+|		Saga (MassTransit State Machine)   		|
+|      ┌─────────────┴──────────────────────┐  	|
+|	   │			Publish		       		│  	|
+|      ▼                           			▼  	|
+| ReserveInventoryIntegrationCommand	ReservePaymentIntegrationCommand
++-----------------------------------------------+
                │                     │
                ▼                     ▼
         Stock Service        Payment Service
