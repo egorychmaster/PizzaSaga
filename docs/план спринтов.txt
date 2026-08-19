@@ -105,13 +105,51 @@ TransactionBehavior — автоматическое открытие транз
 - Убедиться, что OrderCreatedDomainEvent преобразуется в OrderCreatedIntegrationEvent и попадает в таблицу OutboxMessages.
 
 7. HTTP Idempotency (PostgreSQL-based): Реализовать IdempotencyFilter (или Middleware) для эндпоинта создания заказа.
-- Создать таблицу IdempotencyKeys в БД Order Service (колонки: IdempotencyKey (primary key), RequestHash, ResponseStatusCode, ResponseBody, CreatedAt).
-- При получении запроса с заголовком Idempotency-Key выполнять атомарную проверку и вставку ключа в БД в рамках единой транзакции с созданием заказа.
-- Если ключ уже существует — прерывать пайплайн и возвращать сохраненный в таблице ответ (201 Created / ResponseBody) без повторного запуска доменной логики. Если заказ в процессе обработки — возвращать соответствующий промежуточный статус согласно api.md.
-- При повторном использовании существующего Idempotency-Key необходимо сравнить hash тела запроса. Если тело отличается — вернуть 409 Conflict.
-- Добавить в задачу обязательную обработку DbUpdateException (дубликат ключа) внутри IdempotencyFilter. Если поймали ошибку уникального индекса для IdempotencyKey — нужно:
-- Отменить текущую транзакцию.
-- Сделать повторный запрос в таблицу идемпотентности, чтобы забрать тот ответ, который сгенерировала параллельная (успешная) транзакция, либо вернуть статус 409 Conflict / 423 Locked (если первый запрос еще обрабатывается).
+- Создать таблицу IdempotencyKeys в БД Order Service. 
+Структура таблицы IdempotencyKeys:
+    IdempotencyKey (Guid, part of PK)
+    RequestHash (string, SHA-256)
+    ResponseStatusCode (int)
+    ResponseBody (jsonb)
+    CreatedAt (DateTimeOffset)
+	
+- Idempotency-Key является обязательным заголовком для POST /api/v1/orders. При его отсутствии вернуть 400 Bad Request.
+
+- Транзакционные границы: Операции над IdempotencyKeys, Orders, OrderItems и OutboxMessages выполняются строго в рамках единой локальной PostgreSQL-транзакции через TransactionBehavior.
+
+- Алгоритм обработки:
+Шаг 1. Request Hash
+IdempotencyFilter получает Idempotency-Key и вычисляет SHA256(Body) тела HTTP-запроса.
+
+Шаг 2 Fast Path 
+Фильтр проверяет наличие Idempotency record.
+
+Если запись найдена:
+- RequestHash совпадает — вернуть сохранённые ResponseStatusCode и ResponseBody без запуска Handler и доменной логики;
+- RequestHash отличается — вернуть 409 Conflict.
+
+Шаг 3. Create Order
+Если Idempotency record не найден, запрос передаётся дальше по pipeline.
+
+CreateOrderHandler выполняет создание Order и OrderItems, регистрирует OrderCreatedDomainEvent и формирует OutboxMessage.
+Idempotency record также создаётся/обновляется в рамках той же PostgreSQL-транзакции.
+После формирования HTTP-ответа в Idempotency record сохраняются ResponseStatusCode и ResponseBody.
+Все изменения фиксируются одним COMMIT.
+
+Шаг 4. Concurrent Requests
+Если два параллельных запроса используют одинаковый Idempotency-Key и оба первоначально получили NOT FOUND, уникальное ограничение PostgreSQL гарантирует, что только одна транзакция сможет успешно зарегистрировать IdempotencyKey.
+
+Вторая транзакция получает DbUpdateException вследствие нарушения уникального ограничения.
+
+Она должна:
+- откатить текущую транзакцию;
+- повторно прочитать Idempotency record;
+- если запись уже содержит результат — вернуть сохранённый ответ;
+- если запись ещё недоступна, поскольку первая транзакция продолжает обработку, вернуть 409 Conflict.
+
+Доменная операция не должна повторно выполняться после обнаружения уже успешно обработанного Idempotency-Key.
+
+- При повторном использовании Idempotency-Key с отличающимся телом запроса вернуть 409 Conflict.
 
 ✅ Критерии приемки:
 - Выполнение HTTP-запроса POST /api/v1/orders сохраняет запись в таблицы orders и order_items в PostgreSQL.
