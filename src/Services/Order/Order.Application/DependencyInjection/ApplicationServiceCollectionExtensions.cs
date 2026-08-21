@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Order.Application.Abstractions.Persistence.Idempotency;
 using Order.Application.Behaviors;
 using Order.Application.Features.Orders.CreateOrder;
 
@@ -41,6 +42,8 @@ public static class ApplicationServiceCollectionExtensions
                 typeof(TransactionBehavior<,>)
             ];
         });
+
+        services.AddScoped<IIdempotencyContext, IdempotencyContext>();
 
         return services;
     }

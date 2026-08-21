@@ -12,6 +12,21 @@ namespace Order.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "idempotency_records",
+                columns: table => new
+                {
+                    IdempotencyKey = table.Column<Guid>(type: "uuid", nullable: false),
+                    RequestHash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    ResponseStatusCode = table.Column<int>(type: "integer", nullable: false),
+                    ResponseBody = table.Column<string>(type: "jsonb", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_idempotency_records", x => x.IdempotencyKey);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "orders",
                 columns: table => new
                 {
@@ -64,6 +79,9 @@ namespace Order.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "idempotency_records");
+
             migrationBuilder.DropTable(
                 name: "order_items");
 

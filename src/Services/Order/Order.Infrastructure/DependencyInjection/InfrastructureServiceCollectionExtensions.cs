@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Order.Application.Abstractions.Persistence;
+using Order.Application.Abstractions.Persistence.Idempotency;
 using Order.Infrastructure.Persistence;
+using Order.Infrastructure.Persistence.Idempotency;
 using Order.Infrastructure.Persistence.Repositories;
 using Order.Infrastructure.Persistence.Seeding;
 using PizzaSaga.Shared.Infrastructure.Persistence;
@@ -42,6 +44,9 @@ public static class InfrastructureServiceCollectionExtensions
         // Регистрируем сидер БД.
         // Он будет вызываться при старте приложения через DatabaseMigrationExtensions.ApplyMigrationsAsync<TContext>()
         services.AddScoped<IDatabaseSeeder<OrderDbContext>, OrderDatabaseSeeder>();
+
+        // Регистрация Idempotency Repository
+        services.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
 
         return services;
     }

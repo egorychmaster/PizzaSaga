@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Order.Infrastructure.Persistence.Idempotency;
 using OrderAggregate = Order.Domain.AggregatesModel.OrderAggregate.Order;
 
 namespace Order.Infrastructure.Persistence;
@@ -10,8 +11,15 @@ public sealed class OrderDbContext : DbContext
     {
     }
 
-    // DbSet сущности/агрегата Заказа
+    /// <summary>
+    /// Сущности/агрегата Заказа.
+    /// </summary>
     public DbSet<OrderAggregate> Orders => Set<OrderAggregate>();
+
+    /// <summary>
+    /// Набор записей идемпотентности HTTP-запросов.
+    /// </summary>
+    public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

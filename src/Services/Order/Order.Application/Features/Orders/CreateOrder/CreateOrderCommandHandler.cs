@@ -1,7 +1,9 @@
 ﻿using Mediator;
 using Order.Application.Abstractions.Persistence;
+using Order.Application.Abstractions.Persistence.Idempotency;
 using Order.Domain.AggregatesModel.OrderAggregate;
 using Order.Domain.ValueObjects;
+using System.Text.Json;
 using OrderAggregate = Order.Domain.AggregatesModel.OrderAggregate.Order;
 
 namespace Order.Application.Features.Orders.CreateOrder;
@@ -14,11 +16,18 @@ public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderComma
     private const decimal TemporaryUnitPrice = 10m;
 
     private readonly IOrderRepository _orderRepository;
+    private readonly IIdempotencyContext _idempotencyContext;
+    private readonly IIdempotencyRepository _idempotencyRepository;
 
-    public CreateOrderCommandHandler(IOrderRepository orderRepository)
+    public CreateOrderCommandHandler(IOrderRepository orderRepository
+        ,
+        IIdempotencyContext idempotencyContext,
+        IIdempotencyRepository idempotencyRepository
+        )
     {
-        _orderRepository = orderRepository
-            ?? throw new ArgumentNullException(nameof(orderRepository));
+        _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
+        _idempotencyContext = idempotencyContext ?? throw new ArgumentNullException(nameof(idempotencyContext));
+        _idempotencyRepository = idempotencyRepository ?? throw new ArgumentNullException(nameof(idempotencyRepository));
     }
 
     /// <inheritdoc />
@@ -53,11 +62,28 @@ public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderComma
         await _orderRepository.AddAsync(order, cancellationToken);
 
         // 4. Возвращаем DTO — берём данные из агрегата
-        return new CreateOrderResult(
+        var result = new CreateOrderResult(
             OrderId: order.Id,
             Status: order.Status.ToString(),
             TotalAmount: order.TotalAmount.Amount,
             Currency: order.TotalAmount.CurrencyCode,
             CreatedAt: order.CreatedAt);
+
+        // Запись IdempotencyRecord для идемпотентности.
+        if (_idempotencyContext.IsSet)
+        {
+            var jsonBody = JsonSerializer.Serialize(result);
+
+            var idempotencyRecord = new IdempotencyRecordDto(
+                IdempotencyKey: _idempotencyContext.Key,
+                RequestHash: _idempotencyContext.RequestHash!,
+                ResponseStatusCode: 201,
+                ResponseBody: jsonBody,
+                CreatedAt: DateTimeOffset.UtcNow);
+
+            await _idempotencyRepository.AddAsync(idempotencyRecord, cancellationToken);
+        }
+
+        return result;
     }
 }

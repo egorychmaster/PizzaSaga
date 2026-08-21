@@ -1,4 +1,5 @@
 ﻿using Mediator;
+using Order.Api.Idempotency;
 using Order.Application.Features.Orders.CreateOrder;
 using Order.Domain.ValueObjects;
 using System.Security.Claims;
@@ -17,14 +18,16 @@ public static class CreateOrderEndpoint
     /// <returns>Тот же набор маршрутов для дальнейшей конфигурации.</returns>
     public static IEndpointRouteBuilder MapCreateOrderEndpoint(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapPost("/api/v1/orders", HandleAsync)
-            .WithName("CreateOrder")
-            .WithTags("Orders")
+        endpoints.MapPost("/api/v1/orders", HandleAsync)            
             .RequireAuthorization()
             .Produces<CreateOrderResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .WithName("CreateOrder")
+            .WithTags("Orders")
+            .AddEndpointFilter<IdempotencyFilter>()
+            ;
 
         return endpoints;
     }
