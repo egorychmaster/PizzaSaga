@@ -38,33 +38,20 @@ public sealed class IdempotencyContext : IIdempotencyContext
 {
     private Guid _key;
 
-    /// <summary>
-    /// Идемпотентный ключ, полученный из заголовка Idempotency-Key HTTP-запроса.
-    /// По умолчанию Guid.Empty, что означает "не установлен".
-    /// </summary>
+    /// <inheritdoc />
     public Guid Key
     {
         get => _key;
         private set => _key = value != Guid.Empty ? value : throw new InvalidOperationException("Key cannot be set to Guid.Empty.");
     }
 
-    /// <summary>
-    /// SHA-256 хэш тела HTTP-запроса.
-    /// По умолчанию null.
-    /// </summary>
+    /// <inheritdoc />
     public string? RequestHash { get; private set; }
 
-    /// <summary>
-    /// Возвращает true, если оба поля (Key и RequestHash) успешно установлены.
-    /// </summary>
+    /// <inheritdoc />
     public bool IsSet => Key != Guid.Empty && !string.IsNullOrEmpty(RequestHash);
 
-    /// <summary>
-    /// Устанавливает параметры идемпотентности.
-    /// Вызывается из IdempotencyFilter после успешного парсинга и вычислений.
-    /// </summary>
-    /// <param name="key">Идемпотентный ключ (Guid), полученный из HTTP-заголовка Idempotency-Key.</param>
-    /// <param name="requestHash">SHA-256 хэш тела HTTP-запроса в виде строки.</param>
+    /// <inheritdoc />
     public void Set(Guid key, string requestHash)
     {
         Key = key;

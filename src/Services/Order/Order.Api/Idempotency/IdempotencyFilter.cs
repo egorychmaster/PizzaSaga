@@ -64,17 +64,13 @@ public sealed class IdempotencyFilter : IEndpointFilter
         catch (DbUpdateException ex) when (IsDuplicateIdempotencyKey(ex))
         {
             // Обработка Race Condition (Параллельные запросы с одинаковым Idempotency-Key)
-            _logger.LogWarning(
-                "Concurrent request for Idempotency-Key {Key} caused unique constraint violation. Handling fallback...",
-                idempotencyKey);
+            _logger.LogWarning("Concurrent request for Idempotency-Key {Key} caused unique constraint violation. Handling fallback...", idempotencyKey);
 
-            // Так как текущая транзакция и DbContext находятся в сбойном состоянии после Rollback,
-            // поднимаем изолированный Scope для повторного чтения из БД.
+            // Так как текущая транзакция и DbContext находятся в сбойном состоянии после Rollback, поднимаем изолированный Scope для повторного чтения из БД.
             using var scope = _serviceProvider.CreateScope();
             var isolatedRepo = scope.ServiceProvider.GetRequiredService<IIdempotencyRepository>();
 
             var retryRecord = await isolatedRepo.GetAsync(idempotencyKey, httpContext.RequestAborted);
-
             if (retryRecord is null)
             {
                 return Results.Problem(
@@ -107,12 +103,7 @@ public sealed class IdempotencyFilter : IEndpointFilter
             type: "urn:pizzasaga:error:idempotency-key-duplicate-with-different-body");
     }
 
-    private static bool IsDuplicateIdempotencyKey(Exception ex)
-    {
-        // В PostgreSQL дубликат ключа вызовет 23505 constraint violation
-        return ex is DbUpdateException &&
-               (ex.InnerException?.Message.Contains("idempotency_keys", StringComparison.OrdinalIgnoreCase) == true ||
-                ex.InnerException?.Message.Contains("23505", StringComparison.OrdinalIgnoreCase) == true ||
-                ex.InnerException?.Message.Contains("duplicate key", StringComparison.OrdinalIgnoreCase) == true);
-    }
+    private static bool IsDuplicateIdempotencyKey(DbUpdateException ex) =>
+        ex.InnerException?.Message.Contains("23505") == true || // PostgreSQL unique_violation
+        ex.Message.Contains("unique constraint", StringComparison.OrdinalIgnoreCase);
 }
