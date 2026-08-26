@@ -14,36 +14,38 @@ public static class ApplicationServiceCollectionExtensions
     public static IServiceCollection AddOrderApplication(this IServiceCollection services)
     {
         // Регистрирует все FluentValidation-валидаторы, найденные в сборке Order.Application.
-        // Поэтому при добавлении нового Validator отдельную регистрацию в Program.cs делать не нужно.
         services.AddValidatorsFromAssemblyContaining<CreateOrderCommandValidator>();
 
+        // Регистрируем scoped контекст идемпотентности (для передачи параметров из API в Application)
+        services.AddScoped<IIdempotencyContext, IdempotencyContext>();
 
-        // Регистрирует Mediator и application pipeline behaviors.
+        // Регистрируем Mediator с pipeline behaviors.
+        //
+        // ВАЖНО: порядок поведений определяет порядок выполнения:
+        //   LoggingBehavior → ValidationBehavior → IdempotencyBehavior → TransactionBehavior → Handler
+        //
+        // Это соответствует архитектуре:
+        //   IdempotencyBehavior (внешний) перехватывает DuplicateIdempotencyKeyException после ROLLBACK.
+        //   TransactionBehavior (внутренний) управляет транзакцией и SaveChanges/Commit.
+        //
         services.AddMediator(options =>
         {
-            // Mediator и связанные с ним handlers/behaviors
-            // регистрируются как Scoped.
-            //
-            // Это необходимо, поскольку ValidationBehavior
-            // использует scoped IValidator<TMessage>.
-            //
-            // Кроме того, Scoped lifetime хорошо соответствует HTTP request scope и пригодится для TransactionBehavior с EF Core DbContext.
             options.ServiceLifetime = ServiceLifetime.Scoped;
 
             options.PipelineBehaviors =
             [
-                // Логирование всех сообщений Mediator.
+                // Логирование всех сообщений.
                 typeof(LoggingBehavior<,>),
-
                 // Валидация только сообщений, реализующих ICommand<TResponse>.
                 typeof(ValidationBehavior<,>),
 
+                // IdempotencyBehavior должен быть ВНЕШНИМ (выполняется первым из behavior-контейнера).
+                typeof(IdempotencyBehavior<,>),
+                // TransactionBehavior — внутренний: управляет транзакцией и SaveChanges.
                 // Автоматическое управление транзакциями БД для команд.
                 typeof(TransactionBehavior<,>)
             ];
         });
-
-        services.AddScoped<IIdempotencyContext, IdempotencyContext>();
 
         return services;
     }

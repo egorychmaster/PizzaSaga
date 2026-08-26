@@ -16,18 +16,18 @@ public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderComma
     private const decimal TemporaryUnitPrice = 10m;
 
     private readonly IOrderRepository _orderRepository;
-    private readonly IIdempotencyContext _idempotencyContext;
-    private readonly IIdempotencyRepository _idempotencyRepository;
+    //private readonly IIdempotencyContext _idempotencyContext;
+    //private readonly IIdempotencyRepository _idempotencyRepository;
 
     public CreateOrderCommandHandler(IOrderRepository orderRepository
-        ,
-        IIdempotencyContext idempotencyContext,
-        IIdempotencyRepository idempotencyRepository
+        //,
+        //IIdempotencyContext idempotencyContext,
+        //IIdempotencyRepository idempotencyRepository
         )
     {
         _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
-        _idempotencyContext = idempotencyContext ?? throw new ArgumentNullException(nameof(idempotencyContext));
-        _idempotencyRepository = idempotencyRepository ?? throw new ArgumentNullException(nameof(idempotencyRepository));
+        //_idempotencyContext = idempotencyContext ?? throw new ArgumentNullException(nameof(idempotencyContext));
+        //_idempotencyRepository = idempotencyRepository ?? throw new ArgumentNullException(nameof(idempotencyRepository));
     }
 
     /// <inheritdoc />
@@ -69,20 +69,20 @@ public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderComma
             Currency: order.TotalAmount.CurrencyCode,
             CreatedAt: order.CreatedAt);
 
-        // Запись IdempotencyRecord для идемпотентности.
-        if (_idempotencyContext.IsSet)
-        {
-            var jsonBody = JsonSerializer.Serialize(result);
+        //// Запись IdempotencyRecord для идемпотентности.
+        //if (_idempotencyContext.IsSet)
+        //{
+        //    var jsonBody = JsonSerializer.Serialize(result);
 
-            var idempotencyRecord = new IdempotencyRecordDto(
-                IdempotencyKey: _idempotencyContext.Key,
-                RequestHash: _idempotencyContext.RequestHash!,
-                ResponseStatusCode: 201,
-                ResponseBody: jsonBody,
-                CreatedAt: DateTimeOffset.UtcNow);
+        //    var idempotencyRecord = new IdempotencyRecordDto(
+        //        IdempotencyKey: _idempotencyContext.Key,
+        //        RequestHash: _idempotencyContext.RequestHash!,
+        //        ResponseStatusCode: 201,
+        //        ResponseBody: jsonBody,
+        //        CreatedAt: DateTimeOffset.UtcNow);
 
-            await _idempotencyRepository.AddAsync(idempotencyRecord, cancellationToken);
-        }
+        //    await _idempotencyRepository.AddAsync(idempotencyRecord, cancellationToken);
+        //}
 
         return result;
     }

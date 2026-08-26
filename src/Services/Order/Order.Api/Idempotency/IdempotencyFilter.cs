@@ -1,10 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Order.Application.Abstractions.Persistence.Idempotency;
+﻿using Order.Application.Abstractions.Persistence.Idempotency;
 
 namespace Order.Api.Idempotency;
 
 /// <summary>
 /// Endpoint-фильтр для обеспечения идемпотентности POST /api/v1/orders.
+/// Выполняет Fast Path, вычисляет хеш и устанавливает IIdempotencyContext.
+/// Обработка race-условий делегируется IdempotencyBehavior → TransactionBehavior → UnitOfWork.
 /// </summary>
 public sealed class IdempotencyFilter : IEndpointFilter
 {
@@ -12,18 +13,15 @@ public sealed class IdempotencyFilter : IEndpointFilter
 
     private readonly IIdempotencyRepository _idempotencyRepo;
     private readonly IIdempotencyContext _idempotencyContext;
-    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<IdempotencyFilter> _logger;
 
     public IdempotencyFilter(
         IIdempotencyRepository idempotencyRepo,
         IIdempotencyContext idempotencyContext,
-        IServiceProvider serviceProvider,
         ILogger<IdempotencyFilter> logger)
     {
         _idempotencyRepo = idempotencyRepo ?? throw new ArgumentNullException(nameof(idempotencyRepo));
         _idempotencyContext = idempotencyContext ?? throw new ArgumentNullException(nameof(idempotencyContext));
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -56,54 +54,25 @@ public sealed class IdempotencyFilter : IEndpointFilter
         // Шаг 4: Передаем ключ и хеш в Scoped Context для сохранения ВНУТРИ единой транзакции
         _idempotencyContext.Set(idempotencyKey, requestHash);
 
-        try
-        {
-            // Передаем управление дальше по pipeline (Endpoint -> Mediator -> TransactionBehavior)
-            return await next(context);
-        }
-        catch (DbUpdateException ex) when (IsDuplicateIdempotencyKey(ex))
-        {
-            // Обработка Race Condition (Параллельные запросы с одинаковым Idempotency-Key)
-            _logger.LogWarning("Concurrent request for Idempotency-Key {Key} caused unique constraint violation. Handling fallback...", idempotencyKey);
-
-            // Так как текущая транзакция и DbContext находятся в сбойном состоянии после Rollback, поднимаем изолированный Scope для повторного чтения из БД.
-            using var scope = _serviceProvider.CreateScope();
-            var isolatedRepo = scope.ServiceProvider.GetRequiredService<IIdempotencyRepository>();
-
-            var retryRecord = await isolatedRepo.GetAsync(idempotencyKey, httpContext.RequestAborted);
-            if (retryRecord is null)
-            {
-                return Results.Problem(
-                    title: "Concurrent request is being processed.",
-                    detail: "A concurrent request with the same Idempotency-Key is currently being processed. Please retry later.",
-                    statusCode: StatusCodes.Status409Conflict,
-                    instance: httpContext.Request.Path.ToString(),
-                    type: "urn:pizzasaga:error:idempotency-key-concurrent");
-            }
-
-            return HandleExistingRecord(retryRecord, requestHash, httpContext);
-        }
+        // Передаём управление дальше по pipeline (Endpoint → Mediator → TransactionBehavior)
+        return await next(context);
     }
 
     private IResult HandleExistingRecord(IdempotencyRecordDto record, string currentRequestHash, HttpContext context)
     {
-        if (record.RequestHash == currentRequestHash)
+        if (!string.Equals(record.RequestHash, currentRequestHash, StringComparison.OrdinalIgnoreCase))
         {
-            return Results.Content(
-                content: record.ResponseBody,
-                contentType: "application/json",
-                statusCode: record.ResponseStatusCode);
+            return Results.Problem(
+                title: "Idempotency-Key conflict.",
+                detail: "This Idempotency-Key has already been used with a different request payload.",
+                statusCode: StatusCodes.Status409Conflict,
+                instance: context.Request.Path.ToString(),
+                type: "urn:pizzasaga:error:idempotency-key-duplicate-with-different-body");
         }
 
-        return Results.Problem(
-            title: "Idempotency-Key conflict.",
-            detail: "This Idempotency-Key has already been used with a different request payload.",
-            statusCode: StatusCodes.Status409Conflict,
-            instance: context.Request.Path.ToString(),
-            type: "urn:pizzasaga:error:idempotency-key-duplicate-with-different-body");
+        return Results.Content(
+            content: record.ResponseBody,
+            contentType: "application/json",
+            statusCode: record.ResponseStatusCode);
     }
-
-    private static bool IsDuplicateIdempotencyKey(DbUpdateException ex) =>
-        ex.InnerException?.Message.Contains("23505") == true || // PostgreSQL unique_violation
-        ex.Message.Contains("unique constraint", StringComparison.OrdinalIgnoreCase);
 }

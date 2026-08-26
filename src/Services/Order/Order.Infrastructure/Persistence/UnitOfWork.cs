@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using Order.Application.Abstractions.Persistence;
+using Order.Application.Abstractions.Persistence.Idempotency.Exceptions;
 
 namespace Order.Infrastructure.Persistence;
 
@@ -61,8 +63,24 @@ public sealed class UnitOfWork : IUnitOfWork
                 {
                     _logger.LogError(rollbackEx, "Rollback failed.");
                 }
+
+                if (ex is DbUpdateException dbUpdateException && IsDuplicateIdempotencyKey(dbUpdateException))
+                {
+                    throw new DuplicateIdempotencyKeyException(ex);
+                }
+
                 throw;
             }
         });
+    }
+
+    private static bool IsDuplicateIdempotencyKey(DbUpdateException exception)
+    {
+        return exception.InnerException is PostgresException postgresException
+               && postgresException.SqlState == PostgresErrorCodes.UniqueViolation
+               && postgresException.ConstraintName is not null
+               && postgresException.ConstraintName.Contains(
+                   "idempotency",
+                   StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Mediator;
 using Order.Api.Idempotency;
+using Order.Application.Abstractions.Persistence.Idempotency;
 using Order.Application.Features.Orders.CreateOrder;
 using Order.Domain.ValueObjects;
 using System.Security.Claims;
@@ -18,7 +19,7 @@ public static class CreateOrderEndpoint
     /// <returns>Тот же набор маршрутов для дальнейшей конфигурации.</returns>
     public static IEndpointRouteBuilder MapCreateOrderEndpoint(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapPost("/api/v1/orders", HandleAsync)            
+        endpoints.MapPost("/api/v1/orders", HandleAsync)
             .RequireAuthorization()
             .Produces<CreateOrderResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
@@ -35,10 +36,16 @@ public static class CreateOrderEndpoint
     /// <summary> 
     /// Обрабатывает запрос создания заказа. 
     /// </summary> 
-    private static async Task<IResult> HandleAsync(CreateOrderRequest request, HttpContext httpContext, IMediator mediator, CancellationToken cancellationToken)
+    private static async Task<IResult> HandleAsync(
+        CreateOrderRequest request,
+        HttpContext httpContext,
+        IMediator mediator,
+        IIdempotencyContext idempotencyContext,
+        CancellationToken cancellationToken)
     {
         // CustomerId намеренно не принимается из JSON. Идентичность пользователя берётся только из проверенного JWT.
-        var customerIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier) ?? httpContext.User.FindFirst("sub");
+        var customerIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier) ??
+                              httpContext.User.FindFirst("sub");
         if (customerIdClaim is null || !Guid.TryParse(customerIdClaim.Value, out var customerId))
             return Results.Unauthorized();
 
@@ -56,6 +63,9 @@ public static class CreateOrderEndpoint
             Items: items,
             PaymentMethod: request.PaymentMethod,
             Currency: request.Currency);
+
+        // Устанавливаем ожидаемый HTTP-статус ответа
+        idempotencyContext.SetResponseStatusCode(StatusCodes.Status201Created);
 
         // Передаём команду в Mediator. Дальше управление перейдёт в pipeline behaviors, а затем в CreateOrderCommandHandler.
         var result = await mediator.Send(command, cancellationToken);
