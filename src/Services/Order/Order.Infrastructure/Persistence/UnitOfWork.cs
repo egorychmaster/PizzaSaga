@@ -74,6 +74,9 @@ public sealed class UnitOfWork : IUnitOfWork
         });
     }
 
+    /// <summary>
+    /// Проверяет, является ли DbUpdateException результатом нарушения уникального ограничения Idempotency-Key.
+    /// </summary>
     private static bool IsDuplicateIdempotencyKey(DbUpdateException exception)
     {
         return exception.InnerException is PostgresException postgresException
