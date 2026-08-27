@@ -12,11 +12,17 @@ public sealed class TransactionBehavior<TMessage, TResponse> : IPipelineBehavior
     where TMessage : ICommand<TResponse>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ITransactionCallbackContext _transactionCallbackContext;
     private readonly ILogger<TransactionBehavior<TMessage, TResponse>> _logger;
 
-    public TransactionBehavior(IUnitOfWork unitOfWork, ILogger<TransactionBehavior<TMessage, TResponse>> logger)
+    public TransactionBehavior(
+        IUnitOfWork unitOfWork,
+        ITransactionCallbackContext transactionCallbackContext,
+        ILogger<TransactionBehavior<TMessage, TResponse>> logger)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _transactionCallbackContext = transactionCallbackContext
+            ?? throw new ArgumentNullException(nameof(transactionCallbackContext));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -29,9 +35,20 @@ public sealed class TransactionBehavior<TMessage, TResponse> : IPipelineBehavior
         {
             _logger.LogInformation("Executing command {CommandName} inside transaction", commandName);
 
-            // Вся магия транзакций, SaveChanges, Rollback и Retry Strategy прозрачно выполняется внутри UnitOfWork
+            // Транзакция SaveChanges, Rollback и Retry Strategy прозрачно выполняется внутри UnitOfWork
             return await _unitOfWork.ExecuteInTransactionAsync(
-                async ct => await next(message, ct),
+                async ct =>
+                {
+                    // 1. Выполняем Handler.
+                    var result = await next(message, ct);
+
+                    // 2. Выполняем зарегистрированные callback-операции.
+                    // Они находятся внутри той же PostgreSQL-транзакции.
+                    await _transactionCallbackContext.ExecuteAsync(result!, ct);
+
+                    // 3. UnitOfWork после возврата из callback выполнит SaveChangesAsync и Commit.
+                    return result!;
+                },
                 cancellationToken);
         }
         catch (OperationCanceledException)

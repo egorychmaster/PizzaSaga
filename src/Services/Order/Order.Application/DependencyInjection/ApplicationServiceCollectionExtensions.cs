@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Order.Application.Abstractions.Persistence;
 using Order.Application.Abstractions.Persistence.Idempotency;
 using Order.Application.Behaviors;
 using Order.Application.Features.Orders.CreateOrder;
@@ -18,6 +19,10 @@ public static class ApplicationServiceCollectionExtensions
 
         // Регистрируем scoped контекст идемпотентности (для передачи параметров из API в Application)
         services.AddScoped<IIdempotencyContext, IdempotencyContext>();
+
+        // Регистрируем scoped контекст callback-операций внутри транзакции.
+        services.AddScoped<ITransactionCallbackContext, TransactionCallbackContext>();
+
 
         // Регистрируем Mediator с pipeline behaviors.
         //
