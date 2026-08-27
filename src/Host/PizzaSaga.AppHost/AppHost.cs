@@ -2,18 +2,17 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var jwtSecret = builder.AddParameter("JwtSecretKey", secret: true);
 
+
 // --- 1. ОПИСАНИЕ ИНФРАСТРУКТУРЫ (КОНТЕЙНЕРЫ) ---
 
 // База данных PostgreSQL для Auth.Service и Order.Service (Саги)
 var postgres = builder.AddPostgres("postgres")
     .WithPgAdmin();     // Добавит удобную панель управления БД
 
-var orderDb = postgres.AddDatabase("OrderDb");
-var stockDb = postgres.AddDatabase("StockDb");
-
 // Брокер сообщений RabbitMQ для MassTransit (общение между сервисами)
 var rabbitMq = builder.AddRabbitMQ("rabbitmq")
     .WithManagementPlugin();    // Панель управления RabbitMQ
+
 
 // --- 2. ОПИСАНИЕ МИКРОСЕРВИСОВ И ЗАВИСИМОСТЕЙ ---
 
@@ -35,7 +34,17 @@ var rabbitMq = builder.AddRabbitMQ("rabbitmq")
 var authService = builder.AddProject<Projects.Auth_Api>("auth-api")
     .WithEnvironment("Jwt__SecretKey", jwtSecret);
 
+// Сервис каталога (управление номенклатурой пицц)
+var catalogDb = postgres.AddDatabase("CatalogDb");
+var catalogService = builder.AddProject<Projects.Catalog_Api>("catalog-api")
+    .WithEnvironment("Jwt__SecretKey", jwtSecret)
+    .WithReference(catalogDb)
+    .WithReference(rabbitMq)
+    .WaitFor(catalogDb)
+    .WaitFor(rabbitMq);
+
 // Сервис склада (управление остатками)
+var stockDb = postgres.AddDatabase("StockDb");
 var stockService = builder.AddProject<Projects.Stock_Api>("stock-api")
     .WithReference(stockDb)
     .WithReference(rabbitMq)
@@ -48,6 +57,7 @@ var paymentService = builder.AddProject<Projects.Payment_Api>("payment-api")
     .WaitFor(rabbitMq);
 
 // Сервис заказов (содержит бизнес-логику и MassTransit State Machine)
+var orderDb = postgres.AddDatabase("OrderDb");
 var orderService = builder.AddProject<Projects.Order_Api>("order-api")
     .WithEnvironment("Jwt__SecretKey", jwtSecret)
     .WithReference(orderDb)
@@ -55,17 +65,21 @@ var orderService = builder.AddProject<Projects.Order_Api>("order-api")
     .WaitFor(orderDb)       // Сервис не запустится, пока БД не готова. Будет использовать встроенный health check PostgreSQL.
     .WaitFor(rabbitMq);     // Сервис не запустится, пока брокер сообщений не готов. Будет использовать встроенный health check RabbitMQ.
 
+
 // --- 3. ШЛЮЗ МАРШРУТИЗАЦИИ (API GATEWAY) ---
 // Шлюз YARP должен знать адреса других сервисов, чтобы проксировать запросы
 builder.AddProject<Projects.PizzaSaga_ApiGateway>("api-gateway")
     .WithEnvironment("Jwt__SecretKey", jwtSecret)
     .WithReference(authService)
+    .WithReference(catalogService)
     .WithReference(orderService)
     .WithReference(stockService)
     .WithReference(paymentService)
     .WaitFor(authService)
+    .WaitFor(catalogService)
     .WaitFor(orderService)
     .WaitFor(stockService)
     .WaitFor(paymentService);
+
 
 builder.Build().Run();

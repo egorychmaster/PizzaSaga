@@ -14,6 +14,9 @@
   <Folder Name="/Services/Auth/">
     <Project Path="src/Services/Auth/Auth.Api/Auth.Api.csproj" />
   </Folder>
+  <Folder Name="/Services/Catalog/">
+    <Project Path="src/Services/Catalog/Catalog.Api/Catalog.Api.csproj" />
+  </Folder>
   <Folder Name="/Services/Order/">
     <Project Path="src/Services/Order/Order.Api/Order.Api.csproj" />
     <Project Path="src/Services/Order/Order.Application/Order.Application.csproj" Id="3055e8dc-3b96-45ac-9968-405f069f991b" />

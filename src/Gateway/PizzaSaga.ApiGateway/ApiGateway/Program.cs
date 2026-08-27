@@ -38,6 +38,7 @@ try
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/auth/v1/swagger.json", "Auth Service API");
+        options.SwaggerEndpoint("/swagger/catalog/v1/swagger.json", "Catalog Service API");
         options.SwaggerEndpoint("/swagger/order/v1/swagger.json", "Order Service API");
 
         // Доступен по адресу /swagger
