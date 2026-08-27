@@ -16,6 +16,9 @@
   </Folder>
   <Folder Name="/Services/Catalog/">
     <Project Path="src/Services/Catalog/Catalog.Api/Catalog.Api.csproj" />
+    <Project Path="src/Services/Catalog/Catalog.Application/Catalog.Application.csproj" Id="449ca989-83ef-4dbd-80aa-3bfcbee7f8fb" />
+    <Project Path="src/Services/Catalog/Catalog.Domain/Catalog.Domain.csproj" Id="fef95a62-7378-433e-90ec-ebc3691197c4" />
+    <Project Path="src/Services/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj" Id="7dab6896-41a5-4f9b-ace9-ffcb68565f32" />
   </Folder>
   <Folder Name="/Services/Order/">
     <Project Path="src/Services/Order/Order.Api/Order.Api.csproj" />
