@@ -152,13 +152,17 @@ CreateOrderHandler выполняет создание Order и OrderItems, ре
 
 📋 Задачи:
 1. Добавить создание Catalog Service:
-добавить seed каталога;
-добавить публикацию ProductCreatedIntegrationEvent;
-добавить локальную таблицу ProductCatalog (или CatalogCache) в Order Service;
-реализовать consumer'ы для синхронизации локального каталога.
-
-Это позволит уже в Sprint 2 иметь готовую инфраструктуру для расчета TotalAmount.
-Завершить метод создания заказа в Order Service (POST /api/v1/orders) - получать TotalAmount из локальной таблицы ProductCatalog.
+-добавить seed каталога;
+-добавить публикацию ProductCreatedIntegrationEvent;
+Order Service:
+-добавить локальную таблицу ProductCatalog (или CatalogCache) в Order Service;
+-реализовать consumer'ы для синхронизации локального каталога. Это позволит уже в Sprint 2 иметь готовую инфраструктуру для расчета TotalAmount.
+- Каталог хранит цены в одной базовой валюте (например, USD ), а при заказе происходит конвертация.
+Пример:
+ProductId = 1, Price = 10 USD
+Пользователь оформляет заказ в RUB → курс RUB→USD = 1.08 → 10.8 USD
+В сервис Order добавим таблицу курсов конвертации, которая заполнится из seed. Её будет использовать домен, при создании заказа.
+- реализовать расчета TotalAmount: завершить метод создания заказа в Order Service (POST /api/v1/orders) - получать TotalAmount из локальной таблицы ProductCatalog.
 
 2. Создание каркасов Stock и Payment: Создать проекты PizzaSaga.Services.Stock и PizzaSaga.Services.Payment. Настроить для каждого сервиса свою изолированную базу данных PostgreSQL. Полноценной бизнес-логики в них пока нет.
 - Автоматизация БД и Seed-данные (Stock & Payment): Подключить DatabaseMigrationHostedService к сервисам Stock и Payment. Реализовать инициализацию Seed Data: для БД Stock — инициализация остатков для продуктов из фиксированного набора ProductId.
