@@ -1,6 +1,6 @@
 ﻿using PizzaSaga.SharedKernel.Domain.Exceptions;
 
-namespace Order.Domain.Exceptions.CustomerIdentities;
+namespace Order.Domain.AggregatesModel.Orders.Exceptions.CustomerIdentities;
 
 public sealed class EmptyCustomerIdentityException : DomainException
 {

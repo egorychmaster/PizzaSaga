@@ -2,7 +2,7 @@
 using Order.Api.Idempotency;
 using Order.Application.Abstractions.Persistence.Idempotency;
 using Order.Application.Features.Orders.CreateOrder;
-using Order.Domain.ValueObjects;
+using Order.Domain.AggregatesModel.Orders.ValueObjects;
 using System.Security.Claims;
 
 namespace Order.Api.Endpoints.Orders.CreateOrder;

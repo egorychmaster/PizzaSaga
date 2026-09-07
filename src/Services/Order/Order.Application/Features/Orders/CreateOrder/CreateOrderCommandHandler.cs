@@ -2,7 +2,7 @@
 using Order.Application.Abstractions.Persistence;
 using Order.Application.Abstractions.Persistence.Idempotency;
 using Order.Domain.AggregatesModel.Orders;
-using Order.Domain.ValueObjects;
+using Order.Domain.AggregatesModel.Orders.ValueObjects;
 using System.Text.Json;
 
 namespace Order.Application.Features.Orders.CreateOrder;

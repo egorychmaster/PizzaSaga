@@ -1,6 +1,6 @@
-﻿using Order.Domain.Exceptions.PizzaQuantities;
+﻿using Order.Domain.AggregatesModel.Orders.Exceptions.PizzaQuantities;
 
-namespace Order.Domain.ValueObjects;
+namespace Order.Domain.AggregatesModel.Orders.ValueObjects;
 
 /// <summary>
 /// Количество пиццы в заказе (от 1 до 10).

@@ -1,4 +1,4 @@
-﻿using Order.Domain.ValueObjects;
+﻿using Order.Domain.AggregatesModel.Orders.ValueObjects;
 
 namespace Order.Domain.AggregatesModel.Orders;
 

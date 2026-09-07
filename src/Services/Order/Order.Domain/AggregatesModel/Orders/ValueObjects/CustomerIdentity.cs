@@ -1,6 +1,6 @@
-﻿using Order.Domain.Exceptions.CustomerIdentities;
+﻿using Order.Domain.AggregatesModel.Orders.Exceptions.CustomerIdentities;
 
-namespace Order.Domain.ValueObjects;
+namespace Order.Domain.AggregatesModel.Orders.ValueObjects;
 
 /// <summary>
 /// Идентификатор клиента (GUID), исключающий пустое значение.

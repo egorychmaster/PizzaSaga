@@ -1,6 +1,6 @@
 ﻿using PizzaSaga.SharedKernel.Domain.Exceptions;
 
-namespace Order.Domain.Exceptions.PizzaQuantities;
+namespace Order.Domain.AggregatesModel.Orders.Exceptions.PizzaQuantities;
 
 /// <summary>
 /// Исключение, возникающее при попытке создать PizzaQuantity

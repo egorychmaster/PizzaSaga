@@ -1,6 +1,6 @@
 ﻿using PizzaSaga.SharedKernel.Domain.Exceptions;
 
-namespace Order.Domain.Exceptions.Monies;
+namespace Order.Domain.AggregatesModel.Orders.Exceptions.Monies;
 
 public sealed class MoneyParsingException : DomainException
 {

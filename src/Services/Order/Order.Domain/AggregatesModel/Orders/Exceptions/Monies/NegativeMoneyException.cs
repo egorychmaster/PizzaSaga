@@ -1,6 +1,6 @@
 ﻿using PizzaSaga.SharedKernel.Domain.Exceptions;
 
-namespace Order.Domain.Exceptions.Monies;
+namespace Order.Domain.AggregatesModel.Orders.Exceptions.Monies;
 
 /// <summary>
 /// Исключение, возникающее при попытке создать денежное значение с отрицательной суммой.
