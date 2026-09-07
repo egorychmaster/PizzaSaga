@@ -19,7 +19,7 @@ public abstract class AggregateRoot
     /// <summary>
     /// Добавляет доменное событие в список.
     /// </summary>
-    protected void RaiseDomainEvent(IDomainEvent domainEvent)
+    protected void AddDomainEvent(IDomainEvent domainEvent)
     {
         ArgumentNullException.ThrowIfNull(domainEvent);
 

@@ -1,4 +1,4 @@
-﻿namespace PizzaSaga.Contracts.Orders;
+﻿namespace PizzaSaga.Contracts.IntegrationEvents.Orders;
 
 /// <summary>
 /// Интеграционное событие создания заказа, публикуемое в брокер/Outbox.
