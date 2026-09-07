@@ -1,11 +1,10 @@
-﻿namespace Order.Domain.Common;
+﻿namespace PizzaSaga.SharedKernel.Domain;
 
 /// <summary>
-/// Базовый класс для всех корней агрегатов (Aggregate Root).
+/// Базовый класс для всех корней агрегатов (Aggregate Root). Хранит доменные события.
 /// </summary>
 /// <remarks>
 /// Предоставляет механизм регистрации доменных событий, возникающих в процессе изменения состояния агрегата.
-///
 /// После успешного сохранения агрегата инфраструктурный слой может извлечь накопленные события и опубликовать их через Transactional Outbox или иной механизм доставки.
 /// </remarks>
 public abstract class AggregateRoot
@@ -13,16 +12,13 @@ public abstract class AggregateRoot
     private readonly List<IDomainEvent> _domainEvents = [];
 
     /// <summary>
-    /// Коллекция доменных событий, зарегистрированных агрегатом.
+    /// Список неопубликованных доменных событий.
     /// </summary>
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
     /// <summary>
-    /// Регистрирует новое доменное событие.
+    /// Добавляет доменное событие в список.
     /// </summary>
-    /// <param name="domainEvent">
-    /// Доменное событие, описывающее произошедшее изменение состояния агрегата.
-    /// </param>
     protected void RaiseDomainEvent(IDomainEvent domainEvent)
     {
         ArgumentNullException.ThrowIfNull(domainEvent);
@@ -31,11 +27,8 @@ public abstract class AggregateRoot
     }
 
     /// <summary>
-    /// Удаляет все зарегистрированные доменные события.
+    /// Очищает список доменных событий (обычно после публикации).
     /// </summary>
-    /// <remarks>
-    /// Обычно вызывается инфраструктурным слоем после успешной публикации всех накопленных доменных событий.
-    /// </remarks>
     public void ClearDomainEvents()
     {
         _domainEvents.Clear();

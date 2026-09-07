@@ -1,6 +1,6 @@
 ﻿using Order.Domain.AggregatesModel.OrderAggregate.Events;
-using Order.Domain.Common;
 using Order.Domain.ValueObjects;
+using PizzaSaga.SharedKernel.Domain;
 
 namespace Order.Domain.AggregatesModel.OrderAggregate;
 
