@@ -1,6 +1,6 @@
 ﻿using Order.Domain.ValueObjects;
 
-namespace Order.Domain.AggregatesModel.OrderAggregate;
+namespace Order.Domain.AggregatesModel.Orders;
 
 /// <summary>
 /// Позиция заказа.

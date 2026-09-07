@@ -1,10 +1,9 @@
 ﻿using Mediator;
 using Order.Application.Abstractions.Persistence;
 using Order.Application.Abstractions.Persistence.Idempotency;
-using Order.Domain.AggregatesModel.OrderAggregate;
+using Order.Domain.AggregatesModel.Orders;
 using Order.Domain.ValueObjects;
 using System.Text.Json;
-using OrderAggregate = Order.Domain.AggregatesModel.OrderAggregate.Order;
 
 namespace Order.Application.Features.Orders.CreateOrder;
 

@@ -1,5 +1,5 @@
 ﻿using Order.Application.Abstractions.Persistence;
-using OrderAggregate = Order.Domain.AggregatesModel.OrderAggregate.Order;
+using Order.Domain.AggregatesModel.Orders;
 
 namespace Order.Infrastructure.Persistence.Repositories;
 

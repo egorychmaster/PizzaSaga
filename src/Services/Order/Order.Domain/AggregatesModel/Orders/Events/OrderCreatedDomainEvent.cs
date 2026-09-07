@@ -1,7 +1,7 @@
 ﻿using Order.Domain.ValueObjects;
 using PizzaSaga.SharedKernel.Domain;
 
-namespace Order.Domain.AggregatesModel.OrderAggregate.Events;
+namespace Order.Domain.AggregatesModel.Orders.Events;
 
 /// <summary>
 /// Доменное событие, сигнализирующее о создании нового заказа.

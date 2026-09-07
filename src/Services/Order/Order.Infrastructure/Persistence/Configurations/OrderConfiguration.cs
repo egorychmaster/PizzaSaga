@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Order.Domain.AggregatesModel.Orders;
 using Order.Domain.ValueObjects;
-using OrderAggregate = Order.Domain.AggregatesModel.OrderAggregate.Order;
 
 namespace Order.Infrastructure.Persistence.Configurations;
 

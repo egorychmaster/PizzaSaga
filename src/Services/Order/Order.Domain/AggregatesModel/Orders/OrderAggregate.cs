@@ -1,14 +1,14 @@
-﻿using Order.Domain.AggregatesModel.OrderAggregate.Events;
+﻿using Order.Domain.AggregatesModel.Orders.Events;
 using Order.Domain.ValueObjects;
 using PizzaSaga.SharedKernel.Domain;
 
-namespace Order.Domain.AggregatesModel.OrderAggregate;
+namespace Order.Domain.AggregatesModel.Orders;
 
 /// <summary>
 /// Агрегат заказа.
 /// Управляет состоянием заказа, его позициями и бизнес-инвариантами.
 /// </summary>
-public sealed class Order : AggregateRoot
+public sealed class OrderAggregate : AggregateRoot
 {
     private readonly List<OrderItem> _items = [];
 
@@ -50,12 +50,12 @@ public sealed class Order : AggregateRoot
 
 
     // Пустой конструктор для EF Core
-    private Order() { }
+    private OrderAggregate() { }
 
     /// <summary>
     /// Создаёт новый заказ с указанным идентификатором и клиентом.
     /// </summary>
-    public Order(
+    public OrderAggregate(
         Guid id,
         CustomerIdentity customerId,
         IReadOnlyCollection<OrderItem> items)
@@ -86,7 +86,7 @@ public sealed class Order : AggregateRoot
     /// <summary>
     /// Фабрика для создания нового заказа.
     /// </summary>
-    public static Order Create(
+    public static OrderAggregate Create(
         Guid id,
         CustomerIdentity customerId,
         IReadOnlyCollection<OrderItem> items)

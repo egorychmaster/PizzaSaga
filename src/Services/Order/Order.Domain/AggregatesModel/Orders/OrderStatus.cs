@@ -1,4 +1,4 @@
-﻿namespace Order.Domain.AggregatesModel.OrderAggregate;
+﻿namespace Order.Domain.AggregatesModel.Orders;
 
 /// <summary>
 /// Публичные статусы заказа.

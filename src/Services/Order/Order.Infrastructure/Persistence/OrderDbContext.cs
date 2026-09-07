@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Order.Domain.AggregatesModel.Orders;
 using Order.Infrastructure.Persistence.Idempotency;
-using OrderAggregate = Order.Domain.AggregatesModel.OrderAggregate.Order;
 
 namespace Order.Infrastructure.Persistence;
 
