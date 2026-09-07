@@ -4,7 +4,7 @@ using Order.Domain.AggregatesModel.Orders;
 
 namespace Order.Infrastructure.Persistence.Configurations;
 
-internal sealed class OrderConfiguration : IEntityTypeConfiguration<OrderAggregate>
+internal sealed class OrderAggregateConfiguration : IEntityTypeConfiguration<OrderAggregate>
 {
     public void Configure(EntityTypeBuilder<OrderAggregate> builder)
     {
@@ -55,6 +55,6 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<OrderAggrega
             .OnDelete(DeleteBehavior.Cascade);
 
         // Maps to table
-        builder.ToTable("orders");
+        builder.ToTable("Orders");
     }
 }

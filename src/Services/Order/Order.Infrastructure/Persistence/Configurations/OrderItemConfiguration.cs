@@ -9,8 +9,10 @@ internal sealed class OrderItemConfiguration
 {
     public void Configure(EntityTypeBuilder<OrderItem> builder)
     {
+        // Primary key
         builder.HasKey(x => x.Id);
 
+        // Columns
         builder.Property(x => x.ProductId)
             .IsRequired();
 
@@ -39,6 +41,6 @@ internal sealed class OrderItemConfiguration
                     .IsRequired();
             });
 
-        builder.ToTable("order_items");
+        builder.ToTable("OrderItems");
     }
 }

@@ -12,7 +12,7 @@ namespace Order.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "idempotency_records",
+                name: "IdempotencyRecords",
                 columns: table => new
                 {
                     IdempotencyKey = table.Column<Guid>(type: "uuid", nullable: false),
@@ -23,11 +23,11 @@ namespace Order.Infrastructure.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_idempotency_records", x => x.IdempotencyKey);
+                    table.PrimaryKey("PK_IdempotencyRecords", x => x.IdempotencyKey);
                 });
 
             migrationBuilder.CreateTable(
-                name: "orders",
+                name: "Orders",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -40,11 +40,11 @@ namespace Order.Infrastructure.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_orders", x => x.Id);
+                    table.PrimaryKey("PK_Orders", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "order_items",
+                name: "OrderItems",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -56,23 +56,23 @@ namespace Order.Infrastructure.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_order_items", x => x.Id);
+                    table.PrimaryKey("PK_OrderItems", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_order_items_orders_OrderId",
+                        name: "FK_OrderItems_Orders_OrderId",
                         column: x => x.OrderId,
-                        principalTable: "orders",
+                        principalTable: "Orders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_order_items_OrderId",
-                table: "order_items",
+                name: "IX_OrderItems_OrderId",
+                table: "OrderItems",
                 column: "OrderId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_orders_Status",
-                table: "orders",
+                name: "IX_Orders_Status",
+                table: "Orders",
                 column: "Status");
         }
 
@@ -80,13 +80,13 @@ namespace Order.Infrastructure.Persistence.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "idempotency_records");
+                name: "IdempotencyRecords");
 
             migrationBuilder.DropTable(
-                name: "order_items");
+                name: "OrderItems");
 
             migrationBuilder.DropTable(
-                name: "orders");
+                name: "Orders");
         }
     }
 }

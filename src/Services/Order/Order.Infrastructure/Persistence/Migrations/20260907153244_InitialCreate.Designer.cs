@@ -12,7 +12,7 @@ using Order.Infrastructure.Persistence;
 namespace Order.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(OrderDbContext))]
-    [Migration("20260821134134_InitialCreate")]
+    [Migration("20260907153244_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -25,7 +25,7 @@ namespace Order.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Order.Domain.AggregatesModel.OrderAggregate.Order", b =>
+            modelBuilder.Entity("Order.Domain.AggregatesModel.Orders.OrderAggregate", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -47,10 +47,10 @@ namespace Order.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Status");
 
-                    b.ToTable("orders", (string)null);
+                    b.ToTable("Orders", (string)null);
                 });
 
-            modelBuilder.Entity("Order.Domain.AggregatesModel.OrderAggregate.OrderItem", b =>
+            modelBuilder.Entity("Order.Domain.AggregatesModel.Orders.OrderItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -66,7 +66,7 @@ namespace Order.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("order_items", (string)null);
+                    b.ToTable("OrderItems", (string)null);
                 });
 
             modelBuilder.Entity("Order.Infrastructure.Persistence.Idempotency.IdempotencyRecord", b =>
@@ -91,14 +91,14 @@ namespace Order.Infrastructure.Persistence.Migrations
 
                     b.HasKey("IdempotencyKey");
 
-                    b.ToTable("idempotency_records", (string)null);
+                    b.ToTable("IdempotencyRecords", (string)null);
                 });
 
-            modelBuilder.Entity("Order.Domain.AggregatesModel.OrderAggregate.Order", b =>
+            modelBuilder.Entity("Order.Domain.AggregatesModel.Orders.OrderAggregate", b =>
                 {
-                    b.OwnsOne("Order.Domain.ValueObjects.Money", "TotalAmount", b1 =>
+                    b.OwnsOne("Order.Domain.AggregatesModel.Orders.ValueObjects.Money", "TotalAmount", b1 =>
                         {
-                            b1.Property<Guid>("OrderId")
+                            b1.Property<Guid>("OrderAggregateId")
                                 .HasColumnType("uuid");
 
                             b1.Property<decimal>("Amount")
@@ -112,29 +112,29 @@ namespace Order.Infrastructure.Persistence.Migrations
                                 .HasColumnType("character varying(3)")
                                 .HasColumnName("TotalCurrency");
 
-                            b1.HasKey("OrderId");
+                            b1.HasKey("OrderAggregateId");
 
-                            b1.ToTable("orders");
+                            b1.ToTable("Orders");
 
                             b1.WithOwner()
-                                .HasForeignKey("OrderId");
+                                .HasForeignKey("OrderAggregateId");
                         });
 
-                    b.OwnsOne("Order.Domain.ValueObjects.CustomerIdentity", "CustomerId", b1 =>
+                    b.OwnsOne("Order.Domain.AggregatesModel.Orders.ValueObjects.CustomerIdentity", "CustomerId", b1 =>
                         {
-                            b1.Property<Guid>("OrderId")
+                            b1.Property<Guid>("OrderAggregateId")
                                 .HasColumnType("uuid");
 
                             b1.Property<Guid>("Value")
                                 .HasColumnType("uuid")
                                 .HasColumnName("CustomerId");
 
-                            b1.HasKey("OrderId");
+                            b1.HasKey("OrderAggregateId");
 
-                            b1.ToTable("orders");
+                            b1.ToTable("Orders");
 
                             b1.WithOwner()
-                                .HasForeignKey("OrderId");
+                                .HasForeignKey("OrderAggregateId");
                         });
 
                     b.Navigation("CustomerId")
@@ -144,14 +144,14 @@ namespace Order.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Order.Domain.AggregatesModel.OrderAggregate.OrderItem", b =>
+            modelBuilder.Entity("Order.Domain.AggregatesModel.Orders.OrderItem", b =>
                 {
-                    b.HasOne("Order.Domain.AggregatesModel.OrderAggregate.Order", null)
+                    b.HasOne("Order.Domain.AggregatesModel.Orders.OrderAggregate", null)
                         .WithMany("Items")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.OwnsOne("Order.Domain.ValueObjects.Money", "UnitPrice", b1 =>
+                    b.OwnsOne("Order.Domain.AggregatesModel.Orders.ValueObjects.Money", "UnitPrice", b1 =>
                         {
                             b1.Property<Guid>("OrderItemId")
                                 .HasColumnType("uuid");
@@ -169,13 +169,13 @@ namespace Order.Infrastructure.Persistence.Migrations
 
                             b1.HasKey("OrderItemId");
 
-                            b1.ToTable("order_items");
+                            b1.ToTable("OrderItems");
 
                             b1.WithOwner()
                                 .HasForeignKey("OrderItemId");
                         });
 
-                    b.OwnsOne("Order.Domain.ValueObjects.PizzaQuantity", "Quantity", b1 =>
+                    b.OwnsOne("Order.Domain.AggregatesModel.Orders.ValueObjects.PizzaQuantity", "Quantity", b1 =>
                         {
                             b1.Property<Guid>("OrderItemId")
                                 .HasColumnType("uuid");
@@ -186,7 +186,7 @@ namespace Order.Infrastructure.Persistence.Migrations
 
                             b1.HasKey("OrderItemId");
 
-                            b1.ToTable("order_items");
+                            b1.ToTable("OrderItems");
 
                             b1.WithOwner()
                                 .HasForeignKey("OrderItemId");
@@ -199,7 +199,7 @@ namespace Order.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Order.Domain.AggregatesModel.OrderAggregate.Order", b =>
+            modelBuilder.Entity("Order.Domain.AggregatesModel.Orders.OrderAggregate", b =>
                 {
                     b.Navigation("Items");
                 });

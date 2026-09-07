@@ -25,6 +25,6 @@ internal sealed class IdempotencyRecordConfiguration : IEntityTypeConfiguration<
         builder.Property(x => x.CreatedAt).IsRequired();
 
         // Maps to table
-        builder.ToTable("idempotency_records");
+        builder.ToTable("IdempotencyRecords");
     }
 }
