@@ -25,7 +25,7 @@ public sealed class ProductAggregate : AggregateRoot
     // EF Core
     private ProductAggregate() { }
 
-    public ProductAggregate(Guid id, string name, string description, string imageUrl)
+    public ProductAggregate(Guid id, string name, string description)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new InvalidProductNameException();
@@ -37,8 +37,8 @@ public sealed class ProductAggregate : AggregateRoot
         AddDomainEvent(new ProductCreatedDomainEvent(Id, Name, Description));
     }
 
-    public static ProductAggregate Create(Guid id, string name, string description, string imageUrl)
-        => new(id, name, description, imageUrl);
+    public static ProductAggregate Create(Guid id, string name, string description)
+        => new(id, name, description);
 
     public void SetCurrentPrice(decimal amount, string currencyCode)
     {

@@ -3,12 +3,11 @@ using Order.Api.Endpoints.Orders.GetOrders;
 using Order.Application.DependencyInjection;
 using Order.Infrastructure.DependencyInjection;
 using Order.Infrastructure.Persistence;
-using Order.Infrastructure.Persistence.Seeding;
 using PizzaSaga.ServiceDefaults.Extensions;
 using PizzaSaga.ServiceDefaults.InternalServices.Middleware;
+using PizzaSaga.Shared.ErrorHandling;
 using PizzaSaga.Shared.Infrastructure.Persistence;
 using Serilog;
-using PizzaSaga.Shared.ErrorHandling;
 
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
@@ -29,9 +28,7 @@ try
     // Регистрирует зависимости слоя Order.Application.
     builder.Services.AddOrderApplication();
 
-    builder.Services.AddScoped<IDatabaseSeeder<OrderDbContext>, OrderDatabaseSeeder>();
-
-    // Регистрирует зависимости слоя Order.Infrastructure.
+    // Order.Infrastructure.
     // Регистрация DbContext. Название "OrderDb" должно СТРОГО совпадать с именем ресурса в AppHost
     var connectionString = builder.Configuration.GetConnectionString("OrderDb");
     if (string.IsNullOrEmpty(connectionString))
