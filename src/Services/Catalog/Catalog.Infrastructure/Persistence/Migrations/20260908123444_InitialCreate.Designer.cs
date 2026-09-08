@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Catalog.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(CatalogDbContext))]
-    [Migration("20260907153015_InitialCreate")]
+    [Migration("20260908123444_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -69,7 +69,8 @@ namespace Catalog.Infrastructure.Persistence.Migrations
                                 .HasForeignKey("ProductAggregateId");
                         });
 
-                    b.Navigation("CurrentPrice");
+                    b.Navigation("CurrentPrice")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

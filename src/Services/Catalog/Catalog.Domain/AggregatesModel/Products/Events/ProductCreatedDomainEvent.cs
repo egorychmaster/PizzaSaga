@@ -8,7 +8,9 @@ namespace Catalog.Domain.AggregatesModel.Products.Events;
 public sealed record ProductCreatedDomainEvent(
     Guid ProductId,
     string Name,
-    string Description) : IDomainEvent
+    string Description,
+    decimal PriceAmount,
+    string CurrencyCode) : IDomainEvent
 {
     public DateTimeOffset OccurredAt { get; } = DateTimeOffset.UtcNow;
 }

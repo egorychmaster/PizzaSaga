@@ -11,7 +11,7 @@ namespace Catalog.Domain.AggregatesModel.Products;
 /// </summary>
 public sealed class ProductAggregate : AggregateRoot
 {
-    private Price? _currentPrice;
+    private Price _currentPrice;
 
     public Guid Id { get; private set; }
     public string Name { get; private set; } = null!;
@@ -20,12 +20,12 @@ public sealed class ProductAggregate : AggregateRoot
     /// <summary>
     /// Текущая цена (одна активная запись).
     /// </summary>
-    public Price? CurrentPrice => _currentPrice;
+    public Price CurrentPrice => _currentPrice;
 
     // EF Core
     private ProductAggregate() { }
 
-    public ProductAggregate(Guid id, string name, string description)
+    public ProductAggregate(Guid id, string name, string description, decimal amount, string currencyCode)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new InvalidProductNameException();
@@ -33,16 +33,17 @@ public sealed class ProductAggregate : AggregateRoot
         Id = id;
         Name = name.Trim();
         Description = description?.Trim() ?? "";
-
-        AddDomainEvent(new ProductCreatedDomainEvent(Id, Name, Description));
-    }
-
-    public static ProductAggregate Create(Guid id, string name, string description)
-        => new(id, name, description);
-
-    public void SetCurrentPrice(decimal amount, string currencyCode)
-    {
         _currentPrice = Price.Create(amount, currencyCode);
-        AddDomainEvent(new PriceSetDomainEvent(Id, _currentPrice));
+
+        AddDomainEvent(new ProductCreatedDomainEvent(Id, Name, Description, amount, currencyCode));
     }
+
+    public static ProductAggregate Create(Guid id, string name, string description, decimal amount, string currencyCode)
+        => new(id, name, description, amount, currencyCode);
+
+    //public void SetCurrentPrice(decimal amount, string currencyCode)
+    //{
+    //    _currentPrice = Price.Create(amount, currencyCode);
+    //    AddDomainEvent(new PriceSetDomainEvent(Id, _currentPrice));
+    //}
 }

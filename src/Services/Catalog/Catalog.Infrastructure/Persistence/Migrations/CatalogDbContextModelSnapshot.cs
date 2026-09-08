@@ -66,7 +66,8 @@ namespace Catalog.Infrastructure.Persistence.Migrations
                                 .HasForeignKey("ProductAggregateId");
                         });
 
-                    b.Navigation("CurrentPrice");
+                    b.Navigation("CurrentPrice")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
