@@ -2,25 +2,26 @@
 using Catalog.Infrastructure.Persistence.Seeding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using PizzaSaga.Shared.Infrastructure.DependencyInjection;
 using PizzaSaga.Shared.Infrastructure.Persistence;
 
 namespace Catalog.Infrastructure.DependencyInjection;
 
 /// <summary>
-/// Расширения для регистрации зависимостей слоя Order.Infrastructure.
+/// Расширения для регистрации зависимостей слоя Infrastructure.
 /// </summary>
 public static class InfrastructureServiceCollectionExtensions
 {
     /// <summary>
     /// Регистрирует зависимости инфраструктурного слоя.
     /// </summary>
-    public static IServiceCollection AddOrderInfrastructure(this IServiceCollection services, string connectionString)
+    public static IServiceCollection AddOrderInfrastructure(this IServiceCollection services, string dbConnectionString, string rabbitMqConnectionString)
     {
-        // Регистрируем CatalogDbContext с настройками EF Core для PostgreSQL
+        // Регистрируем context с настройками EF Core для PostgreSQL
         services.AddDbContext<CatalogDbContext>((sp, options) =>
         {
             // Используем Npgsql и стратегию повторных попыток (для transient ошибок)
-            options.UseNpgsql(connectionString, npgsqlOptions =>
+            options.UseNpgsql(dbConnectionString, npgsqlOptions =>
             {
                 // Включаем стратегию повторов: при ошибках (например, deadlock)
                 // EF Core автоматически перезапустит транзакцию
@@ -31,7 +32,11 @@ public static class InfrastructureServiceCollectionExtensions
             // options.UseLoggerFactory(sp.GetRequiredService<ILoggerFactory>());
         });
 
-        //services.AddScoped<IOrderRepository, OrderRepository>();
+        // Подключаем MassTransit с RabbitMQ
+        services.AddMassTransitWithRabbitMq(rabbitMqConnectionString);
+
+
+        //services.AddScoped<ICatalogRepository, CatalogRepository>();
 
         // Регистрируем UnitOfWork — реализация IUnitOfWork для EF Core.
         // Lifetime = Scoped (соответствует HTTP-запросу и DbContext).

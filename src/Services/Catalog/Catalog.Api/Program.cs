@@ -1,6 +1,7 @@
-using Catalog.Infrastructure.Persistence;
 using Catalog.Infrastructure.DependencyInjection;
+using Catalog.Infrastructure.Persistence;
 using PizzaSaga.ServiceDefaults.Extensions;
+using PizzaSaga.ServiceDefaults.Extensions.Aspires;
 using PizzaSaga.Shared.ErrorHandling;
 using PizzaSaga.Shared.Infrastructure.Persistence;
 using Serilog;
@@ -23,10 +24,9 @@ try
 
     // Catalog.Infrastructure.
     // Регистрация DbContext. Название "CatalogDb" должно СТРОГО совпадать с именем ресурса в AppHost
-    var connectionString = builder.Configuration.GetConnectionString("CatalogDb");
-    if (string.IsNullOrEmpty(connectionString))
-        throw new InvalidOperationException("Connection string 'CatalogDb' is not configured. Ensure WithReference(orderDb) is used in AppHost.");
-    builder.Services.AddOrderInfrastructure(connectionString);
+    var dbConnectionString = builder.Configuration.GetDatabaseConnectionString("CatalogDb");
+    var rabbitMqConnectionString = builder.Configuration.GetRabbitMqConnectionString();
+    builder.Services.AddOrderInfrastructure(dbConnectionString, rabbitMqConnectionString);
 
 
     var app = builder.Build();
