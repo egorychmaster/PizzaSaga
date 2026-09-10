@@ -1,5 +1,6 @@
 using Catalog.Infrastructure.DependencyInjection;
 using Catalog.Infrastructure.Persistence;
+using Catalog.Infrastructure.Persistence.Outbox;
 using PizzaSaga.ServiceDefaults.Extensions;
 using PizzaSaga.ServiceDefaults.Extensions.Aspires;
 using PizzaSaga.Shared.ErrorHandling;
@@ -27,6 +28,9 @@ try
     var dbConnectionString = builder.Configuration.GetDatabaseConnectionString("CatalogDb");
     var rabbitMqConnectionString = builder.Configuration.GetRabbitMqConnectionString();
     builder.Services.AddOrderInfrastructure(dbConnectionString, rabbitMqConnectionString);
+
+    // Регистрация фонового сервиса OutboxPublisher
+    builder.Services.AddHostedService<OutboxPublisherHostedService>();
 
 
     var app = builder.Build();

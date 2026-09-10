@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\PizzaSaga.Contracts\PizzaSaga.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Shared\PizzaSaga.Shared.Infrastructure\PizzaSaga.Shared.Infrastructure.csproj" />
     <ProjectReference Include="..\Catalog.Application\Catalog.Application.csproj" />
     <ProjectReference Include="..\Catalog.Domain\Catalog.Domain.csproj" />

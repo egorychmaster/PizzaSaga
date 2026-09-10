@@ -9,11 +9,10 @@ namespace Catalog.Domain.AggregatesModel.Products;
 /// Агрегат продукта.
 /// Управляет информацией о продукте и его текущей ценой.
 /// </summary>
-public sealed class ProductAggregate : AggregateRoot
+public sealed class ProductAggregate : AggregateRootWithId
 {
     private Price _currentPrice;
 
-    public Guid Id { get; private set; }
     public string Name { get; private set; } = null!;
     public string Description { get; private set; } = null!;
 
@@ -40,10 +39,4 @@ public sealed class ProductAggregate : AggregateRoot
 
     public static ProductAggregate Create(Guid id, string name, string description, decimal amount, string currencyCode)
         => new(id, name, description, amount, currencyCode);
-
-    //public void SetCurrentPrice(decimal amount, string currencyCode)
-    //{
-    //    _currentPrice = Price.Create(amount, currencyCode);
-    //    AddDomainEvent(new PriceSetDomainEvent(Id, _currentPrice));
-    //}
 }

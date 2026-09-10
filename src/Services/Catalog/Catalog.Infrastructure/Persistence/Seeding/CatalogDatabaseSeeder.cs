@@ -1,4 +1,5 @@
-﻿using Catalog.Domain.AggregatesModel.Products;
+﻿using Catalog.Application.Abstractions.Persistence;
+using Catalog.Domain.AggregatesModel.Products;
 using Microsoft.EntityFrameworkCore;
 using PizzaSaga.Shared.Infrastructure.Persistence;
 
@@ -6,15 +7,17 @@ namespace Catalog.Infrastructure.Persistence.Seeding;
 
 public sealed class CatalogDatabaseSeeder : IDatabaseSeeder<CatalogDbContext>
 {
+    private readonly IUnitOfWork _unitOfWork;
+
+    public CatalogDatabaseSeeder(IUnitOfWork unitOfWork)
+        => _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+
     public async Task SeedAsync(CatalogDbContext context, CancellationToken cancellationToken)
     {
-        //return;
-
-        // Ранний возврат (Early Return) — залог идемпотентности
         if (await context.Products.AnyAsync(cancellationToken))
             return;
 
-        // Заполнение тестовыми данными
+        // Создание продуктов
         var products = new List<ProductAggregate>
         {
             ProductAggregate.Create(Guid.NewGuid(), "Margherita", "Classic pizza with tomato sauce, mozzarella, and basil.", 10.0m, "USD"),
@@ -29,8 +32,9 @@ public sealed class CatalogDatabaseSeeder : IDatabaseSeeder<CatalogDbContext>
             ProductAggregate.Create(Guid.NewGuid(), "Buffalo Chicken", "Spicy buffalo sauce, chicken, jalapeños, and blue cheese.", 12.0m, "USD")
         };
 
-        await context.Products.AddRangeAsync(products, cancellationToken);
-
-        await context.SaveChangesAsync(cancellationToken);
+        foreach (var product in products)
+        {
+            await _unitOfWork.SaveWithOutboxAsync(product, cancellationToken);
+        }
     }
 }

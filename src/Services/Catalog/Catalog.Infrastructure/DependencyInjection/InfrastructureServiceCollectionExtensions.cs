@@ -1,4 +1,5 @@
-﻿using Catalog.Infrastructure.Persistence;
+﻿using Catalog.Application.Abstractions.Persistence;
+using Catalog.Infrastructure.Persistence;
 using Catalog.Infrastructure.Persistence.Seeding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,15 +40,11 @@ public static class InfrastructureServiceCollectionExtensions
         //services.AddScoped<ICatalogRepository, CatalogRepository>();
 
         // Регистрируем UnitOfWork — реализация IUnitOfWork для EF Core.
-        // Lifetime = Scoped (соответствует HTTP-запросу и DbContext).
-        //services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Регистрируем сидер БД.
         // Он будет вызываться при старте приложения через DatabaseMigrationExtensions.ApplyMigrationsAsync<TContext>()
         services.AddScoped<IDatabaseSeeder<CatalogDbContext>, CatalogDatabaseSeeder>();
-
-        // Регистрация Idempotency Repository
-        //services.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
 
         return services;
     }

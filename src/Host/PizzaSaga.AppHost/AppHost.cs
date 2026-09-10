@@ -10,7 +10,10 @@ var postgres = builder.AddPostgres("postgres")
     .WithPgAdmin();     // Добавит удобную панель управления БД
 
 // Брокер сообщений RabbitMQ для MassTransit (общение между сервисами)
-var rabbitMq = builder.AddRabbitMQ("rabbitmq")
+// Объявляем явные параметры для подключения
+var rabbitUser = builder.AddParameter("rabbitmq-user", "guest");
+var rabbitPassword = builder.AddParameter("rabbitmq-pass", "guest");
+var rabbitMq = builder.AddRabbitMQ("rabbitmq", rabbitUser, rabbitPassword)
     .WithManagementPlugin();    // Панель управления RabbitMQ
 
 

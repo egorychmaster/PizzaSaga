@@ -12,6 +12,22 @@ namespace Catalog.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "OutboxMessages",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    AggregateId = table.Column<Guid>(type: "uuid", nullable: false),
+                    MessageType = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    Payload = table.Column<string>(type: "jsonb", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    IsPublished = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OutboxMessages", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Products",
                 columns: table => new
                 {
@@ -47,6 +63,9 @@ namespace Catalog.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "OutboxMessages");
+
             migrationBuilder.DropTable(
                 name: "Prices");
 
