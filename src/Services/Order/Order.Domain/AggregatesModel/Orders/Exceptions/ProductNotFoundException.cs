@@ -1,9 +1,11 @@
-﻿namespace Order.Domain.AggregatesModel.Orders.Exceptions;
+﻿using PizzaSaga.SharedKernel.Domain.Exceptions;
+
+namespace Order.Domain.AggregatesModel.Orders.Exceptions;
 
 /// <summary>
 /// Исключение, выбрасываемое при попытке создать заказ с продуктом, отсутствующим в локальном кэше.
 /// </summary>
-public sealed class ProductNotFoundException : Exception
+public sealed class ProductNotFoundException : DomainException
 {
     /// <summary>
     /// Идентификатор продукта, который не найден.

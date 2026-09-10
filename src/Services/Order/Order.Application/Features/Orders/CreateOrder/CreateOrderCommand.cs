@@ -8,14 +8,14 @@ namespace Order.Application.Features.Orders.CreateOrder;
 /// Содержит identity авторизованного клиента и уже преобразованные значения, соответствующие доменным типам. 
 /// </summary> 
 /// <param name="CustomerId">Идентичность клиента, создающего заказ.</param> 
-/// <param name="Items">Позиции создаваемого заказа.</param> 
 /// <param name="PaymentMethod">Способ оплаты заказа.</param> 
 /// <param name="Currency">Валюта заказа.</param>
+/// <param name="Items">Позиции создаваемого заказа.</param> 
 public sealed record CreateOrderCommand(
     CustomerIdentity CustomerId,
-    IReadOnlyCollection<CreateOrderItem> Items,
     string PaymentMethod,
-    string Currency)
+    string Currency,
+    IReadOnlyCollection<CreateOrderItem> Items)
     : ICommand<CreateOrderResult>;
 
 /// <summary> 
