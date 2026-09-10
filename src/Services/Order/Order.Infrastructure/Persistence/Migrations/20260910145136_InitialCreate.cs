@@ -44,6 +44,21 @@ namespace Order.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ProductCatalogCaches",
+                columns: table => new
+                {
+                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    PriceAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    CurrencyCode = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductCatalogCaches", x => x.ProductId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "OrderItems",
                 columns: table => new
                 {
@@ -84,6 +99,9 @@ namespace Order.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "OrderItems");
+
+            migrationBuilder.DropTable(
+                name: "ProductCatalogCaches");
 
             migrationBuilder.DropTable(
                 name: "Orders");

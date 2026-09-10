@@ -16,7 +16,7 @@ public static class InfrastructureServiceCollectionExtensions
     /// <summary>
     /// Регистрирует зависимости инфраструктурного слоя.
     /// </summary>
-    public static IServiceCollection AddOrderInfrastructure(this IServiceCollection services, string dbConnectionString, string rabbitMqConnectionString)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, string dbConnectionString, string rabbitMqConnectionString)
     {
         // Регистрируем context с настройками EF Core для PostgreSQL
         services.AddDbContext<CatalogDbContext>((sp, options) =>

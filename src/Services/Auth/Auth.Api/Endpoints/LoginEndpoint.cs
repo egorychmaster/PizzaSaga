@@ -55,7 +55,7 @@ public static class LoginEndpoint
             // jti — JWT ID Уникальный идентификатор конкретного экземпляра JWT.
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
 
-            // subject - кто является субъектом токена.
+            // sub subject - кто является субъектом токена.
             // Это идентификатор пользователя, что означает: Этот JWT выдан пользователю с UserId = 2fbb95d2-0672-4b2f-b3fd-447d2a02d5f8.
             new Claim(JwtRegisteredClaimNames.Sub, configuredUserId!),
             

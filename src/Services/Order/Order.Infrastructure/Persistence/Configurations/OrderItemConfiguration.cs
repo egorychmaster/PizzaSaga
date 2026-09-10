@@ -4,6 +4,9 @@ using Order.Domain.AggregatesModel.Orders;
 
 namespace Order.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Конфигурация сущности для Entity Framework Core.
+/// </summary>
 internal sealed class OrderItemConfiguration
     : IEntityTypeConfiguration<OrderItem>
 {

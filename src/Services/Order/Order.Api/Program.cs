@@ -4,6 +4,7 @@ using Order.Application.DependencyInjection;
 using Order.Infrastructure.DependencyInjection;
 using Order.Infrastructure.Persistence;
 using PizzaSaga.ServiceDefaults.Extensions;
+using PizzaSaga.ServiceDefaults.Extensions.Aspires;
 using PizzaSaga.ServiceDefaults.InternalServices.Middleware;
 using PizzaSaga.Shared.ErrorHandling;
 using PizzaSaga.Shared.Infrastructure.Persistence;
@@ -30,10 +31,9 @@ try
 
     // Order.Infrastructure.
     // Регистрация DbContext. Название "OrderDb" должно СТРОГО совпадать с именем ресурса в AppHost
-    var connectionString = builder.Configuration.GetConnectionString("OrderDb");
-    if (string.IsNullOrEmpty(connectionString))
-        throw new InvalidOperationException("Connection string 'OrderDb' is not configured. Ensure WithReference(orderDb) is used in AppHost.");
-    builder.Services.AddOrderInfrastructure(connectionString);
+    var connectionString = builder.Configuration.GetDatabaseConnectionString("OrderDb");
+    var rabbitMqConnectionString = builder.Configuration.GetRabbitMqConnectionString();
+    builder.Services.AddInfrastructure(connectionString, rabbitMqConnectionString);
 
 
     var app = builder.Build();

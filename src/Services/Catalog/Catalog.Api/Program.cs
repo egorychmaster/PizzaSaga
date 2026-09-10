@@ -27,7 +27,7 @@ try
     // Регистрация DbContext. Название "CatalogDb" должно СТРОГО совпадать с именем ресурса в AppHost
     var dbConnectionString = builder.Configuration.GetDatabaseConnectionString("CatalogDb");
     var rabbitMqConnectionString = builder.Configuration.GetRabbitMqConnectionString();
-    builder.Services.AddOrderInfrastructure(dbConnectionString, rabbitMqConnectionString);
+    builder.Services.AddInfrastructure(dbConnectionString, rabbitMqConnectionString);
 
     // Регистрация фонового сервиса OutboxPublisher
     builder.Services.AddHostedService<OutboxPublisherHostedService>();

@@ -5,8 +5,7 @@ using Order.Infrastructure.Persistence.Idempotency;
 namespace Order.Infrastructure.Persistence.Configurations;
 
 /// <summary>
-/// Настройки маппинга сущности IdempotencyKey для EF Core.
-/// Гарантирует, что ResponseBody будет храниться как PostgreSQL jsonb.
+/// Конфигурация сущности для Entity Framework Core.
 /// </summary>
 internal sealed class IdempotencyRecordConfiguration : IEntityTypeConfiguration<IdempotencyRecord>
 {

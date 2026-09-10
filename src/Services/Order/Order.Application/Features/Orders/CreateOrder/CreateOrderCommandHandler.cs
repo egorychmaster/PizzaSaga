@@ -1,9 +1,9 @@
 ﻿using Mediator;
 using Order.Application.Abstractions.Persistence;
-using Order.Application.Abstractions.Persistence.Idempotency;
+using Order.Domain.Abstractions.Repositories;
 using Order.Domain.AggregatesModel.Orders;
+using Order.Domain.AggregatesModel.Orders.Exceptions;
 using Order.Domain.AggregatesModel.Orders.ValueObjects;
-using System.Text.Json;
 
 namespace Order.Application.Features.Orders.CreateOrder;
 
@@ -12,21 +12,15 @@ namespace Order.Application.Features.Orders.CreateOrder;
 /// </summary>
 public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, CreateOrderResult>
 {
-    private const decimal TemporaryUnitPrice = 10m;
-
     private readonly IOrderRepository _orderRepository;
-    //private readonly IIdempotencyContext _idempotencyContext;
-    //private readonly IIdempotencyRepository _idempotencyRepository;
+    private readonly IProductCatalogRepository _productCatalogRepository;
 
-    public CreateOrderCommandHandler(IOrderRepository orderRepository
-        //,
-        //IIdempotencyContext idempotencyContext,
-        //IIdempotencyRepository idempotencyRepository
-        )
+    public CreateOrderCommandHandler(
+        IOrderRepository orderRepository,
+        IProductCatalogRepository productCatalogRepository)
     {
         _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
-        //_idempotencyContext = idempotencyContext ?? throw new ArgumentNullException(nameof(idempotencyContext));
-        //_idempotencyRepository = idempotencyRepository ?? throw new ArgumentNullException(nameof(idempotencyRepository));
+        _productCatalogRepository = productCatalogRepository ?? throw new ArgumentNullException(nameof(productCatalogRepository));
     }
 
     /// <inheritdoc />
@@ -37,51 +31,43 @@ public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderComma
         // 1. Создаём Value Objects
         var customerIdentity = CustomerIdentity.Create(command.CustomerId.Value);
 
-        var items = command.Items
-            .Select(item =>
-            {
-                var quantity = PizzaQuantity.Create(item.Quantity.Value);
-                var unitPrice = Money.Create(TemporaryUnitPrice, command.Currency);
+        // 2. Проверяем наличие продуктов в кэше и готовим OrderItem'ы
+        var items = new List<OrderItem>();
+        foreach (var item in command.Items)
+        {
+            // Получаем данные из кэша
+            var product = _productCatalogRepository.GetProductAsync(item.ProductId, cancellationToken).GetAwaiter().GetResult();
+            if (product is null)
+                throw new ProductNotFoundException(item.ProductId);
 
-                return new OrderItem(
-                    id: Guid.CreateVersion7(),
-                    productId: item.ProductId,
-                    quantity: quantity,
-                    unitPrice: unitPrice);
-            })
-            .ToArray();
+            // Создаём Money из кэшированных данных
+            var unitPrice = Money.Create(product.PriceAmount, product.CurrencyCode);
 
-        // 2. Создаём агрегат Order
+            var quantity = PizzaQuantity.Create(item.Quantity.Value);
+
+            items.Add(new OrderItem(
+                id: Guid.CreateVersion7(),
+                productId: item.ProductId,
+                quantity: quantity,
+                unitPrice: unitPrice));
+        }
+
+        // 3. Создаём агрегат Order
         var order = OrderAggregate.Create(
             id: Guid.CreateVersion7(),
             customerId: customerIdentity,
             items: items);
 
-        // 3. Сохраняем через репозиторий (в рамках транзакции TransactionBehavior)
+        // 4. Сохраняем через репозиторий (в рамках транзакции TransactionBehavior)
         await _orderRepository.AddAsync(order, cancellationToken);
 
-        // 4. Возвращаем DTO — берём данные из агрегата
+        // 5. Возвращаем DTO — берём данные из агрегата
         var result = new CreateOrderResult(
             OrderId: order.Id,
             Status: order.Status.ToString(),
             TotalAmount: order.TotalAmount.Amount,
             Currency: order.TotalAmount.CurrencyCode,
             CreatedAt: order.CreatedAt);
-
-        //// Запись IdempotencyRecord для идемпотентности.
-        //if (_idempotencyContext.IsSet)
-        //{
-        //    var jsonBody = JsonSerializer.Serialize(result);
-
-        //    var idempotencyRecord = new IdempotencyRecordDto(
-        //        IdempotencyKey: _idempotencyContext.Key,
-        //        RequestHash: _idempotencyContext.RequestHash!,
-        //        ResponseStatusCode: 201,
-        //        ResponseBody: jsonBody,
-        //        CreatedAt: DateTimeOffset.UtcNow);
-
-        //    await _idempotencyRepository.AddAsync(idempotencyRecord, cancellationToken);
-        //}
 
         return result;
     }
