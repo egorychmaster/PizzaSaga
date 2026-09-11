@@ -4,6 +4,7 @@ using Order.Domain.Abstractions.Repositories;
 using Order.Domain.AggregatesModel.Orders;
 using Order.Domain.AggregatesModel.Orders.Exceptions;
 using Order.Domain.AggregatesModel.Orders.ValueObjects;
+using Order.Domain.AggregatesModel.ProductCatalog;
 
 namespace Order.Application.Features.Orders.CreateOrder;
 
@@ -14,13 +15,16 @@ public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderComma
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IProductCatalogRepository _productCatalogRepository;
+    private readonly ICurrencyExchangeRateRepository _currencyRateRepo;
 
     public CreateOrderCommandHandler(
         IOrderRepository orderRepository,
-        IProductCatalogRepository productCatalogRepository)
+        IProductCatalogRepository productCatalogRepository,
+        ICurrencyExchangeRateRepository currencyRateRepo)
     {
         _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
         _productCatalogRepository = productCatalogRepository ?? throw new ArgumentNullException(nameof(productCatalogRepository));
+        _currencyRateRepo = currencyRateRepo ?? throw new ArgumentNullException(nameof(currencyRateRepo));
     }
 
     /// <inheritdoc />
@@ -40,8 +44,8 @@ public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderComma
             if (product is null)
                 throw new ProductNotFoundException(item.ProductId);
 
-            // Создаём Money из кэшированных данных
-            var unitPrice = Money.Create(product.PriceAmount, product.CurrencyCode);
+            // Конвертируем цену в валюту пользователя
+            var unitPrice = await ConvertToUserCurrencyAsync(product, command.Currency, cancellationToken);
 
             var quantity = PizzaQuantity.Create(item.Quantity.Value);
 
@@ -70,5 +74,30 @@ public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderComma
             CreatedAt: order.CreatedAt);
 
         return result;
+    }
+
+    /// <summary>
+    /// Конвертирует цену продукта в валюту пользователя.
+    /// Если пользователь заказывает в USD — цена не меняется.
+    /// Иначе берёт курс из CurrencyExchangeRates и умножает.
+    /// </summary>
+    private async Task<Money> ConvertToUserCurrencyAsync(
+        ProductCatalogCache product,
+        string userCurrency,
+        CancellationToken cancellationToken)
+    {
+        // Проверка: цена всегда в USD
+        if (product.CurrencyCode != "USD")
+            throw new InvalidOperationException($"Product {product.ProductId} price must be in USD, but is {product.CurrencyCode}.");
+
+        // Если пользователь заказывает в USD — ничего не конвертируем
+        if (userCurrency.Equals("USD", StringComparison.OrdinalIgnoreCase))
+            return Money.Create(product.PriceAmount, "USD");
+
+        // Иначе получаем курс USD → userCurrency и конвертируем
+        var rate = await _currencyRateRepo.GetRateAsync("USD", userCurrency, cancellationToken);
+        var convertedAmount = product.PriceAmount * rate;
+
+        return Money.Create(convertedAmount, userCurrency);
     }
 }

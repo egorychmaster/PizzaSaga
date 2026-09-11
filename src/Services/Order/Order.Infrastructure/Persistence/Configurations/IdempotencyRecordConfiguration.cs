@@ -14,7 +14,7 @@ internal sealed class IdempotencyRecordConfiguration : IEntityTypeConfiguration<
         // Primary key
         builder.HasKey(x => x.IdempotencyKey);
 
-        // Limit the size of columns to use efficient database types
+        // Columns
         builder.Property(x => x.IdempotencyKey).ValueGeneratedNever();
         builder.Property(x => x.RequestHash).IsRequired()
             .HasMaxLength(64); // SHA-256 в hex-представлении — 64 символа

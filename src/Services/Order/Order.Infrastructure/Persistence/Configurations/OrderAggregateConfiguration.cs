@@ -18,7 +18,7 @@ internal sealed class OrderAggregateConfiguration : IEntityTypeConfiguration<Ord
         //builder.HasIndex(o => o.CustomerId.Value);
         builder.HasIndex(o => o.Status);
 
-        // Limit the size of columns to use efficient database types
+        // Columns
         builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
         builder.Property(o => o.CreatedAt).IsRequired();
         // Оптимистичная блокировка (Optimistic Concurrency Control). EF Core при выполнении UPDATE будет добавлять условие: WHERE "Id" = @id AND "Version" = @oldVersion

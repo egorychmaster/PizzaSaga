@@ -18,7 +18,7 @@ public sealed class ProductCatalogCacheConfiguration : IEntityTypeConfiguration<
         // Устанавливаем Primary Key
         builder.HasKey(e => e.ProductId);
 
-        // Настройка свойств
+        // Columns
         builder.Property(e => e.ProductId)
             .ValueGeneratedNever()
             .IsRequired();

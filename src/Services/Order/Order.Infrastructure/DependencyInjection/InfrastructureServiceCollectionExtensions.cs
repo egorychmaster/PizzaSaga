@@ -40,6 +40,7 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IProductCatalogRepository, ProductCatalogRepository>();
+        services.AddScoped<ICurrencyExchangeRateRepository, CurrencyExchangeRateRepository>();
 
         // Регистрируем UnitOfWork — реализация IUnitOfWork для EF Core.
         // Lifetime = Scoped (соответствует HTTP-запросу и DbContext).

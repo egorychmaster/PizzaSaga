@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Order.Domain.AggregatesModel.Orders;
+using Order.Domain.AggregatesModel.Orders.ValueObjects;
 using Order.Domain.AggregatesModel.ProductCatalog;
 using Order.Infrastructure.Persistence.Idempotency;
 
@@ -26,6 +27,11 @@ public sealed class OrderDbContext : DbContext
     /// Набор записей идемпотентности HTTP-запросов.
     /// </summary>
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
+
+    /// <summary>
+    /// Курсы конвертации валют.
+    /// </summary>
+    public DbSet<CurrencyExchangeRate> CurrencyExchangeRates => Set<CurrencyExchangeRate>();
     
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
