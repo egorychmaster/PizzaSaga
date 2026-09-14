@@ -1,5 +1,6 @@
 using Order.Api.Endpoints.Orders.CreateOrder;
 using Order.Api.Endpoints.Orders.GetOrders;
+using Order.Api.Endpoints.Orders.GetOrderById;
 using Order.Application.DependencyInjection;
 using Order.Infrastructure.DependencyInjection;
 using Order.Infrastructure.Persistence;
@@ -59,6 +60,7 @@ try
     // Зарегистрировать endpoint
     app.MapCreateOrderEndpoint();
     app.MapGetOrdersEndpoint();
+    app.MapGetOrderByIdEndpoint();
 
 
     app.Run();
