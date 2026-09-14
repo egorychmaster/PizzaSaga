@@ -2,6 +2,7 @@
   <Folder Name="/Docs/">
     <File Path="docs/api.md" />
     <File Path="docs/architecture.md" />
+    <File Path="README.md" />
   </Folder>
   <Folder Name="/Gateway/">
     <Project Path="src/Gateway/PizzaSaga.ApiGateway/ApiGateway/PizzaSaga.ApiGateway.csproj" />
