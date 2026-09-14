@@ -30,7 +30,7 @@ public sealed class CurrencyExchangeRateRepository : ICurrencyExchangeRateReposi
             .Select(x => x.Rate)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (rate == 0m) // не найдено
+        if (rate == 0) // не найдено
             throw new MissingExchangeRateException(from, to);
 
         return rate;

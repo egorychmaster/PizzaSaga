@@ -151,7 +151,7 @@ namespace Order.Infrastructure.Persistence.Migrations
                                 .HasColumnType("numeric(18,2)")
                                 .HasColumnName("TotalAmount");
 
-                            b1.Property<string>("CurrencyCode")
+                            b1.Property<string>("Currency")
                                 .IsRequired()
                                 .HasMaxLength(3)
                                 .HasColumnType("character varying(3)")
@@ -206,7 +206,7 @@ namespace Order.Infrastructure.Persistence.Migrations
                                 .HasColumnType("numeric(18,2)")
                                 .HasColumnName("UnitPriceAmount");
 
-                            b1.Property<string>("CurrencyCode")
+                            b1.Property<string>("Currency")
                                 .IsRequired()
                                 .HasMaxLength(3)
                                 .HasColumnType("character varying(3)")

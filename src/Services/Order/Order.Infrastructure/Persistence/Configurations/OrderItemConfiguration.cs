@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Order.Domain.AggregatesModel.Orders;
+using Order.Infrastructure.Persistence.Configurations.Converters;
 
 namespace Order.Infrastructure.Persistence.Configurations;
 
@@ -19,6 +20,7 @@ internal sealed class OrderItemConfiguration
         builder.Property(x => x.ProductId)
             .IsRequired();
 
+        // Quantity
         builder.OwnsOne(
             x => x.Quantity,
             quantity =>
@@ -28,7 +30,7 @@ internal sealed class OrderItemConfiguration
                     .IsRequired();
             });
 
-        // Money маппим как два поля: UnitPriceAmount, UnitPriceCurrency.
+        // UnitPrice (Money) маппим как два поля: UnitPriceAmount, UnitPriceCurrency.
         builder.OwnsOne(
             x => x.UnitPrice,
             money =>
@@ -38,10 +40,11 @@ internal sealed class OrderItemConfiguration
                     .HasPrecision(18, 2)
                     .IsRequired();
 
-                money.Property(x => x.CurrencyCode)
+                money.Property(x => x.Currency)
                     .HasColumnName("UnitPriceCurrency")
                     .HasMaxLength(3)
-                    .IsRequired();
+                    .IsRequired()
+                    .HasConversion<CurrencyValueConverter>();
             });
 
         builder.ToTable("OrderItems");

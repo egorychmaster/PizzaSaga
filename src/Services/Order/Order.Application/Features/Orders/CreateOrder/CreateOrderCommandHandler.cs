@@ -45,7 +45,9 @@ public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderComma
                 throw new ProductNotFoundException(item.ProductId);
 
             // Конвертируем цену в валюту пользователя
-            var unitPrice = await ConvertToUserCurrencyAsync(product, command.Currency, cancellationToken);
+            var userCurrency = Currency.Create(command.Currency);
+
+            var unitPrice = await ConvertToUserCurrencyAsync(product, userCurrency, cancellationToken);
 
             var quantity = PizzaQuantity.Create(item.Quantity.Value);
 
@@ -70,7 +72,7 @@ public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderComma
             OrderId: order.Id,
             Status: order.Status.ToString(),
             TotalAmount: order.TotalAmount.Amount,
-            Currency: order.TotalAmount.CurrencyCode,
+            Currency: order.TotalAmount.Currency.Code,
             CreatedAt: order.CreatedAt);
 
         return result;
@@ -83,7 +85,7 @@ public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderComma
     /// </summary>
     private async Task<Money> ConvertToUserCurrencyAsync(
         ProductCatalogCache product,
-        string userCurrency,
+        Currency userCurrency,
         CancellationToken cancellationToken)
     {
         // Проверка: цена всегда в USD
@@ -91,11 +93,11 @@ public sealed class CreateOrderCommandHandler : ICommandHandler<CreateOrderComma
             throw new InvalidOperationException($"Product {product.ProductId} price must be in USD, but is {product.CurrencyCode}.");
 
         // Если пользователь заказывает в USD — ничего не конвертируем
-        if (userCurrency.Equals("USD", StringComparison.OrdinalIgnoreCase))
-            return Money.Create(product.PriceAmount, "USD");
+        if (userCurrency == Currency.USD)
+            return Money.Create(product.PriceAmount, Currency.USD);
 
         // Иначе получаем курс USD → userCurrency и конвертируем
-        var rate = await _currencyRateRepo.GetRateAsync("USD", userCurrency, cancellationToken);
+        var rate = await _currencyRateRepo.GetRateAsync("USD", userCurrency.Code, cancellationToken);
         var convertedAmount = product.PriceAmount * rate;
 
         return Money.Create(convertedAmount, userCurrency);

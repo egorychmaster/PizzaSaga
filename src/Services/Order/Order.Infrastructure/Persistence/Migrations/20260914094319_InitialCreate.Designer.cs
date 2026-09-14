@@ -12,7 +12,7 @@ using Order.Infrastructure.Persistence;
 namespace Order.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(OrderDbContext))]
-    [Migration("20260910145136_InitialCreate")]
+    [Migration("20260914094319_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -67,6 +67,27 @@ namespace Order.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrderId");
 
                     b.ToTable("OrderItems", (string)null);
+                });
+
+            modelBuilder.Entity("Order.Domain.AggregatesModel.Orders.ValueObjects.CurrencyExchangeRate", b =>
+                {
+                    b.Property<string>("FromCurrencyCode")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<string>("ToCurrencyCode")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<decimal>("Rate")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.HasKey("FromCurrencyCode", "ToCurrencyCode");
+
+                    b.HasIndex("FromCurrencyCode", "ToCurrencyCode")
+                        .IsUnique();
+
+                    b.ToTable("CurrencyExchangeRates", (string)null);
                 });
 
             modelBuilder.Entity("Order.Domain.AggregatesModel.ProductCatalog.ProductCatalogCache", b =>
@@ -133,7 +154,7 @@ namespace Order.Infrastructure.Persistence.Migrations
                                 .HasColumnType("numeric(18,2)")
                                 .HasColumnName("TotalAmount");
 
-                            b1.Property<string>("CurrencyCode")
+                            b1.Property<string>("Currency")
                                 .IsRequired()
                                 .HasMaxLength(3)
                                 .HasColumnType("character varying(3)")
@@ -188,7 +209,7 @@ namespace Order.Infrastructure.Persistence.Migrations
                                 .HasColumnType("numeric(18,2)")
                                 .HasColumnName("UnitPriceAmount");
 
-                            b1.Property<string>("CurrencyCode")
+                            b1.Property<string>("Currency")
                                 .IsRequired()
                                 .HasMaxLength(3)
                                 .HasColumnType("character varying(3)")

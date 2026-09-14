@@ -1,7 +1,10 @@
 ﻿using PizzaSaga.SharedKernel.Domain.Exceptions;
 
-namespace Order.Domain.AggregatesModel.Orders.Exceptions.Monies;
+namespace Order.Domain.AggregatesModel.Orders.Exceptions.Currencies;
 
+/// <summary>
+/// Исключение, которое выбрасывается при попытке создать валюту с недопустимым форматом кода.
+/// </summary>
 public sealed class InvalidCurrencyCodeException : DomainException
 {
     public InvalidCurrencyCodeException(string currencyCode)

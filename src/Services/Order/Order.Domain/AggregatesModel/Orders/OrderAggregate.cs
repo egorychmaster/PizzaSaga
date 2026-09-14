@@ -119,8 +119,8 @@ public sealed class OrderAggregate : AggregateRoot
     private void RecalculateTotal()
     {
         // Все позиции одного заказа должны иметь одну валюту.
-        var currency = _items.First().UnitPrice.CurrencyCode;
-        if (_items.Any(x => !string.Equals(x.UnitPrice.CurrencyCode, currency, StringComparison.OrdinalIgnoreCase)))
+        var currency = _items.First().UnitPrice.Currency;
+        if (_items.Any(x => !string.Equals(x.UnitPrice.Currency.Code, currency.Code, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException("All order items must use the same currency.");
 
         var total = _items.Sum(x => x.UnitPrice.Amount * x.Quantity.Value);

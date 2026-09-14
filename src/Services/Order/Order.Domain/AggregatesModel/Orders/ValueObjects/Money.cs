@@ -1,63 +1,50 @@
 ﻿using Order.Domain.AggregatesModel.Orders.Exceptions.Monies;
-using System.Globalization;
 
 namespace Order.Domain.AggregatesModel.Orders.ValueObjects;
 
 /// <summary>
-/// Значение денежной суммы с указанием валюты.
+/// Value Object, представляющий денежную сумму и её валюту.
 /// Гарантирует неотрицательность суммы и валидность ISO-кода валюты.
 /// </summary>
+/// <summary>
 public sealed class Money
 {
-    private static readonly HashSet<string> AllowedCurrencies = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "EUR", "USD", "RUB"
-    };
-
     /// <summary>
-    /// Сумма. Не может быть отрицательной.
+    /// Денежная сумма.
     /// </summary>
     public decimal Amount { get; }
 
     /// <summary>
-    /// Код валюты в формате ISO 4217 (3 буквы).
+    /// Валюта денежной суммы.
     /// </summary>
-    public string CurrencyCode { get; }
+    public Currency Currency { get; }
 
-    private Money(decimal amount, string currencyCode)
+    private Money(decimal amount, Currency currency)
     {
         if (amount < 0)
             throw new NegativeMoneyException(amount);
 
-        if (!IsValidCurrencyCode(currencyCode))
-            throw new InvalidCurrencyCodeException(currencyCode);
-
-        if (!AllowedCurrencies.Contains(currencyCode))
-            throw new UnsupportedCurrencyException(currencyCode);
+        ArgumentNullException.ThrowIfNull(currency);
 
         Amount = amount;
-        CurrencyCode = currencyCode.ToUpperInvariant();
+        Currency = currency;
     }
 
     /// <summary>
-    /// Фабричный метод для создания Money из числа и кода валюты.
+    /// Создаёт денежное значение из суммы и ISO 4217 кода валюты.
     /// </summary>
+    /// <param name="amount">Денежная сумма.</param>
+    /// <param name="currencyCode">ISO 4217 код валюты.</param>
+    /// <returns>Экземпляр Money.</returns>
     public static Money Create(decimal amount, string currencyCode)
-        => new(amount, currencyCode);
+        => new(amount, Currency.Create(currencyCode));
 
     /// <summary>
-    /// Парсер: создаёт Money из строкового представления суммы и кода валюты.
+    /// Создаёт денежное значение из суммы и валюты.
     /// </summary>
-    public static Money Parse(string rawAmount, string currencyCode)
-    {
-        if (!decimal.TryParse(rawAmount, NumberStyles.Any, CultureInfo.InvariantCulture, out var amount))
-            throw new MoneyParsingException(rawAmount);
-
-        return Create(amount, currencyCode);
-    }
-
-    private static bool IsValidCurrencyCode(string code)
-        => !string.IsNullOrWhiteSpace(code) &&
-            code.Length == 3 &&
-            code.ToUpperInvariant().All(char.IsLetter);
+    /// <param name="amount">Денежная сумма.</param>
+    /// <param name="currency">Валюта.</param>
+    /// <returns>Экземпляр Money.</returns>
+    public static Money Create(decimal amount, Currency currency)
+        => new(amount, currency);
 }

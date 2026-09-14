@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Order.Domain.AggregatesModel.Orders;
+using Order.Infrastructure.Persistence.Configurations.Converters;
 
 namespace Order.Infrastructure.Persistence.Configurations;
 
@@ -21,7 +22,8 @@ internal sealed class OrderAggregateConfiguration : IEntityTypeConfiguration<Ord
         // Columns
         builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
         builder.Property(o => o.CreatedAt).IsRequired();
-        // Оптимистичная блокировка (Optimistic Concurrency Control). EF Core при выполнении UPDATE будет добавлять условие: WHERE "Id" = @id AND "Version" = @oldVersion
+        // Оптимистичная блокировка (Optimistic Concurrency Control).
+        // EF Core при выполнении UPDATE будет добавлять условие: WHERE "Id" = @id AND "Version" = @oldVersion
         builder.Property(o => o.Version).IsConcurrencyToken().IsRequired();
 
         // Настройка CustomerId — CustomerIdentity как owned-тип (вложенный тип) в EF.
@@ -44,10 +46,11 @@ internal sealed class OrderAggregateConfiguration : IEntityTypeConfiguration<Ord
                     .HasPrecision(18, 2)
                     .IsRequired();
 
-                money.Property(x => x.CurrencyCode)
+                money.Property(x => x.Currency)
                     .HasColumnName("TotalCurrency")
                     .HasMaxLength(3)
-                    .IsRequired();
+                    .IsRequired()
+                    .HasConversion<CurrencyValueConverter>();
             });
 
         // Relationships

@@ -1,6 +1,6 @@
 ﻿using PizzaSaga.SharedKernel.Domain.Exceptions;
 
-namespace Order.Domain.AggregatesModel.Orders.Exceptions.Monies;
+namespace Order.Domain.AggregatesModel.Orders.Exceptions.Currencies;
 
 /// <summary>
 /// Данная валюта не поддерживается.

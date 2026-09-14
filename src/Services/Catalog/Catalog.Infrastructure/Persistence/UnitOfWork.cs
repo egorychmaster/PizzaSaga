@@ -34,7 +34,9 @@ public sealed class UnitOfWork : IUnitOfWork
 
         // 1. Добавляем агрегат в контекст, если его там нет
         if (_context.Entry(aggregate).State == EntityState.Detached)
-            _context.Entry(aggregate).State = EntityState.Added;
+            await _context.Set<TAggregate>().AddAsync(aggregate, cancellationToken);
+        else
+            _context.Set<TAggregate>().Update(aggregate);
 
         // 2. Сохраняем агрегат
         await _context.SaveChangesAsync(cancellationToken);
