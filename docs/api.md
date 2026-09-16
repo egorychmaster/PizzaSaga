@@ -222,6 +222,49 @@ Response (200 OK):
   "totalCount": 100
 }
 
+# 7. Остатки товаров (Stock)
+Service: Stock Service
+
+## 7.1 Список остатков товаров
+Endpoint:
+GET /api/v1/stock
+
+Query-параметры:
+page
+pageSize
+
+Response (200 OK):
+{
+  "items": [
+    {
+      "productId": "00000000-0000-0000-0000-000000000001",
+      "availableQuantity": 10
+    }
+  ],
+  "page": 1,
+  "pageSize": 20,
+  "totalCount": 100
+}
+
+Поля ответа:
+productId — идентификатор продукта.
+availableQuantity — текущее доступное количество товара.
+
+## 7.2 Получение остатка конкретного товара
+Endpoint:
+GET /api/v1/stock/{productId}
+
+Response (200 OK):
+{
+  "productId": "00000000-0000-0000-0000-000000000001",
+  "availableQuantity": 10
+}
+
+Ошибки:
+400 Bad Request — некорректный productId.
+404 Not Found — остаток для указанного продукта не найден.
+401 Unauthorized — отсутствует или недействителен JWT.
+
 # 8. Идемпотентность
 Для операций создания ресурсов клиент может передать заголовок
 Idempotency-Key
