@@ -23,7 +23,7 @@ try
 
     // Стандартные сервисы 
 
-    // Catalog.Infrastructure.
+    // Infrastructure.
     // Регистрация DbContext. Название "CatalogDb" должно СТРОГО совпадать с именем ресурса в AppHost
     var dbConnectionString = builder.Configuration.GetDatabaseConnectionString("CatalogDb");
     var rabbitMqConnectionString = builder.Configuration.GetRabbitMqConnectionString();
@@ -41,6 +41,8 @@ try
 
     // Автоматические миграции и идемпотентный Seed данных. Вызов после app = builder.Build():
     await app.ApplyMigrationsAsync<CatalogDbContext>();
+    // Выполняем инициализацию данных
+    await app.SeedDatabaseAsync<CatalogDbContext>();
 
     // Настраиваем эндпоинты для проверки работоспособности (Health Checks)
     app.MapDefaultEndpoints();

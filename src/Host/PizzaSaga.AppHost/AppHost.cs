@@ -46,6 +46,19 @@ var orderService = builder.AddProject<Projects.Order_Api>("order-api")
     .WaitFor(orderDb)       // Сервис не запустится, пока БД не готова. Будет использовать встроенный health check PostgreSQL.
     .WaitFor(rabbitMq);     // Сервис не запустится, пока брокер сообщений не готов. Будет использовать встроенный health check RabbitMQ.
 
+// Сервис склада (управление остатками)
+var stockDb = postgres.AddDatabase("StockDb");
+var stockService = builder.AddProject<Projects.Stock_Api>("stock-api")
+    .WithReference(stockDb)
+    .WithReference(rabbitMq)
+    .WaitFor(stockDb)
+    .WaitFor(rabbitMq);
+
+// Сервис оплаты
+var paymentService = builder.AddProject<Projects.Payment_Api>("payment-api")
+    .WithReference(rabbitMq)
+    .WaitFor(rabbitMq);
+
 // Сервис каталога (управление номенклатурой пицц)
 var catalogDb = postgres.AddDatabase("CatalogDb");
 var catalogService = builder.AddProject<Projects.Catalog_Api>("catalog-api")
@@ -53,23 +66,13 @@ var catalogService = builder.AddProject<Projects.Catalog_Api>("catalog-api")
     .WithReference(catalogDb)
     .WithReference(rabbitMq)
     .WithReference(orderService)
+    .WithReference(stockService)
     .WaitFor(catalogDb)
     .WaitFor(rabbitMq)
-    .WaitFor(orderService)  // Ждём пока заказы поднимутся, иначе консумер заказов пропустит события продуктов и их цен.
+    // Ожидаем сервисы, иначе консьюиеры заказов пропустят события продуктов и их цен.
+    .WaitFor(orderService)  
+    .WaitFor(stockService)
     ;
-
-// Сервис склада (управление остатками)
-var stockDb = postgres.AddDatabase("StockDb");
-var stockService = builder.AddProject<Projects.Stock_Api>("stock-api")
-    .WithReference(stockDb)
-    .WithReference(rabbitMq)
-    .WaitFor(stockDb)   // Сервис не запустится, пока БД не готова. Можно ждать несколько ресурсов.
-    .WaitFor(rabbitMq);
-
-// Сервис оплаты
-var paymentService = builder.AddProject<Projects.Payment_Api>("payment-api")
-    .WithReference(rabbitMq)
-    .WaitFor(rabbitMq);
 
 
 // --- 3. ШЛЮЗ МАРШРУТИЗАЦИИ (API GATEWAY) ---

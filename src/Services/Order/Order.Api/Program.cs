@@ -1,6 +1,6 @@
 using Order.Api.Endpoints.Orders.CreateOrder;
-using Order.Api.Endpoints.Orders.GetOrders;
 using Order.Api.Endpoints.Orders.GetOrderById;
+using Order.Api.Endpoints.Orders.GetOrders;
 using Order.Application.DependencyInjection;
 using Order.Infrastructure.DependencyInjection;
 using Order.Infrastructure.Persistence;
@@ -45,6 +45,8 @@ try
 
     // Автоматические миграции и идемпотентный Seed данных. Вызов после app = builder.Build():
     await app.ApplyMigrationsAsync<OrderDbContext>();
+    // Выполняем инициализацию данных
+    await app.SeedDatabaseAsync<OrderDbContext>();
 
     // Мидлварь аутентификации / авторизации
     app.UseAuthentication();

@@ -43,13 +43,6 @@ public static class DatabaseMigrationExtensions
             {
                 logger.LogInformation("Database {DbContext} is up to date.", contextName);
             }
-
-            // Автоматически пытаемся получить зарегистрированный IDatabaseSeeder<TContext> из DI
-            var seeder = services.GetRequiredService<IDatabaseSeeder<TContext>>();
-
-            logger.LogInformation("Starting database seeder {SeederName} for {DbContext}...", seeder.GetType().Name, contextName);
-            await seeder.SeedAsync(dbContext, cancellationToken);
-            logger.LogInformation("Database seeding completed successfully.");
         }
         catch (Exception ex)
         {

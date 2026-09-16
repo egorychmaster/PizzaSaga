@@ -26,26 +26,19 @@ public sealed class GlobalProblemDetailsExceptionHandler : IExceptionHandler
     {
         var problemDetails = exception switch
         {
-            BadHttpRequestException badRequestEx =>
-                CreateBadRequestProblemDetails(httpContext, badRequestEx),
+            // 400
+            BadHttpRequestException badRequestEx => Create400BadRequestProblemDetails(httpContext, badRequestEx),
+            ValidationException validationException => Create400ValidationProblemDetails(httpContext, validationException),
+            DomainException domainException => Create400DomainProblemDetails(httpContext, domainException),
 
-            ValidationException validationException =>
-                CreateValidationProblemDetails(httpContext, validationException),
+            // 409
+            DbUpdateConcurrencyException => Create409ConcurrencyProblemDetails(httpContext),
 
-            DbUpdateConcurrencyException =>
-                CreateConcurrencyProblemDetails(httpContext),
-
-            DomainException domainException =>
-                CreateDomainProblemDetails(httpContext, domainException),
-
-            _ =>
-                CreateInternalServerProblemDetails(httpContext)
+            // 500
+            _ => Create500InternalServerProblemDetails(httpContext)
         };
 
-        LogException(
-            httpContext,
-            exception,
-            problemDetails.Status!.Value);
+        LogException(httpContext, exception, problemDetails.Status!.Value);
 
         httpContext.Response.StatusCode = problemDetails.Status.Value;
         httpContext.Response.ContentType = "application/problem+json";
@@ -55,7 +48,7 @@ public sealed class GlobalProblemDetailsExceptionHandler : IExceptionHandler
         return true;
     }
 
-    private static ProblemDetails CreateBadRequestProblemDetails(HttpContext httpContext, BadHttpRequestException exception)
+    private static ProblemDetails Create400BadRequestProblemDetails(HttpContext httpContext, BadHttpRequestException exception)
     {
         var problemDetails = new ProblemDetails
         {
@@ -71,7 +64,7 @@ public sealed class GlobalProblemDetailsExceptionHandler : IExceptionHandler
         return problemDetails;
     }
 
-    private static ProblemDetails CreateValidationProblemDetails(HttpContext httpContext, ValidationException exception)
+    private static ProblemDetails Create400ValidationProblemDetails(HttpContext httpContext, ValidationException exception)
     {
         var problemDetails = new ProblemDetails
         {
@@ -97,7 +90,7 @@ public sealed class GlobalProblemDetailsExceptionHandler : IExceptionHandler
         return problemDetails;
     }
 
-    private static ProblemDetails CreateDomainProblemDetails(HttpContext httpContext, DomainException exception)
+    private static ProblemDetails Create400DomainProblemDetails(HttpContext httpContext, DomainException exception)
     {
         var problemDetails = new ProblemDetails
         {
@@ -113,7 +106,7 @@ public sealed class GlobalProblemDetailsExceptionHandler : IExceptionHandler
         return problemDetails;
     }
 
-    private static ProblemDetails CreateConcurrencyProblemDetails(HttpContext httpContext)
+    private static ProblemDetails Create409ConcurrencyProblemDetails(HttpContext httpContext)
     {
         var problemDetails = new ProblemDetails
         {
@@ -128,7 +121,7 @@ public sealed class GlobalProblemDetailsExceptionHandler : IExceptionHandler
         return problemDetails;
     }
 
-    private static ProblemDetails CreateInternalServerProblemDetails(HttpContext httpContext)
+    private static ProblemDetails Create500InternalServerProblemDetails(HttpContext httpContext)
     {
         var problemDetails = new ProblemDetails
         {
