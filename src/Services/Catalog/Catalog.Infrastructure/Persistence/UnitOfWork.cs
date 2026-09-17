@@ -13,12 +13,12 @@ namespace Catalog.Infrastructure.Persistence;
 /// Реализация IUnitOfWork для EF Core + PostgreSQL.
 /// </summary>
 public sealed class UnitOfWork : IUnitOfWork
-{    
+{
     private readonly CatalogDbContext _context;
     private readonly ILogger<UnitOfWork> _logger;
 
     public UnitOfWork(CatalogDbContext context, ILogger<UnitOfWork> logger)
-    {        
+    {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -64,10 +64,10 @@ public sealed class UnitOfWork : IUnitOfWork
                 // ✅ Сохраняем ИНТЕГРАЦИОННОЕ событие в Outbox!
                 var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
                 var payload = JsonSerializer.Serialize(
-                    integrationEvent, 
+                    integrationEvent,
                     integrationEvent.GetType(),
                     jsonOptions);
-                
+
                 _context.OutboxMessages.Add(new OutboxMessage(
                     aggregateId: aggregate.Id,
                     messageType: $"{integrationEvent.GetType().FullName}, {integrationEvent.GetType().Assembly.GetName().Name}",
@@ -81,7 +81,6 @@ public sealed class UnitOfWork : IUnitOfWork
         // 6. Очищаем доменные события
         aggregate.ClearDomainEvents();
 
-        _logger.LogTrace("Outbox saved for aggregate {AggregateId} with {EventCount} events.",
-            aggregate.Id, domainEvents.Count);
+        _logger.LogTrace("Outbox saved for aggregate {AggregateId} with {EventCount} events.", aggregate.Id, domainEvents.Count);
     }
 }

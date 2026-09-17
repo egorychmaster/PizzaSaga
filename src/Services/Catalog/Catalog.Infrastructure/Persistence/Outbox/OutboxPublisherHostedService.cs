@@ -116,14 +116,14 @@ public sealed class OutboxPublisherHostedService : IHostedService
     /// <summary>
     /// Помечает событие как опубликованное.
     /// </summary>
-    private async Task MarkAsPublishedAsync(CatalogDbContext context, Guid messageId, CancellationToken ct)
+    private async Task MarkAsPublishedAsync(CatalogDbContext context, Guid messageId, CancellationToken cancellationToken)
     {
-        var message = await context.OutboxMessages.FindAsync([messageId], ct);
+        var message = await context.OutboxMessages.FindAsync([messageId], cancellationToken);
         if (message is not null)
         {
             message.IsPublished = true;
             context.OutboxMessages.Update(message);
-            await context.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }
