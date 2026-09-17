@@ -180,15 +180,15 @@ ProductId = 1, Price = 10 USD
 -- При созданиии заказа CreateOrderCommand, при сохранении заказа генерируется OrderCreatedIntegrationEvent.
 -- При отмене заказа (через POST /api/v1/orders/{orderId}/cancel) запускается компенсация командой CancelPaymentIntegrationCommand.
 - Шаг проверки инвентаря (Stock): ReserveInventoryIntegrationCommand, InventoryReservedIntegrationEvent, InventoryReservationFailedIntegrationEvent.
-- Шаг авторизации оплаты (Payment): AuthorizePaymentCommand, PaymentAuthorizedEvent, PaymentAuthorizationFailedEvent.
+- Шаг авторизации оплаты (Payment): AuthorizePaymentIntegrationCommand, PaymentAuthorizedIntegrationEvent, PaymentAuthorizationFailedIntegrationEvent.
 - Компенсирующие команды (Откат/Rollback): ReleaseInventoryIntegrationCommand (расформирование резерва товара), CancelPaymentIntegrationCommand (возврат/отмена транзакции авторизации).
 - Финальные (Терминальные) события Саги: OrderCompletedIntegrationEvent, OrderCancelledIntegrationEvent.
 Интеграционные контракты (Contracts) остаются плоскими DTO. Но при получении сообщения потребителем (Consumer) в Stock Service или Payment Service, сырые данные сразу же парсятся во внутренние Value Objects этих доменов (например, Quantity преобразуется в InventoryStockQuantity в Stock-сервисе). Консьюмеры не работают с сырыми int или string в своей бизнес-логике (концепция Parse, Don't Validate).
 
 5. Saga State Machine (Order Service): Создать класс OrderStateMachine и сущность OrderStateData (Saga Instance) с использованием MassTransit State Machine.
-- Реализовать внутренний граф технических состояний Саги согласно разделу 7.4 architecture.md: Initial, AwaitingInventoryReservation, AwaitingPaymentReservation, Completed, Cancelled.
+- Реализовать внутренний граф технических состояний Саги согласно разделу 7.4 architecture.md: Initial, AwaitingInventoryReservation, AwaitingPaymentAuthorization, Completed, Cancelled.
 - Заложить логику маппинга внутренних состояний во внешние статусы согласно разделу 8 api.md:
-- Внутренние состояния Initial, AwaitingInventoryReservation, AwaitingPaymentReservation маппятся в публичный статус Pending («Заказ обрабатывается системой»).
+- Внутренние состояния Initial, AwaitingInventoryReservation, AwaitingPaymentAuthorization маппятся в публичный статус Pending («Заказ обрабатывается системой»).
 - Внутреннее состояние Completed маппится в публичный статус Completed.
 - Внутреннее состояние Cancelled маппится в публичный статус Cancelled.
 - Настроить персистентность инстансов Саги в базе данных Order через EF Core (Saga Repository).
@@ -230,7 +230,7 @@ Stock Service использует "Parse, Don't Validate" для управле
 
 4. Компенсационные сценарии Саги: Расширить OrderStateMachine.
 - Если Stock прислал InventoryReservationFailedIntegrationEvent -> перевести заказ в статус Cancelled.
-- Если Payment прислал PaymentAuthorizationFailedEvent -> Сага должна отправить в Stock компенсирующую команду ReleaseInventoryIntegrationCommand (расформировать резерв), и только после этого перевести заказ в статус Cancelled.
+- Если Payment прислал PaymentAuthorizationFailedIntegrationEvent -> Сага должна отправить в Stock компенсирующую команду ReleaseInventoryIntegrationCommand (расформировать резерв), и только после этого перевести заказ в статус Cancelled.
  
 5. Реализовать ReleaseInventoryConsumer:
     • обработать команду ReleaseInventoryIntegrationCommand;

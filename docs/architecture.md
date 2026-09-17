@@ -382,12 +382,12 @@ Payment Service отвечает за выполнение платёжных о
 обеспечение идемпотентности повторно полученных команд.
 
 Payment Service обрабатывает команды, поступающие от Order Saga, например:
-ReservePaymentIntegrationCommand - команда на резервирование оплаты;
-CancelPaymentIntegrationCommand - команда на отмену ранее зарезервированной оплаты.
+AuthorizePaymentIntegrationCommand - команда на авторизацию платежа;
+CancelPaymentIntegrationCommand - команда на отмену ранее авторизованной (заблокированной) суммы.
 
 В результате обработки операций публикуются интеграционные события:
-PaymentReservedIntegrationEvent - событие об успешном резервировании оплаты;
-PaymentReservationFailedIntegrationEvent - событие о невозможности зарезервировать оплату (Бизнес-отказ);
+PaymentAuthorizedIntegrationEvent - событие об успешной авторизации платежа;
+PaymentAuthorizationFailedIntegrationEvent - событие о неудачной авторизации (бизнес-отказ);
 события, связанные с отменой или освобождением платежа.
 
 Payment Service не отвечает за состояние заказа и не управляет складскими остатками.
@@ -1016,14 +1016,14 @@ PizzaSaga.Contracts
 
 Commands
 ├── ReserveInventoryIntegrationCommand
-├── ReservePaymentIntegrationCommand
+├── AuthorizePaymentIntegrationCommand
 └── CancelOrderCommand
 
 Events
 ├── InventoryReservedIntegrationEvent
 ├── InventoryReservationFailedIntegrationEvent
-├── PaymentReservedIntegrationEvent
-├── PaymentReservationFailedIntegrationEvent
+├── PaymentAuthorizedIntegrationEvent
+├── PaymentAuthorizationFailedIntegrationEvent
 ├── ProductCreatedIntegrationEvent
 └── OrderCompletedIntegrationEvent
 
@@ -1544,7 +1544,7 @@ Order.Application
 |      ┌─────────────┴──────────────────────┐  	|
 |	   │			Publish		       		│  	|
 |      ▼                           			▼  	|
-| ReserveInventoryIntegrationCommand	ReservePaymentIntegrationCommand
+| ReserveInventoryIntegrationCommand	AuthorizePaymentIntegrationCommand
 +-----------------------------------------------+
                │                     │
                ▼                     ▼
@@ -1623,7 +1623,7 @@ Saga сохраняется как отдельный экземпляр State M
           │                 ▼
           │             Cancelled
           ▼
-       AwaitingPaymentReservation
+       AwaitingPaymentAuthorization
           │                 │
           │                 ▼
           │             Cancelled
@@ -1634,7 +1634,7 @@ Saga сохраняется как отдельный экземпляр State M
 Состояние						Что означает
 Initial							Начальное состояние экземпляра Saga до запуска основного процесса.
 AwaitingInventoryReservation	Отправлена команда ReserveInventoryIntegrationCommand, ожидается событие InventoryReservedIntegrationEvent или InventoryReservationFailedIntegrationEvent.
-AwaitingPaymentReservation		Товар успешно зарезервирован, отправлена команда ReservePaymentIntegrationCommand, ожидается событие PaymentReservedIntegrationEvent или PaymentReservationFailedIntegrationEvent.
+AwaitingPaymentAuthorization		Товар успешно зарезервирован, отправлена команда AuthorizePaymentIntegrationCommand, ожидается событие PaymentAuthorizedIntegrationEvent или PaymentAuthorizationFailedIntegrationEvent.
 Completed						Все этапы распределённого бизнес-процесса успешно завершены.
 Cancelled						Распределённый бизнес-процесс завершён с отменой, в том числе после выполнения необходимых компенсирующих операций.
 
@@ -1644,7 +1644,7 @@ Cancelled						Распределённый бизнес-процесс заве
 Состояние Saga					OrderStatus
 Initial							Pending
 AwaitingInventoryReservation	Pending
-AwaitingPaymentReservation		Pending
+AwaitingPaymentAuthorization		Pending
 Completed						Completed
 Cancelled						Cancelled
 
@@ -1708,13 +1708,13 @@ Order Saga: AwaitingInventoryReservation
 InventoryReservedIntegrationEvent
      │
      ▼
-ReservePaymentIntegrationCommand
+AuthorizePaymentIntegrationCommand
      │
      ▼
-Order Saga: AwaitingPaymentReservation
+Order Saga: AwaitingPaymentAuthorization
      │
      ▼
-PaymentReservedIntegrationEvent
+PaymentAuthorizedIntegrationEvent
      │
      ▼
 Order Saga: Completed
@@ -1734,7 +1734,7 @@ OrderCompletedIntegrationEvent
 На момент создания заказа агрегат Order получает статус Pending.
 Этот статус означает, что ресурс заказа успешно создан, но распределённый бизнес-процесс ещё выполняется.
 После создания заказа Saga начинает координацию внутренних операций.
-Пока Saga находится в состояниях Initial, AwaitingInventoryReservation или AwaitingPaymentReservation, публичный статус заказа остаётся Pending.
+Пока Saga находится в состояниях Initial, AwaitingInventoryReservation или AwaitingPaymentAuthorization, публичный статус заказа остаётся Pending.
 После успешного завершения всех этапов Saga переходит во внутреннее состояние Completed. Это состояние не является автоматически публичным статусом API.
 После перехода Saga в терминальное состояние Order Service изменяет агрегат Order через его доменный метод MarkCompleted(). В результате агрегат получает статус Completed.
 
@@ -1777,13 +1777,13 @@ Order Saga: AwaitingInventoryReservation
 InventoryReservedIntegrationEvent
 	  │
       ▼
-ReservePaymentIntegrationCommand
+AuthorizePaymentIntegrationCommand
       │
       ▼
-Order Saga: AwaitingPaymentReservation
+Order Saga: AwaitingPaymentAuthorization
       │
       ▼
-PaymentReservationFailedIntegrationEvent
+PaymentAuthorizationFailedIntegrationEvent
       │
       ▼
 ReleaseInventoryIntegrationCommand
@@ -1806,7 +1806,7 @@ OrderCancelledDomainEvent
       ▼
 OrderCancelledIntegrationEvent
 
-Получив событие PaymentReservationFailedIntegrationEvent, Saga переходит по ветви компенсации и отправляет команду ReleaseInventoryIntegrationCommand.
+Получив событие PaymentAuthorizationFailedIntegrationEvent, Saga переходит по ветви компенсации и отправляет команду ReleaseInventoryIntegrationCommand.
 После успешного освобождения товара Stock Service публикует событие InventoryReleasedIntegrationEvent.
 Получив это событие, Saga завершает компенсационный сценарий и переходит во внутреннее состояние Cancelled.
 После этого Order Service изменяет агрегат Order посредством доменного метода MarkCancelled(). Агрегат получает публичный статус Cancelled, после чего генерируется OrderCancelledDomainEvent, который затем преобразуется в OrderCancelledIntegrationEvent.
@@ -1815,7 +1815,7 @@ OrderCancelledIntegrationEvent
 В рамках процесса оформления заказа возможны следующие бизнес-сценарии:
 1. Успешное выполнение — товар успешно зарезервирован, денежные средства успешно зарезервированы, Saga переходит в состояние Completed, после чего агрегат Order получает статус Completed.
 2. Ошибка резервирования товара — публикуется событие InventoryReservationFailedIntegrationEvent. Saga завершает процесс в состоянии Cancelled, после чего агрегат Order получает статус Cancelled. Компенсация не требуется, поскольку последующие операции ещё не были выполнены.
-3. Ошибка резервирования оплаты — после получения события PaymentReservationFailedIntegrationEvent Saga отправляет команду ReleaseInventoryIntegrationCommand. После успешного завершения компенсации Saga переходит в состояние Cancelled, после чего агрегат Order получает статус Cancelled.
+3. Ошибка резервирования оплаты — после получения события PaymentAuthorizationFailedIntegrationEvent Saga отправляет команду ReleaseInventoryIntegrationCommand. После успешного завершения компенсации Saga переходит в состояние Cancelled, после чего агрегат Order получает статус Cancelled.
 
 Таким образом, Completed и Cancelled существуют одновременно на двух разных уровнях:
 - как внутренние терминальные состояния Saga;
@@ -1842,7 +1842,7 @@ Integration Commands (Интеграционные команды)
 Примеры команд:
 - ReserveInventoryIntegrationCommand
 - ReleaseInventoryIntegrationCommand
-- ReservePaymentIntegrationCommand
+- AuthorizePaymentIntegrationCommand
 
 Integration Events (Интеграционные события)
 Интеграционное событие уведомляет другие микросервисы о произошедшем факте.
@@ -1853,8 +1853,8 @@ Integration Events (Интеграционные события)
 - InventoryReservedIntegrationEvent — товар успешно зарезервирован;
 - InventoryReservationFailedIntegrationEvent — резервирование товара завершилось ошибкой;
 - InventoryReleasedIntegrationEvent — ранее зарезервированный товар освобождён;
-- PaymentReservedIntegrationEvent — денежные средства успешно зарезервированы;
-- PaymentReservationFailedIntegrationEvent — резервирование денежных средств завершилось ошибкой;
+- PaymentAuthorizedIntegrationEvent — денежные средства успешно авторизованы;
+- PaymentAuthorizationFailedIntegrationEvent — событие о неудачной авторизации (бизнес-отказ), завершилось ошибкой;
 - OrderCompletedIntegrationEvent — заказ успешно завершён;
 - OrderCancelledIntegrationEvent — заказ отменён.
 
@@ -1884,8 +1884,8 @@ Integration Event предназначен для обмена информац�
 InventoryReservedIntegrationEvent
 InventoryReservationFailedIntegrationEvent
 InventoryReleasedIntegrationEvent
-PaymentReservedIntegrationEvent
-PaymentReservationFailedIntegrationEvent
+PaymentAuthorizedIntegrationEvent
+PaymentAuthorizationFailedIntegrationEvent
 OrderCompletedIntegrationEvent
 OrderCancelledIntegrationEvent
 ProductCreatedIntegrationEvent
