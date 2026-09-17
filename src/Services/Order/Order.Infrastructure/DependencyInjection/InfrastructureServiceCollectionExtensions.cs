@@ -54,7 +54,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
 
         // Подключаем MassTransit с RabbitMQ
-        services.AddMassTransitWithRabbitMq(rabbitMqConnectionString, typeof(ProductCreatedIntegrationEventConsumer).Assembly);
+        services.AddMassTransitWithRabbitMq(rabbitMqConnectionString, "Order", typeof(ProductCreatedIntegrationEventConsumer).Assembly);
 
         return services;
     }

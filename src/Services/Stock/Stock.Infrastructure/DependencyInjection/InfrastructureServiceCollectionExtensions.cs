@@ -26,7 +26,7 @@ public static class InfrastructureServiceCollectionExtensions
         });
 
         // Подключаем MassTransit с RabbitMQ и указываем сборку consumer'ов
-        services.AddMassTransitWithRabbitMq(rabbitMqConnectionString, typeof(ProductCreatedIntegrationEventConsumer).Assembly);
+        services.AddMassTransitWithRabbitMq(rabbitMqConnectionString, "Stock", typeof(ProductCreatedIntegrationEventConsumer).Assembly);
 
         // Регистрируем UnitOfWork — реализация IUnitOfWork для EF Core.
         //services.AddScoped<IUnitOfWork, UnitOfWork>();

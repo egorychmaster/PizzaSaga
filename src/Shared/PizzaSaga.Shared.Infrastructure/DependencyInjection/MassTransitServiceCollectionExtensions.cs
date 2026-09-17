@@ -11,16 +11,17 @@ public static class MassTransitServiceCollectionExtensions
     /// </summary>
     /// <param name="services"></param>
     /// <param name="rabbitMqConnectionString"></param>
+    /// <param name="servicePrefix">Префикс сервиса для добавления в начало имени очереди.</param>
     /// <param name="consumerAssemblies">Сборки в котрых надо регистрировать потребителей.</param>
     /// <returns></returns>
-    public static IServiceCollection AddMassTransitWithRabbitMq(this IServiceCollection services, string rabbitMqConnectionString, params Assembly[] consumerAssemblies)
+    public static IServiceCollection AddMassTransitWithRabbitMq(
+        this IServiceCollection services, 
+        string rabbitMqConnectionString,
+        string servicePrefix,
+        params Assembly[] consumerAssemblies)
     {
-
         services.AddMassTransit(x =>
         {
-            x.SetKebabCaseEndpointNameFormatter();
-
-            // Регистрируем всех потребителей из переданных сборок
             if (consumerAssemblies is { Length: > 0 })
             {
                 x.AddConsumers(consumerAssemblies);
@@ -32,8 +33,18 @@ public static class MassTransitServiceCollectionExtensions
                 var uri = new Uri(rabbitMqConnectionString);
                 cfg.Host(uri);
 
-                // Автоматическая регистрация consumer'ов из сборки
-                cfg.ConfigureEndpoints(context);
+                // Явно задаём уникальное имя очереди с префиксом имени сервиса для каждого consumer'а,
+                // чтобы избежать конфликта при дублировании типов потребителей в разных сервисах.
+                foreach (var consumerType in consumerAssemblies
+                    .SelectMany(a => a.GetTypes())
+                    .Where(t => typeof(IConsumer).IsAssignableFrom(t)))
+                {
+                    var queueName = $"{servicePrefix}-{consumerType.Name}";
+                    cfg.ReceiveEndpoint(queueName, e =>
+                    {
+                        e.ConfigureConsumer(context, consumerType);
+                    });
+                }
             });
         });
 

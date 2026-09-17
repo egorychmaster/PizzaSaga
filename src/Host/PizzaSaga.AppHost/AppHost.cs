@@ -1,3 +1,5 @@
+using System.Net.Sockets;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var jwtSecret = builder.AddParameter("JwtSecretKey", secret: true);
@@ -6,15 +8,37 @@ var jwtSecret = builder.AddParameter("JwtSecretKey", secret: true);
 // --- 1. ОПИСАНИЕ ИНФРАСТРУКТУРЫ (КОНТЕЙНЕРЫ) ---
 
 // База данных PostgreSQL для Auth.Service и Order.Service (Саги)
-var postgres = builder.AddPostgres("postgres")
-    .WithPgAdmin();     // Добавит удобную панель управления БД
+var pgUser = builder.AddParameter("postgres-user", "postgres");
+var pgPassword = builder.AddParameter("postgres-password", "MySuperSecret123!", secret: true);
+var postgres = builder.AddPostgres("postgres", pgUser, pgPassword)
+    // Добавит удобную панель управления БД
+    .WithPgAdmin(pg =>
+    {
+        // Явно задаём порт для pgAdmin
+        pg.WithEndpoint("http", e => e.Port = 17076);
+    })
+    .WithEndpoint("tcp", e =>
+    {
+        e.Port = 17075;       // внешний порт
+        //e.TargetPort = 5432; // внутренний стандартный порт PostgreSQL
+        e.Protocol = ProtocolType.Tcp;
+        e.UriScheme = "tcp";
+    }); ;
 
 // Брокер сообщений RabbitMQ для MassTransit (общение между сервисами)
 // Объявляем явные параметры для подключения
-var rabbitUser = builder.AddParameter("rabbitmq-user", "guest");
-var rabbitPassword = builder.AddParameter("rabbitmq-pass", "guest");
+var rabbitUser = builder.AddParameter("rabbitmq-user", "q");
+var rabbitPassword = builder.AddParameter("rabbitmq-pass", "q");
 var rabbitMq = builder.AddRabbitMQ("rabbitmq", rabbitUser, rabbitPassword)
-    .WithManagementPlugin();    // Панель управления RabbitMQ
+    // Панель управления RabbitMQ
+    .WithManagementPlugin()
+    .WithEndpoint("management", e =>
+    {
+        e.Port = 17077;       // внешний порт
+        //e.TargetPort = 15672; // внутренний порт RabbitMQ Management
+        e.Protocol = ProtocolType.Tcp;
+        e.UriScheme = "http";
+    });
 
 
 // --- 2. ОПИСАНИЕ МИКРОСЕРВИСОВ И ЗАВИСИМОСТЕЙ ---

@@ -34,7 +34,7 @@ public static class InfrastructureServiceCollectionExtensions
         });
 
         // Подключаем MassTransit с RabbitMQ
-        services.AddMassTransitWithRabbitMq(rabbitMqConnectionString);
+        services.AddMassTransitWithRabbitMq(rabbitMqConnectionString, "Catalog");
 
 
         //services.AddScoped<ICatalogRepository, CatalogRepository>();
