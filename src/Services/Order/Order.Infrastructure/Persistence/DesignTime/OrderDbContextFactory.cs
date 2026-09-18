@@ -4,12 +4,12 @@ using Microsoft.EntityFrameworkCore.Design;
 namespace Order.Infrastructure.Persistence.DesignTime;
 
 /// <summary>
-/// Фабрика для создания OrderDbContext во время выполнения EF Core design-time операций.
+/// Фабрика для создания DbContext во время выполнения EF Core design-time операций.
 /// </summary>
 public sealed class OrderDbContextFactory : IDesignTimeDbContextFactory<OrderDbContext>
 {
     /// <summary>
-    /// Создаёт экземпляр OrderDbContext для EF Core migrations.
+    /// Создаёт экземпляр DbContext для EF Core migrations.
     /// </summary>
     public OrderDbContext CreateDbContext(string[] args)
     {

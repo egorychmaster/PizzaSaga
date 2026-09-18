@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Payment.Infrastructure.MassTransit.Consumers;
+using Payment.Infrastructure.Persistence;
 using PizzaSaga.Shared.Infrastructure.DependencyInjection;
-using Stock.Infrastructure.MassTransit.Consumers;
-using Stock.Infrastructure.Persistence;
 
-namespace Stock.Infrastructure.DependencyInjection;
+namespace Payment.Infrastructure.DependencyInjection;
 
 /// <summary>
 /// Расширения для регистрации зависимостей слоя Infrastructure.
@@ -16,25 +16,21 @@ public static class InfrastructureServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, string dbConnectionString, string rabbitMqConnectionString)
     {
-        // Регистрируем StockDbContext с настройками EF Core для PostgreSQL
-        services.AddDbContext<StockDbContext>((sp, options) =>
+        // Регистрируем PaymentDbContext с настройками EF Core для PostgreSQL
+        services.AddDbContext<PaymentDbContext>((sp, options) =>
         {
+            // Используем Npgsql и стратегию повторных попыток (для transient ошибок)
             options.UseNpgsql(dbConnectionString, npgsqlOptions =>
             {
+                // Включаем стратегию повторов: при ошибках (например, deadlock)
+                // EF Core автоматически перезапустит транзакцию
                 npgsqlOptions.EnableRetryOnFailure();
             });
         });
 
 
-
-        // Регистрируем UnitOfWork — реализация IUnitOfWork для EF Core.
-        //services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-        // Регистрируем сидер БД (хотя в данном случае seed не нужен — остатки создаются через consumer)
-        //services.AddScoped<IDatabaseSeeder<StockDbContext>, StockDatabaseSeeder>();
-
         // Подключаем MassTransit с RabbitMQ и указываем сборку consumer'ов
-        services.AddMassTransitWithRabbitMq(rabbitMqConnectionString, "Stock", typeof(ProductCreatedIntegrationEventConsumer).Assembly);
+        services.AddMassTransitWithRabbitMq(rabbitMqConnectionString, "Payment", typeof(AuthorizePaymentConsumer).Assembly);
 
         return services;
     }

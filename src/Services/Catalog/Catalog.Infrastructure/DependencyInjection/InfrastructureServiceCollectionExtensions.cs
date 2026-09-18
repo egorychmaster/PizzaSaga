@@ -33,10 +33,6 @@ public static class InfrastructureServiceCollectionExtensions
             // options.UseLoggerFactory(sp.GetRequiredService<ILoggerFactory>());
         });
 
-        // Подключаем MassTransit с RabbitMQ
-        services.AddMassTransitWithRabbitMq(rabbitMqConnectionString, "Catalog");
-
-
         //services.AddScoped<ICatalogRepository, CatalogRepository>();
 
         // Регистрируем UnitOfWork — реализация IUnitOfWork для EF Core.
@@ -45,6 +41,10 @@ public static class InfrastructureServiceCollectionExtensions
         // Регистрируем сидер БД.
         // Он будет вызываться при старте приложения через DatabaseMigrationExtensions.ApplyMigrationsAsync<TContext>()
         services.AddScoped<IDatabaseSeeder<CatalogDbContext>, CatalogDatabaseSeeder>();
+
+
+        // Подключаем MassTransit с RabbitMQ
+        services.AddMassTransitWithRabbitMq(rabbitMqConnectionString, "Catalog");
 
         return services;
     }

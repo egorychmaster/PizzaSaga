@@ -1,21 +1,21 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Catalog.Infrastructure.Persistence.DesignTime;
+namespace Payment.Infrastructure.Persistence.DesignTime;
 
 /// <summary>
 /// Фабрика для создания DbContext во время выполнения EF Core design-time операций.
 /// </summary>
-public sealed class CatalogDbContextFactory : IDesignTimeDbContextFactory<CatalogDbContext>
+public sealed class PaymentDbContextFactory : IDesignTimeDbContextFactory<PaymentDbContext>
 {
     /// <summary>
     /// Создаёт экземпляр DbContext для EF Core migrations.
     /// </summary>
-    public CatalogDbContext CreateDbContext(string[] args)
+    public PaymentDbContext CreateDbContext(string[] args)
     {
-        var connectionString = "Host=localhost;Port=5432;Database=catalogs;Username=postgres;Password=";
+        var connectionString = "Host=localhost;Port=5432;Database=Payment;Username=postgres;Password=";
 
-        var optionsBuilder = new DbContextOptionsBuilder<CatalogDbContext>();
+        var optionsBuilder = new DbContextOptionsBuilder<PaymentDbContext>();
 
         optionsBuilder.UseNpgsql(
             connectionString,
@@ -24,6 +24,6 @@ public sealed class CatalogDbContextFactory : IDesignTimeDbContextFactory<Catalo
                 npgsqlOptions.EnableRetryOnFailure();
             });
 
-        return new CatalogDbContext(optionsBuilder.Options);
+        return new PaymentDbContext(optionsBuilder.Options);
     }
 }

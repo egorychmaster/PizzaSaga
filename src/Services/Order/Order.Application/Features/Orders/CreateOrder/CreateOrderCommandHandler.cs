@@ -5,6 +5,7 @@ using Order.Domain.AggregatesModel.Orders;
 using Order.Domain.AggregatesModel.Orders.Exceptions;
 using Order.Domain.AggregatesModel.Orders.ValueObjects;
 using Order.Domain.AggregatesModel.ProductCatalog;
+using PizzaSaga.SharedKernel.Domain.ValueObjects;
 
 namespace Order.Application.Features.Orders.CreateOrder;
 

@@ -8,12 +8,17 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.OpenApi" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Host\PizzaSaga.ServiceDefaults\PizzaSaga.ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\..\Shared\PizzaSaga.Shared.ErrorHandling\PizzaSaga.Shared.ErrorHandling.csproj" />
+    <ProjectReference Include="..\Payment.Infrastructure\Payment.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

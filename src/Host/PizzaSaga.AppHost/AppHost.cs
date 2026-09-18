@@ -79,8 +79,11 @@ var stockService = builder.AddProject<Projects.Stock_Api>("stock-api")
     .WaitFor(rabbitMq);
 
 // Сервис оплаты
+var paymentDb = postgres.AddDatabase("PaymentDb");
 var paymentService = builder.AddProject<Projects.Payment_Api>("payment-api")
+    .WithReference(paymentDb)
     .WithReference(rabbitMq)
+    .WaitFor(paymentDb)
     .WaitFor(rabbitMq);
 
 // Сервис каталога (управление номенклатурой пицц)

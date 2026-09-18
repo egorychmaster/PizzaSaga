@@ -30,7 +30,7 @@ try
     var app = builder.Build();
     app.UseExceptionHandler();
 
-    // Автоматические миграции и идемпотентный Seed данных. Вызов после app = builder.Build():
+    // Автоматические миграции.
     await app.ApplyMigrationsAsync<StockDbContext>();
 
     // Пропагирует уже установленный CorrelationId: берёт из baggage или заголовка и добавляет в span-теги + логи.

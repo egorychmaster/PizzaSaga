@@ -1,4 +1,5 @@
 ﻿using Order.Domain.AggregatesModel.Orders.ValueObjects;
+using PizzaSaga.SharedKernel.Domain.ValueObjects;
 
 namespace Order.Domain.AggregatesModel.Orders;
 

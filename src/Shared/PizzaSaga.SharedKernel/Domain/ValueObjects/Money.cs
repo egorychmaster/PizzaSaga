@@ -1,12 +1,11 @@
-﻿using Order.Domain.AggregatesModel.Orders.Exceptions.Monies;
+﻿using PizzaSaga.SharedKernel.Domain.Exceptions.Monies;
 
-namespace Order.Domain.AggregatesModel.Orders.ValueObjects;
+namespace PizzaSaga.SharedKernel.Domain.ValueObjects;
 
 /// <summary>
 /// Value Object, представляющий денежную сумму и её валюту.
 /// Гарантирует неотрицательность суммы и валидность ISO-кода валюты.
 /// </summary>
-/// <summary>
 public sealed class Money
 {
     /// <summary>

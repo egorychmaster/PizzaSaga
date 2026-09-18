@@ -39,7 +39,7 @@ try
     // Только UseSwagger(), не UseSwaggerUI(), потому что service не обязан иметь собственный UI. Его задача — публиковать: /swagger/v1/swagger.json
     app.UseSwagger();
 
-    // Автоматические миграции и идемпотентный Seed данных. Вызов после app = builder.Build():
+    // Автоматические миграции.
     await app.ApplyMigrationsAsync<CatalogDbContext>();
     // Выполняем инициализацию данных
     await app.SeedDatabaseAsync<CatalogDbContext>();

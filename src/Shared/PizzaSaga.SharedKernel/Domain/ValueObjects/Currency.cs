@@ -1,6 +1,6 @@
-﻿using Order.Domain.AggregatesModel.Orders.Exceptions.Currencies;
+﻿using PizzaSaga.SharedKernel.Domain.Exceptions.Currencies;
 
-namespace Order.Domain.AggregatesModel.Orders.ValueObjects;
+namespace PizzaSaga.SharedKernel.Domain.ValueObjects;
 
 /// <summary>
 /// Value Object, представляющий валюту в формате ISO 4217.

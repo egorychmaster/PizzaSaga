@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PizzaSaga.SharedKernel.Domain.ValueObjects;
 
-namespace Order.Infrastructure.Persistence.Configurations.Converters;
+namespace Payment.Infrastructure.Persistence.Configurations.Converters;
 
 /// <summary>
 /// Преобразует доменный Value Object Currency в строковое представление для хранения в базе данных и обратно.

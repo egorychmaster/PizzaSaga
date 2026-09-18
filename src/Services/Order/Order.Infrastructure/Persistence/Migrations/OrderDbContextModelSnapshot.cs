@@ -17,7 +17,7 @@ namespace Order.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.10")
+                .HasAnnotation("ProductVersion", "10.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -141,7 +141,7 @@ namespace Order.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Order.Domain.AggregatesModel.Orders.OrderAggregate", b =>
                 {
-                    b.OwnsOne("Order.Domain.AggregatesModel.Orders.ValueObjects.Money", "TotalAmount", b1 =>
+                    b.OwnsOne("PizzaSaga.SharedKernel.Domain.ValueObjects.Money", "TotalAmount", b1 =>
                         {
                             b1.Property<Guid>("OrderAggregateId")
                                 .HasColumnType("uuid");
@@ -196,7 +196,7 @@ namespace Order.Infrastructure.Persistence.Migrations
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.OwnsOne("Order.Domain.AggregatesModel.Orders.ValueObjects.Money", "UnitPrice", b1 =>
+                    b.OwnsOne("PizzaSaga.SharedKernel.Domain.ValueObjects.Money", "UnitPrice", b1 =>
                         {
                             b1.Property<Guid>("OrderItemId")
                                 .HasColumnType("uuid");
