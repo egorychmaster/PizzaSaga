@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Stock.Domain.AggregatesModel.Inventory;
+using Stock.Infrastructure.Persistence.Configurations.ValueConverters;
 
 namespace Stock.Infrastructure.Persistence.Configurations;
 
@@ -16,8 +17,24 @@ public sealed class InventoryConfiguration : IEntityTypeConfiguration<InventoryA
 
         // Columns
         builder.Property(x => x.ProductId).IsRequired();
-        builder.Property(x => x.AvailableQuantity).IsRequired();
-        builder.Property(x => x.ReservedQuantity).IsRequired();
+        
+        // Map InventoryBalance properties to columns with value converters
+        builder.OwnsOne(x => x.Balance, balance =>
+        {
+            var converter = QuantityConverter.Create();
+
+            balance.Property(b => b.Available)
+                .HasColumnName("AvailableQuantity")
+                .HasConversion(converter)
+                .ValueGeneratedNever()
+                .IsRequired();
+
+            balance.Property(b => b.Reserved)
+                .HasColumnName("ReservedQuantity")
+                .HasConversion(converter)
+                .ValueGeneratedNever()
+                .IsRequired();
+        });
 
         // Maps to table
         builder.ToTable("Inventories");

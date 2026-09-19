@@ -12,7 +12,7 @@ using Stock.Infrastructure.Persistence;
 namespace Stock.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(StockDbContext))]
-    [Migration("20260916163945_InitialCreate")]
+    [Migration("20260919135005_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace Stock.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.10")
+                .HasAnnotation("ProductVersion", "10.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -31,18 +31,39 @@ namespace Stock.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("AvailableQuantity")
-                        .HasColumnType("integer");
-
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
-
-                    b.Property<int>("ReservedQuantity")
-                        .HasColumnType("integer");
 
                     b.HasKey("ProductId");
 
                     b.ToTable("Inventories", (string)null);
+                });
+
+            modelBuilder.Entity("Stock.Domain.AggregatesModel.Inventory.InventoryAggregate", b =>
+                {
+                    b.OwnsOne("Stock.Domain.AggregatesModel.Inventory.ValueObjects.InventoryBalance", "Balance", b1 =>
+                        {
+                            b1.Property<Guid>("InventoryAggregateProductId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Available")
+                                .HasColumnType("integer")
+                                .HasColumnName("AvailableQuantity");
+
+                            b1.Property<int>("Reserved")
+                                .HasColumnType("integer")
+                                .HasColumnName("ReservedQuantity");
+
+                            b1.HasKey("InventoryAggregateProductId");
+
+                            b1.ToTable("Inventories");
+
+                            b1.WithOwner()
+                                .HasForeignKey("InventoryAggregateProductId");
+                        });
+
+                    b.Navigation("Balance")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
