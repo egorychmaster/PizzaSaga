@@ -1,0 +1,28 @@
+<Project>
+  <!-- 
+    Базовая корневая директория для артефактов сборки на Windows.
+    По умолчанию артефакты выносятся в папку .artifacts/windows в корне решения.
+  -->
+  <PropertyGroup>
+    <PizzaSagaArtifactsRoot>$(MSBuildThisFileDirectory).artifacts\windows</PizzaSagaArtifactsRoot>
+  </PropertyGroup>
+
+  <!-- 
+    Переопределение пути для Linux / Docker / macOS.
+    Если операционная система отличается от Windows_NT, используем отдельную папку .artifacts/linux.
+    Это изолирует кэши сборки (obj/bin) между хост-машиной (Visual Studio) и Linux-контейнерами (OpenTerminal/Docker),
+    исключая ошибки доступа к файлам (например, MSB3374).
+  -->
+  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
+    <PizzaSagaArtifactsRoot>$(MSBuildThisFileDirectory).artifacts\linux</PizzaSagaArtifactsRoot>
+  </PropertyGroup>
+
+  <!-- 
+    Перенаправление стандартных выходов MSBuild (bin и obj) в соответствующую подпапку .artifacts.
+    Каждый проект получает изолированную директорию по своему имени $(MSBuildProjectName).
+  -->
+  <PropertyGroup>
+    <BaseOutputPath>$(PizzaSagaArtifactsRoot)\bin\$(MSBuildProjectName)\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(PizzaSagaArtifactsRoot)\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>

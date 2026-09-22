@@ -46,6 +46,7 @@
     <Project Path="src/Shared/PizzaSaga.SharedKernel/PizzaSaga.SharedKernel.csproj" Id="36562cc7-c244-4009-b554-07d5d833a657" />
   </Folder>
   <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
   </Folder>
 </Solution>
