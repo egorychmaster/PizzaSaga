@@ -1,8 +1,8 @@
-﻿namespace PizzaSaga.Contracts.IntegrationEvents.Orders;
+﻿namespace PizzaSaga.Contracts.Payment.IntegrationCommands;
 
 /// <summary>
 /// Команда для авторизации платежа по заказу.
-/// Публикуется Order.Service при создании заказа.
+/// Обрабатывается Payment Service.
 /// </summary>
 /// <param name="OrderId">Идентификатор заказа.</param>
 /// <param name="Amount">Сумма к списанию.</param>

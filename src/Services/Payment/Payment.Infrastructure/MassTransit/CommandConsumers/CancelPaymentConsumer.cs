@@ -1,8 +1,8 @@
 ﻿using MassTransit;
 using Microsoft.Extensions.Logging;
-using PizzaSaga.Contracts.IntegrationEvents.Orders;
+using PizzaSaga.Contracts.Payment.IntegrationCommands;
 
-namespace Payment.Infrastructure.MassTransit.Consumers;
+namespace Payment.Infrastructure.MassTransit.CommandConsumers;
 
 /// <summary>
 /// Консьюмер команды CancelPaymentIntegrationCommand.

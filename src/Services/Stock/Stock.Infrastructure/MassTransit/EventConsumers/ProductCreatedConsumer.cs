@@ -1,22 +1,22 @@
 ﻿using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using PizzaSaga.Contracts.IntegrationEvents.Catalogs;
+using PizzaSaga.Contracts.Catalogs.IntegrationEvents;
 using Stock.Domain.AggregatesModel.Inventory;
 using Stock.Infrastructure.Persistence;
 
-namespace Stock.Infrastructure.MassTransit.Consumers;
+namespace Stock.Infrastructure.MassTransit.EventConsumers;
 
 /// <summary>
 /// Consumer для интеграционного события ProductCreatedIntegrationEvent.
 /// Создаёт запись остатка (Inventory) при добавлении нового продукта в Catalog Service.
 /// </summary>
-public sealed class ProductCreatedIntegrationEventConsumer : IConsumer<ProductCreatedIntegrationEvent>
+public sealed class ProductCreatedConsumer : IConsumer<ProductCreatedIntegrationEvent>
 {
     private readonly StockDbContext _context;
-    private readonly ILogger<ProductCreatedIntegrationEventConsumer> _logger;
+    private readonly ILogger<ProductCreatedConsumer> _logger;
 
-    public ProductCreatedIntegrationEventConsumer(StockDbContext context, ILogger<ProductCreatedIntegrationEventConsumer> logger)
+    public ProductCreatedConsumer(StockDbContext context, ILogger<ProductCreatedConsumer> logger)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));

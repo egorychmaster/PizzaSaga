@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using PizzaSaga.Contracts.IntegrationEvents.Catalogs;
+using PizzaSaga.Contracts.Catalogs.IntegrationEvents;
 using System.Text.Json;
 
 namespace Catalog.Infrastructure.Persistence.Outbox;

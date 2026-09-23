@@ -196,7 +196,7 @@ ProductId = 1, Price = 10 USD
 
 6. Создание Заглушек Потребителей (Consumers):
 - В Stock Service создать ReserveInventoryConsumer. На этом этапе он просто логирует получение команды и сразу публикует в ответ событие InventoryReservedIntegrationEvent.
-- В Payment Service создать AuthorizePaymentConsumer. Он логирует команду и сразу публикует в ответ PaymentAuthorized.
+- В Payment Service создать AuthorizePaymentConsumer. Он логирует команду и сразу публикует в ответ PaymentAuthorizedIntegrationEvent.
 
 7. Transactional Outbox & Inbox для всех сервисов:
 - Настроить встроенный Transactional Outbox MassTransit в Order Service (в связке с EF Core DbContext). Гарантировать, что создание/обновление заказа и сохранение событий Саги в таблицу OutboxMessages происходят в единой транзакции PostgreSQL.

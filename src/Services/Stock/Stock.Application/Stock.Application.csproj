@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Stock.Domain\Stock.Domain.csproj" />
+    <ProjectReference Include="..\..\..\Shared\PizzaSaga.Contracts\PizzaSaga.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

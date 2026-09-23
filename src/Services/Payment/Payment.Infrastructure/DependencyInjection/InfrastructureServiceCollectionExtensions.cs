@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Payment.Infrastructure.MassTransit.Consumers;
+using Payment.Infrastructure.MassTransit.CommandConsumers;
 using Payment.Infrastructure.Persistence;
 using PizzaSaga.Shared.Infrastructure.DependencyInjection;
 

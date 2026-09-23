@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PizzaSaga.Shared.Infrastructure.DependencyInjection;
-using Stock.Infrastructure.MassTransit.Consumers;
+using Stock.Infrastructure.MassTransit.EventConsumers;
 using Stock.Infrastructure.Persistence;
 
 namespace Stock.Infrastructure.DependencyInjection;
@@ -34,7 +34,7 @@ public static class InfrastructureServiceCollectionExtensions
         //services.AddScoped<IDatabaseSeeder<StockDbContext>, StockDatabaseSeeder>();
 
         // Подключаем MassTransit с RabbitMQ и указываем сборку consumer'ов
-        services.AddMassTransitWithRabbitMq(rabbitMqConnectionString, "Stock", typeof(ProductCreatedIntegrationEventConsumer).Assembly);
+        services.AddMassTransitWithRabbitMq(rabbitMqConnectionString, "Stock", typeof(ProductCreatedConsumer).Assembly);
 
         return services;
     }

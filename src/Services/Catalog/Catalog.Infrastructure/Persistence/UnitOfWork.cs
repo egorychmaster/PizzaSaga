@@ -3,7 +3,7 @@ using Catalog.Domain.AggregatesModel.Products.Events;
 using Catalog.Infrastructure.Persistence.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using PizzaSaga.Contracts.IntegrationEvents.Catalogs;
+using PizzaSaga.Contracts.Catalogs.IntegrationEvents;
 using PizzaSaga.SharedKernel.Domain;
 using System.Text.Json;
 

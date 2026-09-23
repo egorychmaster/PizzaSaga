@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Order.Domain.AggregatesModel.ProductCatalog;
 using Order.Infrastructure.Persistence;
-using PizzaSaga.Contracts.IntegrationEvents.Catalogs;
+using PizzaSaga.Contracts.Catalogs.IntegrationEvents;
 
 namespace Order.Infrastructure.MassTransit.Consumers;
 

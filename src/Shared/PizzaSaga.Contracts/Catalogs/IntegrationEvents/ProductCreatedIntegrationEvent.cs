@@ -1,4 +1,4 @@
-﻿namespace PizzaSaga.Contracts.IntegrationEvents.Catalogs;
+namespace PizzaSaga.Contracts.Catalogs.IntegrationEvents;
 
 /// <summary>
 /// Интеграционное событие создания продукта.
