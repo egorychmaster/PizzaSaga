@@ -235,7 +235,7 @@ Stock Service использует "Parse, Don't Validate" для управле
 5. Реализовать ReleaseInventoryConsumer:
     • обработать команду ReleaseInventoryIntegrationCommand;
     • освободить ранее зарезервированный товар;
-    • опубликовать InventoryReleasedEvent;
+    • опубликовать InventoryReleasedIntegrationEvent;
     • обеспечить идемпотентность обработки.
 
 6. Политики устойчивости (Resilience) и DLQ: Настроить MassTransit Retries (политика повторных попыток при дедлоках БД или временных сбоях сети). Настроить Dead Letter Queue (DLQ) для сообщений, которые не удалось обработать после всех повторов.
