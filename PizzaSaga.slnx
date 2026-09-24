@@ -2,6 +2,8 @@
   <Folder Name="/Docs/">
     <File Path="docs/api.md" />
     <File Path="docs/architecture.md" />
+    <File Path="docs/задание на пет-проект.txt" />
+    <File Path="docs/план спринтов.txt" />
     <File Path="README.md" />
   </Folder>
   <Folder Name="/Gateway/">
