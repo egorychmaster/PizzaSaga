@@ -1515,17 +1515,26 @@ Api не обращается напрямую к Domain;
 
 Что такое State Machine
 State Machine (машина состояний) — это обычный класс, который хранит описание жизненного цикла Saga.
+Order Saga является оркестратором бизнес-процесса, а Order Service является хостом этой Saga.
 Выглядит примерно так:
 
-Order.Application
+Order Service
 │
-├── Commands
-├── Queries
-├── Consumers
-├── StateMachines
-│      ├── OrderStateMachine.cs
-│      └── OrderState.cs
-└── ...
+├── API
+│
+├── Application
+│   ├── Commands
+│   ├── Queries
+│   └── Abstractions
+│
+├── Domain
+│
+└── Infrastructure
+    └── MassTransit
+        ├── Consumers
+        └── Saga
+            ├── OrderStateMachine.cs
+            └── OrderStateData.cs
 
 Где она находится
 Она находится внутри Order Service:
@@ -1626,6 +1635,9 @@ Saga сохраняется как отдельный экземпляр State M
        AwaitingPaymentAuthorization
           │                 │
           │                 ▼
+          │       AwaitingInventoryRelease
+          │                 │
+          │                 ▼
           │             Cancelled
           ▼
        Completed
@@ -1634,7 +1646,8 @@ Saga сохраняется как отдельный экземпляр State M
 Состояние						Что означает
 Initial							Начальное состояние экземпляра Saga до запуска основного процесса.
 AwaitingInventoryReservation	Отправлена команда ReserveInventoryIntegrationCommand, ожидается событие InventoryReservedIntegrationEvent или InventoryReservationFailedIntegrationEvent.
-AwaitingPaymentAuthorization		Товар успешно зарезервирован, отправлена команда AuthorizePaymentIntegrationCommand, ожидается событие PaymentAuthorizedIntegrationEvent или PaymentAuthorizationFailedIntegrationEvent.
+AwaitingPaymentAuthorization	Товар успешно зарезервирован, отправлена команда AuthorizePaymentIntegrationCommand, ожидается событие PaymentAuthorizedIntegrationEvent или PaymentAuthorizationFailedIntegrationEvent.
+AwaitingInventoryRelease        Авторизация оплаты завершилась ошибкой. Отправлена команда ReleaseInventoryIntegrationCommand, ожидается событие InventoryReleasedIntegrationEvent.
 Completed						Все этапы распределённого бизнес-процесса успешно завершены.
 Cancelled						Распределённый бизнес-процесс завершён с отменой, в том числе после выполнения необходимых компенсирующих операций.
 
@@ -1644,7 +1657,8 @@ Cancelled						Распределённый бизнес-процесс заве
 Состояние Saga					OrderStatus
 Initial							Pending
 AwaitingInventoryReservation	Pending
-AwaitingPaymentAuthorization		Pending
+AwaitingPaymentAuthorization	Pending
+AwaitingInventoryRelease        Pending
 Completed						Completed
 Cancelled						Cancelled
 
