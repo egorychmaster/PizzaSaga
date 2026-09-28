@@ -1,9 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Order.Application.Abstractions.Persistence;
 using Order.Application.Abstractions.Persistence.Idempotency;
 using Order.Domain.Abstractions.Repositories;
 using Order.Infrastructure.MassTransit.Consumers;
+using Order.Infrastructure.MassTransit.Saga;
 using Order.Infrastructure.Persistence;
 using Order.Infrastructure.Persistence.Idempotency;
 using Order.Infrastructure.Persistence.Repositories;
@@ -53,8 +55,32 @@ public static class InfrastructureServiceCollectionExtensions
         // Регистрация Idempotency Repository
         services.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
 
-        // Подключаем MassTransit с RabbitMQ
-        services.AddMassTransitWithRabbitMq(rabbitMqConnectionString, "Order", typeof(ProductCreatedIntegrationEventConsumer).Assembly);
+        // Регистрируем OrderSagaDbContext для хранения состояния Saga.
+        // Использует ту же PostgreSQL базу данных, что и OrderDbContext.
+        services.AddDbContext<OrderSagaDbContext>((sp, options) =>
+        {
+            options.UseNpgsql(connectionString, npgsqlOptions =>
+            {
+                npgsqlOptions.EnableRetryOnFailure();
+            });
+        });
+
+        // Подключаем MassTransit с RabbitMQ и регистрацией Saga State Machine.
+        services.AddMassTransitWithRabbitMq(
+            rabbitMqConnectionString,
+            "Order",
+            configure: x =>
+            {
+                x.AddSagaStateMachine<OrderStateMachine, OrderSagaStateData>()
+                    .EntityFrameworkRepository(repository =>
+                    {
+                        repository.ConcurrencyMode = ConcurrencyMode.Optimistic;
+                        repository.ExistingDbContext<OrderSagaDbContext>();
+                        repository.UsePostgres();
+                    });
+            },
+            consumerAssemblies: new[] { typeof(ProductCreatedIntegrationEventConsumer).Assembly }
+            );
 
         return services;
     }

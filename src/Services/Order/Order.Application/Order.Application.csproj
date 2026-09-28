@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Order.Domain\Order.Domain.csproj" />
+    <ProjectReference Include="..\..\..\Shared\PizzaSaga.Contracts\PizzaSaga.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

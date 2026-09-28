@@ -187,7 +187,7 @@ curl -X POST https://localhost:<gateway-port>/api/v1/orders \
 |------|--------|----------|
 | **Sprint 0** | ✅ | API Gateway (YARP), JWT, CorrelationId, OpenTelemetry, Health Checks, Auth Service (POST /login) |
 | **Sprint 1** | ✅ | Vertical Slices, CQRS + Mediator, FluentValidation, TransactionBehavior, Optimistic Concurrency, HTTP Idempotency |
-| **Sprint 2** | 🟡 | Order Saga State Machine, RabbitMQ integration, Catalog Service (seed), Currency Exchange Rates, Outbox pattern |
+| **Sprint 2** | ✅ | Order Saga State Machine  (MassTransit), RabbitMQ integration, Catalog Service (seed), Currency Exchange Rates, Outbox pattern |
 
 > **Примечание**: Проект находится в активной разработке. Полный стек функциональности описан в `docs/план спринтов.txt`.
 

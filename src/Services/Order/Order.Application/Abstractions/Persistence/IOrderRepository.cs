@@ -21,6 +21,15 @@ public interface IOrderRepository
     Task<OrderAggregate?> GetByIdAsync(Guid orderId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Получает заказ для обновления (с отслеживанием изменений EF Core).
+    /// Используется Saga Consumer-ами для изменения статуса заказа.
+    /// </summary>
+    /// <param name="orderId">Идентификатор заказа.</param>
+    /// <param name="cancellationToken">Токен отмены.</param>
+    /// <returns>Заказ с загруженными позициями или null, если не найден.</returns>
+    Task<OrderAggregate?> GetByIdForUpdateAsync(Guid orderId, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Получает страницу заказов пользователя.
     /// </summary>
     /// <param name="customerId">Идентификатор клиента.</param>

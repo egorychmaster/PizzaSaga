@@ -8,6 +8,8 @@
     <PackageVersion Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.5.4" />
     <PackageVersion Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageVersion Include="MassTransit" Version="9.2.1" />
+    <PackageVersion Include="MassTransit.EntityFrameworkCore" Version="9.2.1" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="9.2.1" />
     <PackageVersion Include="Mediator.Abstractions" Version="3.0.2" />
     <PackageVersion Include="Mediator.SourceGenerator" Version="3.0.2" />

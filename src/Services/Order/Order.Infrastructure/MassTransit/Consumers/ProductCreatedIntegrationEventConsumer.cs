@@ -42,18 +42,12 @@ public sealed class ProductCreatedIntegrationEventConsumer : IConsumer<ProductCr
             _context.ProductCatalog.Add(productEntry);
             await _context.SaveChangesAsync(context.CancellationToken);
 
-            _logger.LogInformation(
-                "Product catalog cache updated for ProductId={ProductId}, Name={Name}",
-                @event.ProductId,
-                @event.Name);
+            _logger.LogInformation("Product catalog cache updated for ProductId={ProductId}, Name={Name}", @event.ProductId, @event.Name);
         }
         catch (DbUpdateException ex)
         {
             // Обработка дублирующихся записей — логируем и игнорируем
-            _logger.LogWarning(
-                ex,
-                "Attempt to insert duplicate ProductCatalogCache entry for ProductId={ProductId}. Skipping.",
-                @event.ProductId);
+            _logger.LogWarning(ex, "Attempt to insert duplicate ProductCatalogCache entry for ProductId={ProductId}. Skipping.", @event.ProductId);
         }
     }
 }

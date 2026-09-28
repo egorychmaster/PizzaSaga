@@ -4,16 +4,18 @@ using System.Reflection;
 
 namespace PizzaSaga.Shared.Infrastructure.DependencyInjection;
 
+/// <summary>
+/// Расширения для подключения MassTransit с RabbitMQ.
+/// </summary>
 public static class MassTransitServiceCollectionExtensions
 {
     /// <summary>
-    /// Подключает MassTransit с RabbitMQ. Ожидает connection string "RabbitMQ" или "rabbitmq".
+    /// Подключает MassTransit с RabbitMQ и автоматической регистрацией consumer'ов в отдельных очередях с префиксом.
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="rabbitMqConnectionString"></param>
-    /// <param name="servicePrefix">Префикс сервиса для добавления в начало имени очереди.</param>
-    /// <param name="consumerAssemblies">Сборки в котрых надо регистрировать потребителей.</param>
-    /// <returns></returns>
+    /// <param name="services">Коллекция сервисов.</param>
+    /// <param name="rabbitMqConnectionString">Connection string RabbitMQ (формат amqp://...).</param>
+    /// <param name="servicePrefix">Префикс для имён очередей.</param>
+    /// <param name="consumerAssemblies">Сборки, содержащие реализации IConsumer.</param>
     public static IServiceCollection AddMassTransitWithRabbitMq(
         this IServiceCollection services, 
         string rabbitMqConnectionString,
@@ -22,6 +24,7 @@ public static class MassTransitServiceCollectionExtensions
     {
         services.AddMassTransit(x =>
         {
+            // Регистрация потребителей из указанных сборок
             if (consumerAssemblies is { Length: > 0 })
             {
                 x.AddConsumers(consumerAssemblies);
@@ -45,6 +48,46 @@ public static class MassTransitServiceCollectionExtensions
                         e.ConfigureConsumer(context, consumerType);
                     });
                 }
+            });
+        });
+
+        return services;
+    }
+
+    /// <summary>
+    /// Подключает MassTransit с RabbitMQ и дополнительной конфигурацией bus (например, Saga).
+    /// </summary>
+    /// <param name="services">Коллекция сервисов.</param>
+    /// <param name="rabbitMqConnectionString">Connection string RabbitMQ (формат amqp://...).</param>
+    /// <param name="servicePrefix">Префикс для имён очередей.</param>
+    /// <param name="configure">Доп. конфигурация bus (например, регистрация State Machine).</param>
+    /// <param name="consumerAssemblies">Сборки с consumer'ами (необязательно).</param>
+    public static IServiceCollection AddMassTransitWithRabbitMq(
+    this IServiceCollection services,
+    string rabbitMqConnectionString,
+    string servicePrefix,
+    Action<IBusRegistrationConfigurator> configure,
+    Assembly[] consumerAssemblies = null
+        )
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+
+        services.AddMassTransit(x =>
+        {
+            // Регистрация потребителей из указанных сборок
+            if (consumerAssemblies is { Length: > 0 })
+                x.AddConsumers(consumerAssemblies);
+
+            // Вызов дополнительной конфигурации (например, регистрация saga)
+            configure(x);
+
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                var uri = new Uri(rabbitMqConnectionString);
+                cfg.Host(uri);
+
+                // Автоматическая настройка endpoints с учётом зарегистрированных компонентов
+                cfg.ConfigureEndpoints(context);
             });
         });
 

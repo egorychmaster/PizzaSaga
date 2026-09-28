@@ -7,6 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="MassTransit.EntityFrameworkCore" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
@@ -20,7 +21,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Persistence\Migrations\" />
+	  <Folder Include="Persistence\Migrations\OrderSagaDbContexts\" />
+	  <Folder Include="Persistence\Migrations\OrderDbContexts\" />
 	</ItemGroup>
 
 </Project>

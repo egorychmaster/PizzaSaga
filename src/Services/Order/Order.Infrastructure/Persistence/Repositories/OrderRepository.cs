@@ -34,6 +34,14 @@ internal sealed class OrderRepository : IOrderRepository
     }
 
     /// <inheritdoc />
+    public async Task<OrderAggregate?> GetByIdForUpdateAsync(Guid orderId, CancellationToken cancellationToken)
+    {
+        return await _context.Orders
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == orderId, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<(IReadOnlyCollection<OrderAggregate>, long TotalCount)> GetListByCustomerIdAsync(Guid customerId, int page, int pageSize, CancellationToken cancellationToken)
     {
         var skip = (page - 1) * pageSize;

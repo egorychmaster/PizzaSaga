@@ -92,18 +92,31 @@ public sealed class OrderAggregate : AggregateRoot
         IReadOnlyCollection<OrderItem> items)
         => new(id, customerId, items);
 
-    ///// <summary>
-    ///// Пример бизнес-метода изменения состояния агрегата.
-    ///// Каждая модификация агрегата обязана инкрементировать версию.
-    ///// </summary>
-    //public void ChangeStatus(string newStatus)
-    //{
-    //    if (string.IsNullOrWhiteSpace(newStatus))
-    //        throw new ArgumentException("Status cannot be empty.", nameof(newStatus));
+    /// <summary>
+    /// Переводит заказ в состояние успешно завершённого.
+    /// Вызывается Saga после успешного завершения всех этапов оформления заказа.
+    /// </summary>
+    public void MarkCompleted()
+    {
+        if (Status != OrderStatus.Pending)
+            throw new InvalidOperationException($"Order cannot be completed from status '{Status}'.");
 
-    //    Status = newStatus;
-    //    Version++;
-    //}
+        Status = OrderStatus.Completed;
+        Version++;
+    }
+
+    /// <summary>
+    /// Переводит заказ в состояние отменённого.
+    /// Вызывается Saga после завершения компенсирующих операций.
+    /// </summary>
+    public void MarkCancelled()
+    {
+        if (Status != OrderStatus.Pending)
+            throw new InvalidOperationException($"Order cannot be cancelled from status '{Status}'.");
+
+        Status = OrderStatus.Cancelled;
+        Version++;
+    }
 
 
     private void AddItems(IReadOnlyCollection<OrderItem> items)

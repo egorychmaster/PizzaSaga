@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using Order.Application.Abstractions.Persistence;
 using Order.Application.Abstractions.Persistence.Idempotency.Exceptions;
+using Order.Infrastructure.Persistence.Outbox;
+using System.Text.Json;
 
 namespace Order.Infrastructure.Persistence;
 
@@ -72,6 +74,33 @@ public sealed class UnitOfWork : IUnitOfWork
                 throw;
             }
         });
+    }
+
+    /// <inheritdoc />
+    public async Task SaveWithOutboxAsync<TEvent>(Guid aggregateId, TEvent integrationEvent, CancellationToken cancellationToken = default)
+        where TEvent : class
+    {
+        ArgumentNullException.ThrowIfNull(integrationEvent);
+
+        _logger.LogTrace("Saving Outbox message for aggregate {AggregateId} with event type {EventType}.", aggregateId, typeof(TEvent).Name);
+
+        // Сериализуем событие в JSON
+        var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var payload = JsonSerializer.Serialize(integrationEvent, integrationEvent.GetType(), jsonOptions);
+
+        // Формируем полное имя типа для десериализации
+        var messageType = $"{integrationEvent.GetType().FullName}, {integrationEvent.GetType().Assembly.GetName().Name}";
+
+        // Добавляем сообщение в Outbox — оно будет сохранено вместе с другими изменениями DbContext
+        _context.OutboxMessages.Add(new OutboxMessage(
+            aggregateId: aggregateId,
+            messageType: messageType,
+            payload: payload));
+
+        // Сохраняем Outbox-сообщение (в рамках текущей транзакции)
+        await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogTrace("Outbox message saved for aggregate {AggregateId}.", aggregateId);
     }
 
     /// <summary>
