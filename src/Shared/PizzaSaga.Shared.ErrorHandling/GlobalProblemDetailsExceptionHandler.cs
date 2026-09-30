@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 using FluentValidation;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PizzaSaga.SharedKernel.Domain.Exceptions;
+using System.Diagnostics;
 
 namespace PizzaSaga.Shared.ErrorHandling;
 
@@ -29,9 +29,14 @@ public sealed class GlobalProblemDetailsExceptionHandler : IExceptionHandler
             // 400
             BadHttpRequestException badRequestEx => Create400BadRequestProblemDetails(httpContext, badRequestEx),
             ValidationException validationException => Create400ValidationProblemDetails(httpContext, validationException),
+
+            // 404
+            NotFoundException notFoundEx => Create404NotFoundProblemDetails(httpContext, notFoundEx),
+
+            // 400 default
             DomainException domainException => Create400DomainProblemDetails(httpContext, domainException),
 
-            // 409
+            // 409            
             DbUpdateConcurrencyException => Create409ConcurrencyProblemDetails(httpContext),
 
             // 500
@@ -106,6 +111,22 @@ public sealed class GlobalProblemDetailsExceptionHandler : IExceptionHandler
         return problemDetails;
     }
 
+    private static ProblemDetails Create404NotFoundProblemDetails(HttpContext httpContext, NotFoundException exception)
+    {
+        var problemDetails = new ProblemDetails
+        {
+            Type = "urn:pizzasaga:error:not-found",
+            Title = "The requested resource was not found.",
+            Status = StatusCodes.Status404NotFound,
+            Instance = httpContext.Request.Path,
+            Detail = exception.Message
+        };
+
+        AddTraceId(problemDetails);
+
+        return problemDetails;
+    }
+
     private static ProblemDetails Create409ConcurrencyProblemDetails(HttpContext httpContext)
     {
         var problemDetails = new ProblemDetails
@@ -142,6 +163,10 @@ public sealed class GlobalProblemDetailsExceptionHandler : IExceptionHandler
         {
             case StatusCodes.Status400BadRequest:
                 _logger.LogInformation(exception, "Request failed with a client error. Path: {Path}", httpContext.Request.Path);
+                break;
+
+            case StatusCodes.Status404NotFound:
+                _logger.LogInformation(exception, "Resource not found. Path: {Path}", httpContext.Request.Path);
                 break;
 
             case StatusCodes.Status409Conflict:

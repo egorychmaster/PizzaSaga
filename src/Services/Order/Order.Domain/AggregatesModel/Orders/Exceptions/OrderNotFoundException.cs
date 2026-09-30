@@ -5,7 +5,7 @@ namespace Order.Domain.AggregatesModel.Orders.Exceptions;
 /// <summary>
 /// Исключение, выбрасываемое при попытке получить несуществующий заказ.
 /// </summary>
-public sealed class OrderNotFoundException : DomainException
+public sealed class OrderNotFoundException : NotFoundException
 {
     /// <summary>
     /// Идентификатор заказа, который не найден.
