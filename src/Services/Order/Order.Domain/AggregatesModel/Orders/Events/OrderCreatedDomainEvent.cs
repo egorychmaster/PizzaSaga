@@ -1,4 +1,4 @@
-﻿using Order.Domain.AggregatesModel.Orders.ValueObjects;
+using Order.Domain.AggregatesModel.Orders.ValueObjects;
 using PizzaSaga.SharedKernel.Domain;
 using PizzaSaga.SharedKernel.Domain.ValueObjects;
 
@@ -11,4 +11,8 @@ public sealed record OrderCreatedDomainEvent(
     Guid OrderId,
     CustomerIdentity CustomerId,
     Money TotalAmount,
-    DateTimeOffset OccurredAt) : IDomainEvent;
+    IReadOnlyCollection<(Guid ProductId, int Quantity)> Items)
+    : IDomainEvent
+{
+    public DateTimeOffset OccurredAt { get; } = DateTimeOffset.UtcNow;
+}

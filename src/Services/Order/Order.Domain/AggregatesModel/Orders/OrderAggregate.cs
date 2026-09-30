@@ -1,4 +1,5 @@
-﻿using Order.Domain.AggregatesModel.Orders.ValueObjects;
+using Order.Domain.AggregatesModel.Orders.Events;
+using Order.Domain.AggregatesModel.Orders.ValueObjects;
 using PizzaSaga.SharedKernel.Domain;
 using PizzaSaga.SharedKernel.Domain.ValueObjects;
 
@@ -50,7 +51,9 @@ public sealed class OrderAggregate : AggregateRoot
 
 
     // Пустой конструктор для EF Core
-    private OrderAggregate() { }
+    private OrderAggregate()
+    {
+    }
 
     /// <summary>
     /// Создаёт новый заказ с указанным идентификатором и клиентом.
@@ -75,12 +78,15 @@ public sealed class OrderAggregate : AggregateRoot
         AddItems(items);
         RecalculateTotal();
 
-        //AddDomainEvent(
-        //    new OrderCreatedDomainEvent(
-        //        OrderId: Id,
-        //        CustomerId: CustomerId,
-        //        TotalAmount: TotalAmount,
-        //        OccurredAt: CreatedAt));
+        // Создаём доменное событие
+        var domainEvent = new OrderCreatedDomainEvent(
+            OrderId: Id,
+            CustomerId: CustomerId,
+            TotalAmount: TotalAmount,
+            Items: _items.Select(x => (x.ProductId, x.Quantity.Value)).ToList());
+
+        // Добавляем событие в базовый AggregateRoot
+        base.AddDomainEvent(domainEvent);
     }
 
     /// <summary>

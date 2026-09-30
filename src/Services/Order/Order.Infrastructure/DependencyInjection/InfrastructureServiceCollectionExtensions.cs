@@ -1,13 +1,17 @@
-﻿using MassTransit;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Order.Application.Abstractions.DomainEvents;
 using Order.Application.Abstractions.Persistence;
 using Order.Application.Abstractions.Persistence.Idempotency;
+using Order.Application.Abstractions.Persistence.Outbox;
 using Order.Domain.Abstractions.Repositories;
 using Order.Infrastructure.MassTransit.Consumers;
 using Order.Infrastructure.MassTransit.Saga;
 using Order.Infrastructure.Persistence;
+using Order.Infrastructure.Persistence.DomainEvents;
 using Order.Infrastructure.Persistence.Idempotency;
+using Order.Infrastructure.Persistence.Outbox;
 using Order.Infrastructure.Persistence.Repositories;
 using Order.Infrastructure.Persistence.Seeding;
 using PizzaSaga.Shared.Infrastructure.DependencyInjection;
@@ -25,6 +29,10 @@ public static class InfrastructureServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString, string rabbitMqConnectionString)
     {
+        // Регистрируем сидер БД.
+        // Он будет вызываться при старте приложения через DatabaseMigrationExtensions.ApplyMigrationsAsync<TContext>()
+        services.AddScoped<IDatabaseSeeder<OrderDbContext>, OrderDatabaseSeeder>();
+
         // Регистрируем OrderDbContext с настройками EF Core для PostgreSQL
         services.AddDbContext<OrderDbContext>((sp, options) =>
         {
@@ -40,20 +48,23 @@ public static class InfrastructureServiceCollectionExtensions
             // options.UseLoggerFactory(sp.GetRequiredService<ILoggerFactory>());
         });
 
+
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IProductCatalogRepository, ProductCatalogRepository>();
         services.AddScoped<ICurrencyExchangeRateRepository, CurrencyExchangeRateRepository>();
+        // Регистрация Idempotency Repository
+        services.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
+        
 
         // Регистрируем UnitOfWork — реализация IUnitOfWork для EF Core.
         // Lifetime = Scoped (соответствует HTTP-запросу и DbContext).
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IOutboxWriter, OutboxWriter>();
+        // Регистрируем IDomainEventAccessor — позволяет получать доменные события из агрегатов.
+        services.AddScoped<IDomainEventAccessor, EfCoreDomainEventAccessor>();
+        // Регистрируем IDomainEventDispatcher — публикует доменные события через MediatR.
+        services.AddScoped<IDomainEventDispatcher, EfCoreDomainEventDispatcher>();
 
-        // Регистрируем сидер БД.
-        // Он будет вызываться при старте приложения через DatabaseMigrationExtensions.ApplyMigrationsAsync<TContext>()
-        services.AddScoped<IDatabaseSeeder<OrderDbContext>, OrderDatabaseSeeder>();
-
-        // Регистрация Idempotency Repository
-        services.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
 
         // Регистрируем OrderSagaDbContext для хранения состояния Saga.
         // Использует ту же PostgreSQL базу данных, что и OrderDbContext.

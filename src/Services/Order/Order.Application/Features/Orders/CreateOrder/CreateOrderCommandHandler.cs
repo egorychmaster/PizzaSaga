@@ -1,31 +1,26 @@
-﻿using Mediator;
+using Mediator;
 using Order.Application.Abstractions.Persistence;
 using Order.Domain.Abstractions.Repositories;
 using Order.Domain.AggregatesModel.Orders;
 using Order.Domain.AggregatesModel.Orders.Exceptions;
 using Order.Domain.AggregatesModel.Orders.ValueObjects;
 using Order.Domain.AggregatesModel.ProductCatalog;
-using PizzaSaga.Contracts.Orders.IntegrationEvents;
-using PizzaSaga.Contracts.Orders.Models;
 using PizzaSaga.SharedKernel.Domain.ValueObjects;
 
 namespace Order.Application.Features.Orders.CreateOrder;
 
 /// <summary>
 /// Обработчик команды создания заказа.
-/// Создаёт агрегат Order и сохраняет OrderCreatedIntegrationEvent через Outbox.
 /// </summary>
 public sealed class CreateOrderCommandHandler(
     IOrderRepository orderRepository,
     IProductCatalogRepository productCatalogRepository,
-    ICurrencyExchangeRateRepository currencyRateRepo,
-    IUnitOfWork unitOfWork) 
+    ICurrencyExchangeRateRepository currencyRateRepo)
     : ICommandHandler<CreateOrderCommand, CreateOrderResult>
 {
     private readonly IOrderRepository _orderRepository = orderRepository;
     private readonly IProductCatalogRepository _productCatalogRepository = productCatalogRepository;
     private readonly ICurrencyExchangeRateRepository _currencyRateRepo = currencyRateRepo;
-    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     /// <inheritdoc />
     public async ValueTask<CreateOrderResult> Handle(CreateOrderCommand command, CancellationToken cancellationToken)
@@ -67,21 +62,9 @@ public sealed class CreateOrderCommandHandler(
         // 4. Сохраняем через репозиторий (в рамках транзакции TransactionBehavior)
         await _orderRepository.AddAsync(order, cancellationToken);
 
-        // 5. Формируем интеграционное событие и сохраняем его в Outbox.
-        // Это выполнится внутри той же PostgreSQL-транзакции перед SaveChanges и Commit.
-        var integrationEvent = new OrderCreatedIntegrationEvent(
-            OrderId: order.Id,
-            CustomerId: order.CustomerId.Value,
-            TotalAmount: order.TotalAmount.Amount,
-            CurrencyCode: order.TotalAmount.Currency.Code,
-            CreatedAt: order.CreatedAt,
-            Items: order.Items.Select(i => new PizzaItem(
-                i.ProductId,
-                i.Quantity.Value)).ToArray());
 
-        await _unitOfWork.SaveWithOutboxAsync(order.Id, integrationEvent, cancellationToken);
 
-        // 6. Возвращаем DTO — берём данные из агрегата
+        // 5. Возвращаем DTO — берём данные из агрегата
         var result = new CreateOrderResult(
             OrderId: order.Id,
             Status: order.Status.ToString(),

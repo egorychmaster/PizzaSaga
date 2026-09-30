@@ -1,4 +1,4 @@
-﻿using MassTransit;
+using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -67,8 +67,7 @@ public sealed class OutboxPublisherHostedService : IHostedService
                         }
 
                         // Десериализуем в нужный тип интеграционного события
-                        var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-                        var integrationEvent = JsonSerializer.Deserialize(message.Payload, eventType, jsonOptions);
+                        var integrationEvent = JsonSerializer.Deserialize(message.Payload, eventType, OutboxJsonSerializationOptionsProvider.Options);
                         if (integrationEvent is null)
                         {
                             _logger.LogWarning("Failed to deserialize event: {Payload}", message.Payload);

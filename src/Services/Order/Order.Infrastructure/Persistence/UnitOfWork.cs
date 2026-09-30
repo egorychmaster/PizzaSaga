@@ -1,10 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using Order.Application.Abstractions.DomainEvents;
 using Order.Application.Abstractions.Persistence;
 using Order.Application.Abstractions.Persistence.Idempotency.Exceptions;
-using Order.Infrastructure.Persistence.Outbox;
-using System.Text.Json;
 
 namespace Order.Infrastructure.Persistence;
 
@@ -14,11 +13,19 @@ namespace Order.Infrastructure.Persistence;
 public sealed class UnitOfWork : IUnitOfWork
 {
     private readonly OrderDbContext _context;
+    private readonly IDomainEventAccessor _domainEventAccessor;
+    private readonly IDomainEventDispatcher _domainEventDispatcher;
     private readonly ILogger<UnitOfWork> _logger;
 
-    public UnitOfWork(OrderDbContext context, ILogger<UnitOfWork> logger)
+    public UnitOfWork(
+        OrderDbContext context,
+        IDomainEventAccessor domainEventAccessor,
+        IDomainEventDispatcher domainEventDispatcher,
+        ILogger<UnitOfWork> logger)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
+        _domainEventAccessor = domainEventAccessor ?? throw new ArgumentNullException(nameof(domainEventAccessor));
+        _domainEventDispatcher = domainEventDispatcher ?? throw new ArgumentNullException(nameof(domainEventDispatcher));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -42,10 +49,22 @@ public sealed class UnitOfWork : IUnitOfWork
                 // 1. Выполняем бизнес-логику (Application Handler)
                 var result = await action(cancellationToken);
 
-                // 2. Сохраняем изменения, выполненные Handler
+                // 2. Извлекаем Domain Events из агрегатов, отслеживаемых текущим DbContext.
+                var domainEvents = _domainEventAccessor.GetDomainEvents();
+                if (domainEvents.Count > 0)
+                {
+                    // Преобразуем Domain Events в локальные действия Application.
+                    // В случае OrderCreatedDomainEvent это приведёт к добавлению OrderCreatedIntegrationEvent в Outbox.
+                    await _domainEventDispatcher.DispatchAsync(domainEvents, cancellationToken);
+
+                    // События больше не должны повторно обрабатываться в рамках этого DbContext.
+                    _domainEventAccessor.ClearDomainEvents();
+                }
+
+                // 3. Order, IdempotencyRecord и OutboxMessage сохраняются одним вызовом внутри одной транзакции.
                 await _context.SaveChangesAsync(cancellationToken);
 
-                // 3. Фиксируем транзакцию только после успешного SaveChanges.
+                // 4. Фиксируем транзакцию только после успешного SaveChanges.
                 await transaction.CommitAsync(cancellationToken);
 
                 _logger.LogTrace("Transaction completed successfully.");
@@ -74,33 +93,6 @@ public sealed class UnitOfWork : IUnitOfWork
                 throw;
             }
         });
-    }
-
-    /// <inheritdoc />
-    public async Task SaveWithOutboxAsync<TEvent>(Guid aggregateId, TEvent integrationEvent, CancellationToken cancellationToken = default)
-        where TEvent : class
-    {
-        ArgumentNullException.ThrowIfNull(integrationEvent);
-
-        _logger.LogTrace("Saving Outbox message for aggregate {AggregateId} with event type {EventType}.", aggregateId, typeof(TEvent).Name);
-
-        // Сериализуем событие в JSON
-        var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        var payload = JsonSerializer.Serialize(integrationEvent, integrationEvent.GetType(), jsonOptions);
-
-        // Формируем полное имя типа для десериализации
-        var messageType = $"{integrationEvent.GetType().FullName}, {integrationEvent.GetType().Assembly.GetName().Name}";
-
-        // Добавляем сообщение в Outbox — оно будет сохранено вместе с другими изменениями DbContext
-        _context.OutboxMessages.Add(new OutboxMessage(
-            aggregateId: aggregateId,
-            messageType: messageType,
-            payload: payload));
-
-        // Сохраняем Outbox-сообщение (в рамках текущей транзакции)
-        await _context.SaveChangesAsync(cancellationToken);
-
-        _logger.LogTrace("Outbox message saved for aggregate {AggregateId}.", aggregateId);
     }
 
     /// <summary>
