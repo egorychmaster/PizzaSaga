@@ -1,7 +1,5 @@
 using Mediator;
-using Order.Application.Abstractions.Messaging;
 using Order.Application.Abstractions.Persistence.Outbox;
-using Order.Domain.AggregatesModel.Orders.Events;
 using PizzaSaga.Contracts.Orders.IntegrationEvents;
 using PizzaSaga.Contracts.Orders.Models;
 
@@ -12,12 +10,12 @@ namespace Order.Application.Features.Orders.DomainEvents;
 /// Handler определяет бизнес-логику. Является адаптером, изолирует mapping Domain → Integration.
 /// Cодержит конкретное бизнес-сопоставление OrderCreatedDomainEvent с OrderCreatedIntegrationEvent и добавляет его в Outbox.
 /// </summary>
-public sealed class OrderCreatedDomainEventHandler(IOutboxWriter outboxWriter) : INotificationHandler<DomainEventNotification>
+public sealed class OrderCreatedDomainEventHandler(IOutboxWriter outboxWriter) : INotificationHandler<OrderCreatedDomainEventNotification>
 {
     private readonly IOutboxWriter _outboxWriter = outboxWriter;
 
     /// <inheritdoc />
-    public ValueTask Handle(DomainEventNotification notification, CancellationToken cancellationToken)
+    public ValueTask Handle(OrderCreatedDomainEventNotification notification, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(notification);
 
@@ -25,23 +23,17 @@ public sealed class OrderCreatedDomainEventHandler(IOutboxWriter outboxWriter) :
 
         var domainEvent = notification.DomainEvent;
 
-        // Приведение к конкретному типу события — безопасно, так как обработчик вызывается только для OrderCreatedDomainEvent
-        if (domainEvent is not OrderCreatedDomainEvent orderCreatedEvent)
-        {
-            return ValueTask.CompletedTask;
-        }
-
         var integrationEvent = new OrderCreatedIntegrationEvent(
-            OrderId: orderCreatedEvent.OrderId,
-            CustomerId: orderCreatedEvent.CustomerId.Value,
-            TotalAmount: orderCreatedEvent.TotalAmount.Amount,
-            CurrencyCode: orderCreatedEvent.TotalAmount.Currency.Code,
-            CreatedAt: orderCreatedEvent.OccurredAt,
-            Items: orderCreatedEvent.Items
+            OrderId: domainEvent.OrderId,
+            CustomerId: domainEvent.CustomerId.Value,
+            TotalAmount: domainEvent.TotalAmount.Amount,
+            CurrencyCode: domainEvent.TotalAmount.Currency.Code,
+            CreatedAt: domainEvent.OccurredAt,
+            Items: domainEvent.Items
                 .Select(x => new PizzaItem(x.ProductId, x.Quantity))
                 .ToArray());
 
-        _outboxWriter.Add(orderCreatedEvent.OrderId, integrationEvent);
+        _outboxWriter.Add(domainEvent.OrderId, integrationEvent);
 
         return ValueTask.CompletedTask;
     }

@@ -1,6 +1,7 @@
 using Mediator;
 using Order.Application.Abstractions.DomainEvents;
-using Order.Application.Abstractions.Messaging;
+using Order.Application.Features.Orders.DomainEvents;
+using Order.Domain.AggregatesModel.Orders.Events;
 using PizzaSaga.SharedKernel.Domain;
 
 namespace Order.Infrastructure.Persistence.DomainEvents;
@@ -24,9 +25,16 @@ public sealed class EfCoreDomainEventDispatcher : IDomainEventDispatcher
         //  Единственная задача: преобразовать доменное событие в формат, который понимает Mediator, и передать дальше.
         foreach (var domainEvent in domainEvents)
         {
-            INotification notification = new DomainEventNotification(domainEvent);
+            switch (domainEvent)
+            {
+                case OrderCreatedDomainEvent orderCreatedEvent:
+                    await _mediator.Publish(new OrderCreatedDomainEventNotification(orderCreatedEvent), cancellationToken);
+                    break;
 
-            await _mediator.Publish(notification, cancellationToken);
+                default:
+                    throw new InvalidOperationException(
+                        $"Unsupported domain event type: {domainEvent.GetType().Name}");
+            }
         }
     }
 }
