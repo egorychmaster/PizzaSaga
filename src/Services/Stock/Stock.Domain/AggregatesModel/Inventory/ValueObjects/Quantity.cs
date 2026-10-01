@@ -1,4 +1,4 @@
-﻿using Stock.Domain.AggregatesModel.Inventory.Exceptions;
+using Stock.Domain.AggregatesModel.Inventory.Exceptions;
 
 namespace Stock.Domain.AggregatesModel.Inventory.ValueObjects;
 

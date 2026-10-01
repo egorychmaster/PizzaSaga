@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Stock.Domain.AggregatesModel.Inventory;
 using Stock.Infrastructure.Persistence.Configurations.ValueConverters;

@@ -1,4 +1,4 @@
-﻿namespace Order.Api.Endpoints.Orders.GetOrders;
+namespace Order.Api.Endpoints.Orders.GetOrders;
 
 public sealed record GetOrdersResponse(
     IReadOnlyCollection<GetOrdersItemResponse> Items,

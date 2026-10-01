@@ -1,4 +1,4 @@
-﻿using PizzaSaga.SharedKernel.Domain.Exceptions.Monies;
+using PizzaSaga.SharedKernel.Domain.Exceptions.Monies;
 
 namespace PizzaSaga.SharedKernel.Domain.ValueObjects;
 

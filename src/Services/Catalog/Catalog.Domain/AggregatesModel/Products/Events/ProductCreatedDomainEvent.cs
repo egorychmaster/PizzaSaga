@@ -1,4 +1,4 @@
-﻿using PizzaSaga.SharedKernel.Domain;
+using PizzaSaga.SharedKernel.Domain;
 
 namespace Catalog.Domain.AggregatesModel.Products.Events;
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Order.Domain.Abstractions.Repositories;
 using Order.Domain.AggregatesModel.Orders.Exceptions.Monies;
 

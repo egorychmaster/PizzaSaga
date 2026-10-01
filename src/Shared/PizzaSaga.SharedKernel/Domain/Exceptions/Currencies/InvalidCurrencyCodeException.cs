@@ -1,4 +1,4 @@
-﻿namespace PizzaSaga.SharedKernel.Domain.Exceptions.Currencies;
+namespace PizzaSaga.SharedKernel.Domain.Exceptions.Currencies;
 
 /// <summary>
 /// Исключение для некорректного кода валюты.

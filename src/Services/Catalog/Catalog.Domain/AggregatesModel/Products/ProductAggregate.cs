@@ -1,4 +1,4 @@
-﻿using Catalog.Domain.AggregatesModel.Products.Events;
+using Catalog.Domain.AggregatesModel.Products.Events;
 using Catalog.Domain.AggregatesModel.Products.Exceptions.ProductAggregates;
 using Catalog.Domain.AggregatesModel.Products.ValueObjects;
 using PizzaSaga.SharedKernel.Domain;

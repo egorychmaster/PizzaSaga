@@ -1,4 +1,4 @@
-﻿namespace Order.Infrastructure.Persistence.Idempotency;
+namespace Order.Infrastructure.Persistence.Idempotency;
 
 /// <summary>
 /// Сущность для хранения данных идемпотентности HTTP-запроса.

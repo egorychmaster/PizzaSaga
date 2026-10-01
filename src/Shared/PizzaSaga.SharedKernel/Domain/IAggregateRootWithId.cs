@@ -1,4 +1,4 @@
-﻿namespace PizzaSaga.SharedKernel.Domain;
+namespace PizzaSaga.SharedKernel.Domain;
 
 /// <summary>
 /// Маркерный интерфейс для агрегатов с идентификатором.

@@ -1,4 +1,4 @@
-﻿namespace Order.Application.Abstractions.Persistence.Idempotency;
+namespace Order.Application.Abstractions.Persistence.Idempotency;
 
 /// <summary>
 /// Интерфейс абстракции для работы с хранилищем идемпотентности.

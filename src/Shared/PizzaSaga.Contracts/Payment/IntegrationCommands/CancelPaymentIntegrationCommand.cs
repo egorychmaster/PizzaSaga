@@ -1,4 +1,4 @@
-﻿namespace PizzaSaga.Contracts.Payment.IntegrationCommands;
+namespace PizzaSaga.Contracts.Payment.IntegrationCommands;
 
 /// <summary>
 /// Команда для отмены платежа по заказу (возврат средств).

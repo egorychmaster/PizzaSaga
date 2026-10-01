@@ -1,4 +1,4 @@
-﻿namespace Order.Application.Features.Orders.GetOrders;
+namespace Order.Application.Features.Orders.GetOrders;
 
 public sealed record GetOrdersResult(
     IReadOnlyCollection<GetOrdersItemResult> Items,

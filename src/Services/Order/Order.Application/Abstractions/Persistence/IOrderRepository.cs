@@ -1,4 +1,4 @@
-﻿using Order.Domain.AggregatesModel.Orders;
+using Order.Domain.AggregatesModel.Orders;
 
 namespace Order.Application.Abstractions.Persistence;
 

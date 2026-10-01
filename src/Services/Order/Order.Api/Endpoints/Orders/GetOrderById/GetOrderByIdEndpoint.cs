@@ -1,4 +1,4 @@
-﻿using Mediator;
+using Mediator;
 using Order.Application.Features.Orders.GetOrderById;
 
 namespace Order.Api.Endpoints.Orders.GetOrderById;

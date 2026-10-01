@@ -1,4 +1,4 @@
-﻿using Catalog.Infrastructure.Persistence.Outbox;
+using Catalog.Infrastructure.Persistence.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

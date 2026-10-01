@@ -1,4 +1,4 @@
-﻿using Order.Domain.AggregatesModel.ProductCatalog;
+using Order.Domain.AggregatesModel.ProductCatalog;
 
 namespace Order.Domain.Abstractions.Repositories;
 

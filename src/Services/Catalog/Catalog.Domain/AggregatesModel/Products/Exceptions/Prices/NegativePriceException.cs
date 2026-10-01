@@ -1,4 +1,4 @@
-﻿using PizzaSaga.SharedKernel.Domain.Exceptions;
+using PizzaSaga.SharedKernel.Domain.Exceptions;
 
 namespace Catalog.Domain.AggregatesModel.Products.Exceptions.Prices;
 

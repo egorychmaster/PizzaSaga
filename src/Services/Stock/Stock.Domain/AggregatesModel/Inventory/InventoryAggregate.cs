@@ -1,4 +1,4 @@
-﻿using PizzaSaga.SharedKernel.Domain;
+using PizzaSaga.SharedKernel.Domain;
 using Stock.Domain.AggregatesModel.Inventory.ValueObjects;
 
 namespace Stock.Domain.AggregatesModel.Inventory;

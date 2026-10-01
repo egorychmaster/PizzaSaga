@@ -1,4 +1,4 @@
-﻿namespace PizzaSaga.Contracts.Orders.Models;
+namespace PizzaSaga.Contracts.Orders.Models;
 
 /// <summary>
 /// Позиция пиццы в заказе.

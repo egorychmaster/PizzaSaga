@@ -1,4 +1,4 @@
-﻿namespace Order.Api.Endpoints.Orders.CreateOrder;
+namespace Order.Api.Endpoints.Orders.CreateOrder;
 
 /// <summary> 
 /// Входной HTTP-запрос для создания нового заказа. 

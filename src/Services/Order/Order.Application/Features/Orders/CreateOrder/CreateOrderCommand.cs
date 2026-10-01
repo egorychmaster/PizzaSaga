@@ -1,4 +1,4 @@
-﻿using Mediator;
+using Mediator;
 using Order.Domain.AggregatesModel.Orders.ValueObjects;
 
 namespace Order.Application.Features.Orders.CreateOrder;

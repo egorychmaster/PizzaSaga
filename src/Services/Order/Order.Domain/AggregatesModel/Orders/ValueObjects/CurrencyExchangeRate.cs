@@ -1,4 +1,4 @@
-﻿namespace Order.Domain.AggregatesModel.Orders.ValueObjects;
+namespace Order.Domain.AggregatesModel.Orders.ValueObjects;
 
 /// <summary>
 /// Курс конвертации валют. 

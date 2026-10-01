@@ -1,4 +1,4 @@
-﻿using Catalog.Application.Abstractions.Persistence;
+using Catalog.Application.Abstractions.Persistence;
 using Catalog.Domain.AggregatesModel.Products;
 using Microsoft.EntityFrameworkCore;
 using PizzaSaga.Shared.Infrastructure.Persistence;

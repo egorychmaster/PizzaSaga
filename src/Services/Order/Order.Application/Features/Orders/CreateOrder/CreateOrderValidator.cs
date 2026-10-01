@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 namespace Order.Application.Features.Orders.CreateOrder;
 

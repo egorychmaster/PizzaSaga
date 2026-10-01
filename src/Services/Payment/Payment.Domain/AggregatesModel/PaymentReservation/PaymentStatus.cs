@@ -1,4 +1,4 @@
-﻿namespace Payment.Domain.AggregatesModel.PaymentReservation;
+namespace Payment.Domain.AggregatesModel.PaymentReservation;
 
 /// <summary>
 /// Состояние платежной резервации.

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Stock.Domain.AggregatesModel.Inventory.ValueObjects;
 
 namespace Stock.Infrastructure.Persistence.Configurations.ValueConverters;

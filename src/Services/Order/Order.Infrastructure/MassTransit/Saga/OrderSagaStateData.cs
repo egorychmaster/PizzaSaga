@@ -1,4 +1,4 @@
-﻿using MassTransit;
+using MassTransit;
 
 namespace Order.Infrastructure.MassTransit.Saga;
 

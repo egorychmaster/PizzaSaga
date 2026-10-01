@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Stock.Domain.AggregatesModel.Inventory;
 
 namespace Stock.Infrastructure.Persistence;

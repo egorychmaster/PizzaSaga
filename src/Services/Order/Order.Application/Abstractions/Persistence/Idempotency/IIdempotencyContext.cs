@@ -1,4 +1,4 @@
-﻿namespace Order.Application.Abstractions.Persistence.Idempotency;
+namespace Order.Application.Abstractions.Persistence.Idempotency;
 
 /// <summary>
 /// Контекст идемпотентности текущего HTTP-запроса.

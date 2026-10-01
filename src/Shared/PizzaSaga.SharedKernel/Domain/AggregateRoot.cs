@@ -1,4 +1,4 @@
-﻿namespace PizzaSaga.SharedKernel.Domain;
+namespace PizzaSaga.SharedKernel.Domain;
 
 /// <summary>
 /// Базовый класс для всех корней агрегатов (Aggregate Root). Хранит доменные события.

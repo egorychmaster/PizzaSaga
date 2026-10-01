@@ -1,4 +1,4 @@
-﻿namespace Catalog.Infrastructure.Persistence.Outbox;
+namespace Catalog.Infrastructure.Persistence.Outbox;
 
 /// <summary>
 /// Сообщение Outbox для надёжной публикации интеграционных событий через RabbitMQ.

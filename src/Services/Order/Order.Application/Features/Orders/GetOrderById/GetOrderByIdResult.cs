@@ -1,4 +1,4 @@
-﻿namespace Order.Application.Features.Orders.GetOrderById;
+namespace Order.Application.Features.Orders.GetOrderById;
 
 /// <summary>
 /// Результат детализации заказа.

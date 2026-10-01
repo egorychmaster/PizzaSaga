@@ -1,4 +1,4 @@
-﻿using Mediator;
+using Mediator;
 using Order.Api.Idempotency;
 using Order.Application.Abstractions.Persistence.Idempotency;
 using Order.Application.Features.Orders.CreateOrder;

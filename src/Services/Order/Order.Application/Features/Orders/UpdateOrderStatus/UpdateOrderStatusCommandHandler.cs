@@ -1,4 +1,4 @@
-﻿using Mediator;
+using Mediator;
 using Order.Application.Abstractions.Persistence;
 
 namespace Order.Application.Features.Orders.UpdateOrderStatus;

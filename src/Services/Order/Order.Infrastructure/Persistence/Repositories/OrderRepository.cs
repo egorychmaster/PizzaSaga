@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Order.Application.Abstractions.Persistence;
 using Order.Domain.AggregatesModel.Orders;
 

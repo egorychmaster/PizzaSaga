@@ -1,4 +1,4 @@
-﻿namespace Order.Domain.AggregatesModel.ProductCatalog;
+namespace Order.Domain.AggregatesModel.ProductCatalog;
 
 /// <summary>
 /// Локальный кэш каталога продуктов для Order Service.

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PizzaSaga.SharedKernel.Domain.ValueObjects;
 
 namespace Payment.Infrastructure.Persistence.Configurations.Converters;

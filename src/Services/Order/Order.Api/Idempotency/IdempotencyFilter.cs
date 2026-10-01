@@ -1,4 +1,4 @@
-﻿using Order.Application.Abstractions.Persistence.Idempotency;
+using Order.Application.Abstractions.Persistence.Idempotency;
 
 namespace Order.Api.Idempotency;
 

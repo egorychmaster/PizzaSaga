@@ -1,4 +1,4 @@
-﻿using Catalog.Domain.AggregatesModel.Products;
+using Catalog.Domain.AggregatesModel.Products;
 using Catalog.Infrastructure.Persistence.Configurations;
 using Catalog.Infrastructure.Persistence.Outbox;
 using Microsoft.EntityFrameworkCore;

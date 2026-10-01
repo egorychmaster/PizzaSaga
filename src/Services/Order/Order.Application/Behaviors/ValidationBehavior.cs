@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Mediator;
 
 namespace Order.Application.Behaviors;

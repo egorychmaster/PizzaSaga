@@ -1,4 +1,4 @@
-﻿namespace PizzaSaga.Contracts.Payment.IntegrationEvents;
+namespace PizzaSaga.Contracts.Payment.IntegrationEvents;
 
 /// <summary>
 /// Событие об успешной отмене платежа (возврате средств).

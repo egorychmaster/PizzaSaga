@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Payment.Domain.AggregatesModel.PaymentReservation;
 using Payment.Infrastructure.Persistence.Configurations.Converters;

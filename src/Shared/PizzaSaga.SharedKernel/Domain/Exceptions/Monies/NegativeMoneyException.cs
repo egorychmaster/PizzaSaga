@@ -1,4 +1,4 @@
-﻿namespace PizzaSaga.SharedKernel.Domain.Exceptions.Monies;
+namespace PizzaSaga.SharedKernel.Domain.Exceptions.Monies;
 
 /// <summary>
 /// Исключение для отрицательной денежной суммы.

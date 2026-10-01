@@ -1,4 +1,4 @@
-﻿namespace Order.Domain.Abstractions.Repositories;
+namespace Order.Domain.Abstractions.Repositories;
 
 /// <summary>
 /// Репозиторий для получения курсов конвертации валют.

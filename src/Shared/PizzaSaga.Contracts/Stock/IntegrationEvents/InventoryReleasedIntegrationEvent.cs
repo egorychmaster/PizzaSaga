@@ -1,4 +1,4 @@
-﻿namespace PizzaSaga.Contracts.Stock.IntegrationEvents;
+namespace PizzaSaga.Contracts.Stock.IntegrationEvents;
 
 /// <summary>
 /// Событие об успешном освобождении ранее созданного резерва товара.

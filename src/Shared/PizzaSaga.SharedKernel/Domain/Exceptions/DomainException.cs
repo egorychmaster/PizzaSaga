@@ -1,4 +1,4 @@
-﻿namespace PizzaSaga.SharedKernel.Domain.Exceptions;
+namespace PizzaSaga.SharedKernel.Domain.Exceptions;
 
 /// <summary>
 /// Базовое исключение для нарушения доменных правил.

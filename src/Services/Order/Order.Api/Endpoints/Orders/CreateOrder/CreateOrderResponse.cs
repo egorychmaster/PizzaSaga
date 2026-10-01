@@ -1,4 +1,4 @@
-﻿namespace Order.Api.Endpoints.Orders.CreateOrder;
+namespace Order.Api.Endpoints.Orders.CreateOrder;
 
 /// <summary> 
 /// Ответ API на успешное создание заказа. 

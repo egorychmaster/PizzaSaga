@@ -1,4 +1,4 @@
-﻿using Mediator;
+using Mediator;
 using Order.Application.Features.Orders.GetOrders;
 using System.Security.Claims;
 

@@ -1,4 +1,4 @@
-﻿using PizzaSaga.SharedKernel.Domain.Exceptions.Currencies;
+using PizzaSaga.SharedKernel.Domain.Exceptions.Currencies;
 
 namespace PizzaSaga.SharedKernel.Domain.ValueObjects;
 

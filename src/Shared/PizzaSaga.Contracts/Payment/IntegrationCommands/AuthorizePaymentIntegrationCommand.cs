@@ -1,4 +1,4 @@
-﻿namespace PizzaSaga.Contracts.Payment.IntegrationCommands;
+namespace PizzaSaga.Contracts.Payment.IntegrationCommands;
 
 /// <summary>
 /// Команда для авторизации платежа по заказу.

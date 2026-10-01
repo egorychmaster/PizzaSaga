@@ -1,4 +1,4 @@
-﻿using Catalog.Domain.AggregatesModel.Products.Exceptions.Prices;
+using Catalog.Domain.AggregatesModel.Products.Exceptions.Prices;
 
 namespace Catalog.Domain.AggregatesModel.Products.ValueObjects;
 

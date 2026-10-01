@@ -1,4 +1,4 @@
-﻿using Order.Domain.AggregatesModel.Orders.Exceptions.PizzaQuantities;
+using Order.Domain.AggregatesModel.Orders.Exceptions.PizzaQuantities;
 
 namespace Order.Domain.AggregatesModel.Orders.ValueObjects;
 

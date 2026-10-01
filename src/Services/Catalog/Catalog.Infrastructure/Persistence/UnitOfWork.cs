@@ -1,4 +1,4 @@
-﻿using Catalog.Application.Abstractions.Persistence;
+using Catalog.Application.Abstractions.Persistence;
 using Catalog.Domain.AggregatesModel.Products.Events;
 using Catalog.Infrastructure.Persistence.Outbox;
 using Microsoft.EntityFrameworkCore;

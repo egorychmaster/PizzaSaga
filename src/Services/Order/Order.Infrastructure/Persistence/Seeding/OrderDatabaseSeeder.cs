@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Order.Domain.AggregatesModel.Orders.ValueObjects;
 using PizzaSaga.Shared.Infrastructure.Persistence;
 

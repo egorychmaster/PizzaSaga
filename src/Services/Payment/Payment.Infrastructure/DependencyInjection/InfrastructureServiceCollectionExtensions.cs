@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Payment.Infrastructure.MassTransit.CommandConsumers;
 using Payment.Infrastructure.Persistence;

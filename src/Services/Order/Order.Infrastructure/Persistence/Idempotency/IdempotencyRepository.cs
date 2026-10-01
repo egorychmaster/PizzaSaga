@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Order.Application.Abstractions.Persistence.Idempotency;
 
 namespace Order.Infrastructure.Persistence.Idempotency;

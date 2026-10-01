@@ -1,4 +1,4 @@
-﻿namespace Order.Application.Abstractions.Persistence;
+namespace Order.Application.Abstractions.Persistence;
 
 /// <summary>
 /// Контекст callback-операций, выполняемых внутри транзакции.

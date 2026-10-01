@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PizzaSaga.Shared.Infrastructure.DependencyInjection;
 using Stock.Infrastructure.MassTransit.EventConsumers;

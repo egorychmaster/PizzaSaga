@@ -1,4 +1,4 @@
-﻿using Catalog.Application.Abstractions.Persistence;
+using Catalog.Application.Abstractions.Persistence;
 using Catalog.Infrastructure.Persistence;
 using Catalog.Infrastructure.Persistence.Seeding;
 using Microsoft.EntityFrameworkCore;

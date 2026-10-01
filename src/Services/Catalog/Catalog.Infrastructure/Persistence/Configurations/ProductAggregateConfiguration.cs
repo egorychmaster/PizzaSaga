@@ -1,4 +1,4 @@
-﻿using Catalog.Domain.AggregatesModel.Products;
+using Catalog.Domain.AggregatesModel.Products;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

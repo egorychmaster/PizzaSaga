@@ -1,4 +1,4 @@
-﻿namespace Order.Application.Abstractions.Persistence.Idempotency.Exceptions;
+namespace Order.Application.Abstractions.Persistence.Idempotency.Exceptions;
 
 /// <summary>
 /// Исключение, возникающее при попытке зарегистрировать уже существующий Idempotency-Key.

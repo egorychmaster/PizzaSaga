@@ -1,4 +1,4 @@
-﻿namespace Order.Api.Endpoints.Orders.GetOrderById;
+namespace Order.Api.Endpoints.Orders.GetOrderById;
 
 /// <summary>
 /// Ответ API на запрос детализации заказа.

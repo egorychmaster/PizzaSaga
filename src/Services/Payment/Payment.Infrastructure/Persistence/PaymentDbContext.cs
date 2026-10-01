@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Payment.Domain.AggregatesModel.PaymentReservation;
 
 namespace Payment.Infrastructure.Persistence;

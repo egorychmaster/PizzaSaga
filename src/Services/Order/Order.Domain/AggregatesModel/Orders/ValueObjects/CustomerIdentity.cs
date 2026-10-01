@@ -1,4 +1,4 @@
-﻿using Order.Domain.AggregatesModel.Orders.Exceptions.CustomerIdentities;
+using Order.Domain.AggregatesModel.Orders.Exceptions.CustomerIdentities;
 
 namespace Order.Domain.AggregatesModel.Orders.ValueObjects;
 

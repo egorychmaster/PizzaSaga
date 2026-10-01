@@ -1,4 +1,4 @@
-﻿using PizzaSaga.SharedKernel.Domain;
+using PizzaSaga.SharedKernel.Domain;
 using PizzaSaga.SharedKernel.Domain.ValueObjects;
 
 namespace Payment.Domain.AggregatesModel.PaymentReservation;

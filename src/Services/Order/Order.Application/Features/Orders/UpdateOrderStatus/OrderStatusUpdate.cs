@@ -1,4 +1,4 @@
-﻿namespace Order.Application.Features.Orders.UpdateOrderStatus;
+namespace Order.Application.Features.Orders.UpdateOrderStatus;
 
 /// <summary>
 /// Допустимые терминальные изменения публичного статуса заказа.
