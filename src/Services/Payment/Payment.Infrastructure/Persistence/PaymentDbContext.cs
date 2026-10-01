@@ -1,3 +1,4 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Payment.Domain.AggregatesModel.PaymentReservation;
 
@@ -15,7 +16,12 @@ public class PaymentDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Автоматическое применение всех конфигураций IEntityTypeConfiguration из текущей сборки
+        base.OnModelCreating(modelBuilder);
+
+        // Автоматическое применение всех конфигураций IEntityTypeConfiguration из текущей сборки.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PaymentDbContext).Assembly);
+
+        // Регистрирует сущности Outbox/Inbox MassTransit в модели EF Core.
+        modelBuilder.AddTransactionalOutboxEntities();
     }
 }
