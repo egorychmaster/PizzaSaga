@@ -27,8 +27,8 @@ var postgres = builder.AddPostgres("postgres", pgUser, pgPassword)
 
 // Брокер сообщений RabbitMQ для MassTransit (общение между сервисами)
 // Объявляем явные параметры для подключения
-var rabbitUser = builder.AddParameter("rabbitmq-user", "q");
-var rabbitPassword = builder.AddParameter("rabbitmq-pass", "q");
+var rabbitUser = builder.AddParameter("rabbitmq-user", "1");
+var rabbitPassword = builder.AddParameter("rabbitmq-pass", "1");
 var rabbitMq = builder.AddRabbitMQ("rabbitmq", rabbitUser, rabbitPassword)
     // Панель управления RabbitMQ
     .WithManagementPlugin()

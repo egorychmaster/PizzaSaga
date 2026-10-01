@@ -1,4 +1,4 @@
-﻿using MassTransit.EntityFrameworkCoreIntegration;
+using MassTransit.EntityFrameworkCoreIntegration;
 using Microsoft.EntityFrameworkCore;
 
 namespace Order.Infrastructure.MassTransit.Saga;

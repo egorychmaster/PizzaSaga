@@ -2,19 +2,18 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Order.Application.Abstractions.DomainEvents;
+using Order.Application.Abstractions.Messaging;
 using Order.Application.Abstractions.Persistence;
 using Order.Application.Abstractions.Persistence.Idempotency;
-using Order.Application.Abstractions.Persistence.Outbox;
 using Order.Domain.Abstractions.Repositories;
 using Order.Infrastructure.MassTransit.Consumers;
 using Order.Infrastructure.MassTransit.Saga;
+using Order.Infrastructure.Messaging;
 using Order.Infrastructure.Persistence;
 using Order.Infrastructure.Persistence.DomainEvents;
 using Order.Infrastructure.Persistence.Idempotency;
-using Order.Infrastructure.Persistence.Outbox;
 using Order.Infrastructure.Persistence.Repositories;
 using Order.Infrastructure.Persistence.Seeding;
-using PizzaSaga.Shared.Infrastructure.DependencyInjection;
 using PizzaSaga.Shared.Infrastructure.Persistence;
 
 namespace Order.Infrastructure.DependencyInjection;
@@ -54,15 +53,14 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<ICurrencyExchangeRateRepository, CurrencyExchangeRateRepository>();
         // Регистрация Idempotency Repository
         services.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
-        
 
         // Регистрируем UnitOfWork — реализация IUnitOfWork для EF Core.
         // Lifetime = Scoped (соответствует HTTP-запросу и DbContext).
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        services.AddScoped<IOutboxWriter, OutboxWriter>();
+
         // Регистрируем IDomainEventAccessor — позволяет получать доменные события из агрегатов.
         services.AddScoped<IDomainEventAccessor, EfCoreDomainEventAccessor>();
-        // Регистрируем IDomainEventDispatcher — публикует доменные события через MediatR.
+        // Регистрируем IDomainEventDispatcher — публикует доменные события через Mediator.
         services.AddScoped<IDomainEventDispatcher, EfCoreDomainEventDispatcher>();
 
 
@@ -76,22 +74,41 @@ public static class InfrastructureServiceCollectionExtensions
             });
         });
 
-        // Подключаем MassTransit с RabbitMQ и регистрацией Saga State Machine.
-        services.AddMassTransitWithRabbitMq(
-            rabbitMqConnectionString,
-            "Order",
-            configure: x =>
+        // Подключаем MassTransit с RabbitMQ, Saga и EF Core Outbox.
+        services.AddMassTransit(x =>
+        {
+            // Регистрация потребителей из указанных сборок
+            x.AddConsumers(new[] { typeof(ProductCreatedIntegrationEventConsumer).Assembly });
+
+            // Регистрация State Machine
+            x.AddSagaStateMachine<OrderStateMachine, OrderSagaStateData>()
+                .EntityFrameworkRepository(repository =>
+                {
+                    repository.ConcurrencyMode = ConcurrencyMode.Optimistic;
+                    repository.ExistingDbContext<OrderSagaDbContext>();
+                    repository.UsePostgres();
+                });
+
+            // Включаем EF Core Outbox для надёжной публикации сообщений.
+            // Сообщения будут сохраняться в таблицу OutboxMessages внутри той же транзакции, что и Order/Aggregate.
+            // При коммите транзакции MassTransit отправит сообщения в RabbitMQ.
+            x.AddEntityFrameworkOutbox<OrderDbContext>(options =>
             {
-                x.AddSagaStateMachine<OrderStateMachine, OrderSagaStateData>()
-                    .EntityFrameworkRepository(repository =>
-                    {
-                        repository.ConcurrencyMode = ConcurrencyMode.Optimistic;
-                        repository.ExistingDbContext<OrderSagaDbContext>();
-                        repository.UsePostgres();
-                    });
-            },
-            consumerAssemblies: new[] { typeof(ProductCreatedIntegrationEventConsumer).Assembly }
-            );
+                options.UsePostgres();
+                options.UseBusOutbox();
+            });
+
+            // Конфигурация RabbitMQ
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                var uri = new Uri(rabbitMqConnectionString);
+                cfg.Host(uri);
+                cfg.ConfigureEndpoints(context);
+            });
+        });
+
+        // Регистрация IIntegrationEventPublisher через MassTransit реализацию.
+        services.AddScoped<IIntegrationEventPublisher, MassTransitIntegrationEventPublisher>();
 
         return services;
     }

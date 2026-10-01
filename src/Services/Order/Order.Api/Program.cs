@@ -5,7 +5,7 @@ using Order.Application.DependencyInjection;
 using Order.Infrastructure.DependencyInjection;
 using Order.Infrastructure.MassTransit.Saga;
 using Order.Infrastructure.Persistence;
-using Order.Infrastructure.Persistence.Outbox;
+
 using PizzaSaga.ServiceDefaults.Extensions;
 using PizzaSaga.ServiceDefaults.Extensions.Aspires;
 using PizzaSaga.ServiceDefaults.InternalServices.Middleware;
@@ -38,9 +38,7 @@ try
     var rabbitMqConnectionString = builder.Configuration.GetRabbitMqConnectionString();
     builder.Services.AddInfrastructure(connectionString, rabbitMqConnectionString);
 
-    // Регистрируем фоновый сервис для публикации Outbox-сообщений в RabbitMQ.
-    builder.Services.AddHostedService<OutboxPublisherHostedService>();
-
+    
 
     var app = builder.Build();
     app.UseExceptionHandler();

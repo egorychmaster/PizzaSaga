@@ -1,7 +1,7 @@
 using Mediator;
 using Order.Application.Abstractions.DomainEvents;
-using Order.Application.Features.Orders.DomainEvents;
 using Order.Domain.AggregatesModel.Orders.Events;
+using Order.Application.Features.Orders.DomainEvents;
 using PizzaSaga.SharedKernel.Domain;
 
 namespace Order.Infrastructure.Persistence.DomainEvents;

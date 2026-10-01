@@ -12,7 +12,7 @@ using Order.Infrastructure.MassTransit.Saga;
 namespace Order.Infrastructure.Persistence.Migrations.OrderSagaDbContexts
 {
     [DbContext(typeof(OrderSagaDbContext))]
-    [Migration("20260927173435_AddOrderSagaStatesTable")]
+    [Migration("20261001081122_AddOrderSagaStatesTable")]
     partial class AddOrderSagaStatesTable
     {
         /// <inheritdoc />
