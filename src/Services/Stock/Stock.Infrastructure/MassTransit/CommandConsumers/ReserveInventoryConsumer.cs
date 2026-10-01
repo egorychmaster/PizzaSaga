@@ -1,7 +1,9 @@
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PizzaSaga.Contracts.Stock.IntegrationCommands;
 using PizzaSaga.Contracts.Stock.IntegrationEvents;
+using Stock.Infrastructure.Persistence;
 
 namespace Stock.Infrastructure.MassTransit.CommandConsumers;
 
@@ -11,10 +13,12 @@ namespace Stock.Infrastructure.MassTransit.CommandConsumers;
 /// </summary>
 public sealed class ReserveInventoryConsumer : IConsumer<ReserveInventoryIntegrationCommand>
 {
+    //private readonly StockDbContext _dbContext;
     private readonly ILogger<ReserveInventoryConsumer> _logger;
 
-    public ReserveInventoryConsumer(ILogger<ReserveInventoryConsumer> logger)
+    public ReserveInventoryConsumer(/*StockDbContext dbContext,*/ ILogger<ReserveInventoryConsumer> logger)
     {
+        //_dbContext = dbContext;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -28,12 +32,18 @@ public sealed class ReserveInventoryConsumer : IConsumer<ReserveInventoryIntegra
             message.OrderId,
             message.Products?.Count() ?? 0);
 
+        // 1. Изменяем состояние домена/БД
+        //var inventory = await _dbContext.Inventories.FindAsync(message.Products.);
+        //inventory.Reserve(message.Products);
+
+        // 2. Публикуем событие
         // На данном этапе просто публикуем успешное событие.
         // Полноценная логика резервирования будет реализована в следующих шагах спринта.
         await context.Publish(new InventoryReservedIntegrationEvent(message.OrderId));
 
-        _logger.LogInformation(
-            "InventoryReservedIntegrationEvent published for OrderId={OrderId}",
-            message.OrderId);
+        // 3. Коммитим БД. MassTransit перехватит этот момент и запишет событие в OutboxMessage
+        //await _dbContext.SaveChangesAsync(context.CancellationToken);
+
+        _logger.LogInformation("InventoryReservedIntegrationEvent published for OrderId={OrderId}", message.OrderId);
     }
 }

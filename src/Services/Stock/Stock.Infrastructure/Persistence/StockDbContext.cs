@@ -1,3 +1,4 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Stock.Domain.AggregatesModel.Inventory;
 
@@ -18,7 +19,12 @@ public class StockDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Автоматическое применение всех конфигураций IEntityTypeConfiguration из текущей сборки
+        base.OnModelCreating(modelBuilder);
+
+        // Автоматическое применение всех конфигураций IEntityTypeConfiguration из текущей сборки.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(StockDbContext).Assembly);
+
+        // Регистрирует сущности Outbox/Inbox MassTransit в модели EF Core
+        modelBuilder.AddTransactionalOutboxEntities();
     }
 }

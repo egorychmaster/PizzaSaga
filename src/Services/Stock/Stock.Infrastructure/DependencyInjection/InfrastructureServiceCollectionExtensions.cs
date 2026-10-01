@@ -1,7 +1,7 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using PizzaSaga.Shared.Infrastructure.DependencyInjection;
-using Stock.Infrastructure.MassTransit.EventConsumers;
+using Stock.Infrastructure.MassTransit.CommandConsumers;
 using Stock.Infrastructure.Persistence;
 
 namespace Stock.Infrastructure.DependencyInjection;
@@ -25,16 +25,51 @@ public static class InfrastructureServiceCollectionExtensions
             });
         });
 
-
-
         // Регистрируем UnitOfWork — реализация IUnitOfWork для EF Core.
         //services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Регистрируем сидер БД (хотя в данном случае seed не нужен — остатки создаются через consumer)
         //services.AddScoped<IDatabaseSeeder<StockDbContext>, StockDatabaseSeeder>();
 
-        // Подключаем MassTransit с RabbitMQ и указываем сборку consumer'ов
-        services.AddMassTransitWithRabbitMq(rabbitMqConnectionString, "Stock", typeof(ProductCreatedConsumer).Assembly);
+        // Подключаем MassTransit с RabbitMQ, Outbox и consumer'ами
+        services.AddMassTransit(x =>
+        {
+            // Регистрация потребителей из указанных сборок
+            x.AddConsumers(typeof(ReserveInventoryConsumer).Assembly);
+
+            // Включаем EF Core Transactional Outbox для надёжной публикации сообщений.
+            // Сообщения будут сохраняться в таблицу OutboxMessage внутри той же транзакции, что и Inventory.
+            // При коммите транзакции MassTransит отправит сообщения в RabbitMQ.
+            x.AddEntityFrameworkOutbox<StockDbContext>(options =>
+            {
+                options.UsePostgres();
+            });
+
+            // Конфигурация RabbitMQ
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                var uri = new Uri(rabbitMqConnectionString);
+                cfg.Host(uri);
+
+                cfg.ReceiveEndpoint("ReserveInventory",
+                    endpoint =>
+                    {
+                        // Consumer Outbox: входящее сообщение, изменения БД и исходящие сообщения
+                        // обрабатываются в рамках одной транзакционной границы.
+                        endpoint.UseEntityFrameworkOutbox<StockDbContext>(context);
+
+                        endpoint.ConfigureConsumer<ReserveInventoryConsumer>(context);
+                    });
+
+                //cfg.ReceiveEndpoint("ProductCreated",
+                //    endpoint =>
+                //    {
+                //        endpoint.ConfigureConsumer<ProductCreatedConsumer>(context);
+                //    });
+
+                cfg.ConfigureEndpoints(context);
+            });
+        });
 
         return services;
     }
