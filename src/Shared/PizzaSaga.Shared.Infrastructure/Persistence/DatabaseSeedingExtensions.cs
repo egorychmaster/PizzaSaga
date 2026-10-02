@@ -15,16 +15,14 @@ public static class DatabaseSeedingExtensions
     /// </summary>
     /// <typeparam name="TContext">Тип контекста базы данных (DbContext).</typeparam>
     /// <param name="cancellationToken">Токен отмены операции.</param>
-    public static async Task SeedDatabaseAsync<TContext>(
-        this IHost app,
-        CancellationToken cancellationToken = default)
+    public static async Task SeedDatabaseAsync<TContext>(this IHost app, CancellationToken cancellationToken = default)
         where TContext : DbContext
     {
         // Получаем зарегистрированный IDatabaseSeeder<TContext> из DI-контейнера
-        using var scope = app.Services.CreateScope();
+        await using var scope = app.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;
         var logger = services.GetRequiredService<ILogger<TContext>>();
-        var dbContext = services.GetRequiredService<TContext>();        
+        var dbContext = services.GetRequiredService<TContext>();
         var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder<TContext>>();
 
         try

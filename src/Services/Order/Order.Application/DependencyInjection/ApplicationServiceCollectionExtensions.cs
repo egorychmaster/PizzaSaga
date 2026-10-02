@@ -12,7 +12,7 @@ public static class ApplicationServiceCollectionExtensions
     /// <summary>
     /// Регистрирует зависимости слоя Order.Application.
     /// </summary>
-    public static IServiceCollection AddOrderApplication(this IServiceCollection services)
+    public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         // Регистрирует все FluentValidation-валидаторы, найденные в сборке Order.Application.
         services.AddValidatorsFromAssemblyContaining<CreateOrderCommandValidator>();

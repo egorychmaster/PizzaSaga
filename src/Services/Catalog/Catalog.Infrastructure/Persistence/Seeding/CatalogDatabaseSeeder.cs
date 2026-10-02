@@ -34,7 +34,8 @@ public sealed class CatalogDatabaseSeeder : IDatabaseSeeder<CatalogDbContext>
 
         foreach (var product in products)
         {
-            await _unitOfWork.SaveWithOutboxAsync(product, cancellationToken);
+            context.Products.Add(product);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
     }
 }

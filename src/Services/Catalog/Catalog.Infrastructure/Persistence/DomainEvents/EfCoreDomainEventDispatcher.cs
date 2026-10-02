@@ -1,10 +1,10 @@
+using Catalog.Application.Abstractions.DomainEvents;
+using Catalog.Application.Features.Catalogs.DomainEvents;
+using Catalog.Domain.AggregatesModel.Products.Events;
 using Mediator;
-using Order.Application.Abstractions.DomainEvents;
-using Order.Domain.AggregatesModel.Orders.Events;
-using Order.Application.Features.Orders.DomainEvents;
 using PizzaSaga.SharedKernel.Domain;
 
-namespace Order.Infrastructure.Persistence.DomainEvents;
+namespace Catalog.Infrastructure.Persistence.DomainEvents;
 
 /// <summary>
 /// Диспетчер (маршрутизатор) доменных событий на основе локального Mediator.
@@ -27,8 +27,8 @@ public sealed class EfCoreDomainEventDispatcher : IDomainEventDispatcher
         {
             switch (domainEvent)
             {
-                case OrderCreatedDomainEvent orderCreatedEvent:
-                    await _mediator.Publish(new OrderCreatedDomainEventNotification(orderCreatedEvent), cancellationToken);
+                case ProductCreatedDomainEvent productCreated:
+                    await _mediator.Publish(new ProductCreatedDomainEventNotification(productCreated), cancellationToken);
                     break;
 
                 default:

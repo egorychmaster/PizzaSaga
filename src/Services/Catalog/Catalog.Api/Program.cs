@@ -1,10 +1,10 @@
 using Catalog.Infrastructure.DependencyInjection;
 using Catalog.Infrastructure.Persistence;
-using Catalog.Infrastructure.Persistence.Outbox;
 using PizzaSaga.ServiceDefaults.Extensions;
 using PizzaSaga.ServiceDefaults.Extensions.Aspires;
 using PizzaSaga.Shared.ErrorHandling;
 using PizzaSaga.Shared.Infrastructure.Persistence;
+using Catalog.Application.DependencyInjection;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
@@ -23,14 +23,16 @@ try
 
     // Стандартные сервисы 
 
+    // Регистрирует зависимости слоя Application.
+    builder.Services.AddApplication();
+
     // Infrastructure.
     // Регистрация DbContext. Название "CatalogDb" должно СТРОГО совпадать с именем ресурса в AppHost
     var dbConnectionString = builder.Configuration.GetDatabaseConnectionString("CatalogDb");
     var rabbitMqConnectionString = builder.Configuration.GetRabbitMqConnectionString();
     builder.Services.AddInfrastructure(dbConnectionString, rabbitMqConnectionString);
 
-    // Регистрация фонового сервиса OutboxPublisher
-    builder.Services.AddHostedService<OutboxPublisherHostedService>();
+
 
 
     var app = builder.Build();

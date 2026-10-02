@@ -5,7 +5,6 @@ using Order.Application.DependencyInjection;
 using Order.Infrastructure.DependencyInjection;
 using Order.Infrastructure.MassTransit.Saga;
 using Order.Infrastructure.Persistence;
-
 using PizzaSaga.ServiceDefaults.Extensions;
 using PizzaSaga.ServiceDefaults.Extensions.Aspires;
 using PizzaSaga.ServiceDefaults.InternalServices.Middleware;
@@ -29,8 +28,8 @@ try
 
     // Стандартные сервисы 
 
-    // Регистрирует зависимости слоя Order.Application.
-    builder.Services.AddOrderApplication();
+    // Регистрирует зависимости слоя Application.
+    builder.Services.AddApplication();
 
     // Order.Infrastructure.
     // Регистрация DbContext. Название "OrderDb" должно СТРОГО совпадать с именем ресурса в AppHost

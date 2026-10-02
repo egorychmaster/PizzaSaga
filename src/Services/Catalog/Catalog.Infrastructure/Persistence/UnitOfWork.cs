@@ -1,86 +1,44 @@
+using Catalog.Application.Abstractions.DomainEvents;
 using Catalog.Application.Abstractions.Persistence;
-using Catalog.Domain.AggregatesModel.Products.Events;
-using Catalog.Infrastructure.Persistence.Outbox;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using PizzaSaga.Contracts.Catalogs.IntegrationEvents;
-using PizzaSaga.SharedKernel.Domain;
-using System.Text.Json;
 
 namespace Catalog.Infrastructure.Persistence;
 
 /// <summary>
 /// Реализация IUnitOfWork для EF Core + PostgreSQL.
+/// Доменные события агрегатов диспетчеризируются через Mediator в Application-слой,
+/// где они преобразуются в интеграционные события и публикуются через MassTransit EF Core Outbox.
 /// </summary>
 public sealed class UnitOfWork : IUnitOfWork
 {
     private readonly CatalogDbContext _context;
-    private readonly ILogger<UnitOfWork> _logger;
+    private readonly IDomainEventAccessor _domainEventAccessor;
+    private readonly IDomainEventDispatcher _domainEventDispatcher;
 
-    public UnitOfWork(CatalogDbContext context, ILogger<UnitOfWork> logger)
+    public UnitOfWork(
+        CatalogDbContext context,
+        IDomainEventAccessor domainEventAccessor,
+        IDomainEventDispatcher domainEventDispatcher)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _domainEventAccessor = domainEventAccessor ?? throw new ArgumentNullException(nameof(domainEventAccessor));
+        _domainEventDispatcher = domainEventDispatcher ?? throw new ArgumentNullException(nameof(domainEventDispatcher));
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        => await _context.SaveChangesAsync(cancellationToken);
-
-    public async Task SaveWithOutboxAsync<TAggregate>(TAggregate aggregate, CancellationToken cancellationToken = default)
-        where TAggregate : AggregateRootWithId
     {
-        ArgumentNullException.ThrowIfNull(aggregate);
-        _logger.LogTrace("Saving aggregate {AggregateId} with Outbox.", aggregate.Id);
-
-        // 1. Добавляем агрегат в контекст, если его там нет
-        if (_context.Entry(aggregate).State == EntityState.Detached)
-            await _context.Set<TAggregate>().AddAsync(aggregate, cancellationToken);
-        else
-            _context.Set<TAggregate>().Update(aggregate);
-
-        // 2. Сохраняем агрегат
-        await _context.SaveChangesAsync(cancellationToken);
-
-        // 3. Извлекаем доменные события
-        var domainEvents = aggregate.DomainEvents.ToList();
-        if (domainEvents.Count == 0)
+        // 1. Извлекаем Domain Events из агрегатов, отслеживаемых текущим DbContext.
+        var domainEvents = _domainEventAccessor.GetDomainEvents();
+        if (domainEvents.Count > 0)
         {
-            _logger.LogTrace("No domain events for aggregate {AggregateId}.", aggregate.Id);
-            return;
+            // Преобразуем Domain Events в локальные действия Application.
+            // В случае OrderCreatedDomainEvent это приведёт к добавлению OrderCreatedIntegrationEvent в Outbox.
+            await _domainEventDispatcher.DispatchAsync(domainEvents, cancellationToken);
+
+            // События больше не должны повторно обрабатываться в рамках этого DbContext.
+            _domainEventAccessor.ClearDomainEvents();
         }
 
-        // 4. Создаём Outbox-сообщения и сохраняем их в одной транзакции
-        foreach (var domainEvent in domainEvents)
-        {
-            if (domainEvent is ProductCreatedDomainEvent pce)
-            {
-                var integrationEvent = new ProductCreatedIntegrationEvent(
-                    ProductId: pce.ProductId,
-                    Name: pce.Name,
-                    Description: pce.Description,
-                    PriceAmount: pce.PriceAmount,
-                    CurrencyCode: pce.CurrencyCode);
-
-                // ✅ Сохраняем ИНТЕГРАЦИОННОЕ событие в Outbox!
-                var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-                var payload = JsonSerializer.Serialize(
-                    integrationEvent,
-                    integrationEvent.GetType(),
-                    jsonOptions);
-
-                _context.OutboxMessages.Add(new OutboxMessage(
-                    aggregateId: aggregate.Id,
-                    messageType: $"{integrationEvent.GetType().FullName}, {integrationEvent.GetType().Assembly.GetName().Name}",
-                    payload: payload));
-            }
-        }
-
-        // 5. Сохраняем Outbox-сообщения (в той же транзакции)
-        await _context.SaveChangesAsync(cancellationToken);
-
-        // 6. Очищаем доменные события
-        aggregate.ClearDomainEvents();
-
-        _logger.LogTrace("Outbox saved for aggregate {AggregateId} with {EventCount} events.", aggregate.Id, domainEvents.Count);
+        // 2. Сохраняем изменения агрегатов в БД (включая Outbox-сообщения MassTransit).
+        return await _context.SaveChangesAsync(cancellationToken);
     }
 }
