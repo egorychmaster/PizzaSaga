@@ -1,5 +1,5 @@
-using Catalog.Application.Abstractions.DomainEvents;
 using Catalog.Application.Abstractions.Persistence;
+using PizzaSaga.SharedKernel.Domain.DomainEvents;
 
 namespace Catalog.Infrastructure.Persistence;
 

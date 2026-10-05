@@ -1,6 +1,4 @@
-using PizzaSaga.SharedKernel.Domain;
-
-namespace Order.Application.Abstractions.DomainEvents;
+namespace PizzaSaga.SharedKernel.Domain.DomainEvents;
 
 /// <summary>
 /// Интерфейс диспетчера доменных событий.

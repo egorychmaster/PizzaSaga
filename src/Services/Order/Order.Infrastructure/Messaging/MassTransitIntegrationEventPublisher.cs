@@ -1,5 +1,5 @@
 using MassTransit;
-using Order.Application.Abstractions.Messaging;
+using PizzaSaga.SharedKernel.Messaging;
 
 namespace Order.Infrastructure.Messaging;
 

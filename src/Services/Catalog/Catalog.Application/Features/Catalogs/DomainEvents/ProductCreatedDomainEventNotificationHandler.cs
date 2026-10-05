@@ -1,6 +1,6 @@
-using Catalog.Application.Abstractions.Messaging;
 using Mediator;
 using PizzaSaga.Contracts.Catalogs.IntegrationEvents;
+using PizzaSaga.SharedKernel.Messaging;
 
 namespace Catalog.Application.Features.Catalogs.DomainEvents;
 

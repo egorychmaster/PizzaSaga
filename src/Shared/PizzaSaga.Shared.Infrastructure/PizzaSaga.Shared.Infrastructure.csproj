@@ -13,5 +13,10 @@
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
 	</ItemGroup>
+
+
+	<ItemGroup>
+	  <ProjectReference Include="..\PizzaSaga.SharedKernel\PizzaSaga.SharedKernel.csproj" />
+	</ItemGroup>
 	
 </Project>

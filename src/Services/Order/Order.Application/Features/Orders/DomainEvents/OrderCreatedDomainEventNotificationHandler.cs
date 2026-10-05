@@ -1,7 +1,7 @@
 using Mediator;
-using Order.Application.Abstractions.Messaging;
 using PizzaSaga.Contracts.Orders.IntegrationEvents;
 using PizzaSaga.Contracts.Orders.Models;
+using PizzaSaga.SharedKernel.Messaging;
 
 namespace Order.Application.Features.Orders.DomainEvents;
 

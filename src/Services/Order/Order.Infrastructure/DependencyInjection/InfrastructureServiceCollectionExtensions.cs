@@ -1,8 +1,6 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Order.Application.Abstractions.DomainEvents;
-using Order.Application.Abstractions.Messaging;
 using Order.Application.Abstractions.Persistence;
 using Order.Application.Abstractions.Persistence.Idempotency;
 using Order.Domain.Abstractions.Repositories;
@@ -14,7 +12,10 @@ using Order.Infrastructure.Persistence.DomainEvents;
 using Order.Infrastructure.Persistence.Idempotency;
 using Order.Infrastructure.Persistence.Repositories;
 using Order.Infrastructure.Persistence.Seeding;
+using PizzaSaga.Shared.Infrastructure.Persistence.DomainEvents;
 using PizzaSaga.Shared.Infrastructure.Persistence;
+using PizzaSaga.SharedKernel.Domain.DomainEvents;
+using PizzaSaga.SharedKernel.Messaging;
 
 namespace Order.Infrastructure.DependencyInjection;
 
@@ -59,7 +60,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Регистрируем IDomainEventAccessor — позволяет получать доменные события из агрегатов.
-        services.AddScoped<IDomainEventAccessor, EfCoreDomainEventAccessor>();
+        services.AddScoped<IDomainEventAccessor, EfCoreDomainEventAccessor<OrderDbContext>>();
         // Регистрируем IDomainEventDispatcher — публикует доменные события через Mediator.
         services.AddScoped<IDomainEventDispatcher, EfCoreDomainEventDispatcher>();
 

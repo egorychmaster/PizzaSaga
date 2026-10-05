@@ -1,5 +1,5 @@
-using Catalog.Application.Abstractions.Messaging;
 using MassTransit;
+using PizzaSaga.SharedKernel.Messaging;
 
 namespace Catalog.Infrastructure.Messaging;
 

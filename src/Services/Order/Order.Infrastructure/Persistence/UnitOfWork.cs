@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using Order.Application.Abstractions.DomainEvents;
 using Order.Application.Abstractions.Persistence;
 using Order.Application.Abstractions.Persistence.Idempotency.Exceptions;
+using PizzaSaga.SharedKernel.Domain.DomainEvents;
 
 namespace Order.Infrastructure.Persistence;
 

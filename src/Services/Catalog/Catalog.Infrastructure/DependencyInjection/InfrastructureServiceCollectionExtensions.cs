@@ -1,14 +1,15 @@
-using Catalog.Application.Abstractions.DomainEvents;
-using Catalog.Application.Abstractions.Messaging;
 using Catalog.Application.Abstractions.Persistence;
 using Catalog.Infrastructure.Messaging;
 using Catalog.Infrastructure.Persistence;
 using Catalog.Infrastructure.Persistence.DomainEvents;
 using Catalog.Infrastructure.Persistence.Seeding;
+using PizzaSaga.Shared.Infrastructure.Persistence.DomainEvents;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PizzaSaga.Shared.Infrastructure.Persistence;
+using PizzaSaga.SharedKernel.Domain.DomainEvents;
+using PizzaSaga.SharedKernel.Messaging;
 
 namespace Catalog.Infrastructure.DependencyInjection;
 
@@ -41,7 +42,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Регистрируем IDomainEventAccessor — позволяет получать доменные события из агрегатов.
-        services.AddScoped<IDomainEventAccessor, EfCoreDomainEventAccessor>();
+        services.AddScoped<IDomainEventAccessor, EfCoreDomainEventAccessor<CatalogDbContext>>();
         // Регистрируем IDomainEventDispatcher — публикует доменные события через Mediator.
         services.AddScoped<IDomainEventDispatcher, EfCoreDomainEventDispatcher>();
 

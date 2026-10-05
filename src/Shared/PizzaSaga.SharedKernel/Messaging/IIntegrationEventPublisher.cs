@@ -1,4 +1,4 @@
-namespace Catalog.Application.Abstractions.Messaging;
+namespace PizzaSaga.SharedKernel.Messaging;
 
 /// <summary>
 /// Абстракция публикации интеграционных событий.

@@ -1,8 +1,8 @@
-using Catalog.Application.Abstractions.DomainEvents;
 using Catalog.Application.Features.Catalogs.DomainEvents;
 using Catalog.Domain.AggregatesModel.Products.Events;
 using Mediator;
 using PizzaSaga.SharedKernel.Domain;
+using PizzaSaga.SharedKernel.Domain.DomainEvents;
 
 namespace Catalog.Infrastructure.Persistence.DomainEvents;
 

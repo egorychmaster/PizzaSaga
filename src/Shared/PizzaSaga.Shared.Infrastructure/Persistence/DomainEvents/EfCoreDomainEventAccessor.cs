@@ -1,16 +1,19 @@
-using Catalog.Application.Abstractions.DomainEvents;
+using Microsoft.EntityFrameworkCore;
 using PizzaSaga.SharedKernel.Domain;
+using PizzaSaga.SharedKernel.Domain.DomainEvents;
 
-namespace Catalog.Infrastructure.Persistence.DomainEvents;
+namespace PizzaSaga.Shared.Infrastructure.Persistence.DomainEvents;
 
 /// <summary>
-/// Извлекает доменные события из агрегатов, отслеживаемых Entity Framework Core.
+/// Обобщённая реализация IDomainEventAccessor для работы с Entity Framework Core контекстами.
 /// </summary>
-public sealed class EfCoreDomainEventAccessor : IDomainEventAccessor
+/// <typeparam name="TContext">Тип DbContext, от которого наследуются агрегаты.</typeparam>
+public sealed class EfCoreDomainEventAccessor<TContext> : IDomainEventAccessor
+    where TContext : DbContext
 {
-    private readonly CatalogDbContext _context;
+    private readonly TContext _context;
 
-    public EfCoreDomainEventAccessor(CatalogDbContext context)
+    public EfCoreDomainEventAccessor(TContext context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }
