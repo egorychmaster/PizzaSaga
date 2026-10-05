@@ -49,7 +49,7 @@ public static class InfrastructureServiceCollectionExtensions
                 var uri = new Uri(rabbitMqConnectionString);
                 cfg.Host(uri);
 
-                cfg.ReceiveEndpoint("AuthorizePayment",
+                cfg.ReceiveEndpoint("Payment-AuthorizePayment",
                     endpoint =>
                     {
                         // Consumer Outbox: входящее сообщение, изменения БД и исходящие сообщения

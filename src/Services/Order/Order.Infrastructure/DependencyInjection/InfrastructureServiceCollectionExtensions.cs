@@ -1,5 +1,7 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using PizzaSaga.Contracts.Payment.IntegrationCommands;
+using PizzaSaga.Contracts.Stock.IntegrationCommands;
 using Microsoft.Extensions.DependencyInjection;
 using Order.Application.Abstractions.Persistence;
 using Order.Application.Abstractions.Persistence.Idempotency;
@@ -74,6 +76,11 @@ public static class InfrastructureServiceCollectionExtensions
                 npgsqlOptions.EnableRetryOnFailure();
             });
         });
+
+        // Глобальные маршруты для команд, отправляемых из OrderStateMachine.
+        // Должны быть зарегистрированы ДО AddMassTransit(...).
+        EndpointConvention.Map<ReserveInventoryIntegrationCommand>(new Uri("queue:Stock-ReserveInventory"));
+        EndpointConvention.Map<AuthorizePaymentIntegrationCommand>(new Uri("queue:Payment-AuthorizePayment"));
 
         // Подключаем MassTransit с RabbitMQ, Saga и EF Core Outbox.
         services.AddMassTransit(x =>

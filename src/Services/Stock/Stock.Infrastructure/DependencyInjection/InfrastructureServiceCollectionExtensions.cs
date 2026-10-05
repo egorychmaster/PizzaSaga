@@ -51,7 +51,7 @@ public static class InfrastructureServiceCollectionExtensions
                 var uri = new Uri(rabbitMqConnectionString);
                 cfg.Host(uri);
 
-                cfg.ReceiveEndpoint("ReserveInventory",
+                cfg.ReceiveEndpoint("Stock-ReserveInventory",
                     endpoint =>
                     {
                         // Consumer Outbox: входящее сообщение, изменения БД и исходящие сообщения

@@ -126,13 +126,13 @@ public sealed class OrderStateMachine : MassTransitStateMachine<OrderSagaStateDa
                     context.Saga.TotalAmount = context.Message.TotalAmount;
                     context.Saga.CurrencyCode = context.Message.CurrencyCode;
                 })
-                // асинхронная публикация команды резерва на склад
-                .Publish(context =>
-                    new ReserveInventoryIntegrationCommand(
-                        context.Message.OrderId,
-                        // OrderCreatedIntegrationEvent содержит детализацию по позициям
-                        context.Message.Items.Select(item =>
-                            new ProductQuantity(item.ProductId, item.Quantity))))
+                // Отправляем команду Stock Service для резервирования товара.
+                .Send(context =>
+                        new ReserveInventoryIntegrationCommand(
+                            context.Message.OrderId,
+                            // OrderCreatedIntegrationEvent содержит детализацию по позициям
+                            context.Message.Items.Select(item =>
+                                new ProductQuantity(item.ProductId, item.Quantity))))
                 // переход в новое состояние
                 .TransitionTo(AwaitingInventoryReservation)
                 );
@@ -142,40 +142,34 @@ public sealed class OrderStateMachine : MassTransitStateMachine<OrderSagaStateDa
             AwaitingInventoryReservation,
             // Сценарий 1: Резерв успешен -> Запрашиваем авторизацию платежа
             When(InventoryReserved)
-                .Publish(context =>
-                    new AuthorizePaymentIntegrationCommand(
-                        context.Message.OrderId,
-                        context.Saga.TotalAmount,
-                        context.Saga.CurrencyCode))
+                .Send(context =>
+                        new AuthorizePaymentIntegrationCommand(
+                            context.Message.OrderId,
+                            context.Saga.TotalAmount,
+                            context.Saga.CurrencyCode))
                 .TransitionTo(AwaitingPaymentAuthorization),
             // Сценарий 2: Резерв отклонен -> Отменяем заказ
             When(InventoryReservationFailed)
-                .ThenAsync(async context =>
-                {
-                    await context.Publish(
+                .Publish(context =>
                         new OrderCancelledIntegrationEvent(
                             context.Message.OrderId,
-                            context.Saga.CustomerId));
-                })
+                            context.Saga.CustomerId))
                 .TransitionTo(Cancelled)
                 );
 
         // 3. Ожидание авторизации оплаты
         During(AwaitingPaymentAuthorization,
             When(PaymentAuthorized)
-                .ThenAsync(async context =>
-                {
-                    await context.Publish(
+                .Publish(context =>
                         new OrderCompletedIntegrationEvent(
                             context.Message.OrderId,
                             context.Saga.CustomerId,
                             context.Saga.TotalAmount,
-                            context.Saga.CurrencyCode));
-                })
+                            context.Saga.CurrencyCode))
                 .TransitionTo(Completed),
 
             When(PaymentAuthorizationFailed)
-                .Publish(context =>
+                .Send(context =>
                     new ReleaseInventoryIntegrationCommand(
                         context.Message.OrderId))
                 .TransitionTo(AwaitingInventoryRelease));
@@ -183,15 +177,11 @@ public sealed class OrderStateMachine : MassTransitStateMachine<OrderSagaStateDa
         // --- Ожидание освобождения резерва (компенсация) ---
         During(
             AwaitingInventoryRelease,
-
             When(InventoryReleased)
-                .ThenAsync(async context =>
-                {
-                    await context.Publish(
+                .Publish(context =>
                         new OrderCancelledIntegrationEvent(
                             context.Message.OrderId,
-                            context.Saga.CustomerId));
-                })
+                            context.Saga.CustomerId))
                 .TransitionTo(Cancelled));
 
         // Конфигурация терминальных состояний
