@@ -47,12 +47,12 @@
 |                  |  | • Vertical Slices|  | • Prices Cache   |
 +------------------+  +------------------+  +------------------+
                               │                     │
-                    Publish / Consume Events      │
+                    Publish / Consume Events        │
                               │                     ▼
                        +--------------+     +------------------+
                        |   RabbitMQ   |     |   Stock Service  |
                        +-------+------+     | • Reservations   |
-                               │            | • Inventory        |
+                               │            | • Inventory      |
                         ┌──────┴──────┐     +------------------+
                         ▼             ▼
                   +-----------+  +-------------+
