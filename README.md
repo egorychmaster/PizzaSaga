@@ -133,9 +133,30 @@ dotnet run --launch-profile PizzaSaga.AppHost
 | **Auth Service** | `POST /api/v1/auth/login` → JWT token |
 | **Order Service** | `POST /api/v1/orders` (с JWT + Idempotency-Key) |
 | **Catalog Service** | `GET /api/v1/catalogs/test2` (seed-данные) |
-| **.NET Aspire Dashboard** | `http://localhost:17074/` |
+| **.NET Aspire Dashboard** | `https://localhost:17074/` |
 
-### 3. Пример запроса создания заказа
+### 3. Подключение к инфраструктуре (PostgreSQL + RabbitMQ)
+
+При запуске через `.NET Aspire AppHost` инфраструктура поднимается автоматически с параметрами:
+
+| Компонент | Порт (внешний) | Пользователь | Пароль | Доступ |
+|-----------|----------------|--------------|--------|--------|
+| **PostgreSQL** | `17075` | `postgres` | `MySuperSecret123!` | TCP |
+| **RabbitMQ Management** | `17077` | `guest` | `guest` | HTTP |
+
+#### Примеры подключения:
+
+```bash
+# PostgreSQL (через psql)
+docker exec -it pizza-saga-postgres-1 psql -U postgres -d ordersdb
+
+# RabbitMQ Management UI
+open http://localhost:17077
+```
+
+> **Важно**: Параметры подключения задаются в `src/Host/PizzaSaga.AppHost/AppHost.cs` через `builder.AddParameter(...)`. Для production-среды рекомендуется использовать секреты (например, Azure Key Vault или Docker Secrets).
+
+### 4. Пример запроса создания заказа
 
 ```bash
 # Получить JWT
