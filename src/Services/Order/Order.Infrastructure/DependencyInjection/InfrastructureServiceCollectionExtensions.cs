@@ -1,7 +1,5 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
-using PizzaSaga.Contracts.Payment.IntegrationCommands;
-using PizzaSaga.Contracts.Stock.IntegrationCommands;
 using Microsoft.Extensions.DependencyInjection;
 using Order.Application.Abstractions.Persistence;
 using Order.Application.Abstractions.Persistence.Idempotency;
@@ -14,8 +12,11 @@ using Order.Infrastructure.Persistence.DomainEvents;
 using Order.Infrastructure.Persistence.Idempotency;
 using Order.Infrastructure.Persistence.Repositories;
 using Order.Infrastructure.Persistence.Seeding;
-using PizzaSaga.Shared.Infrastructure.Persistence.DomainEvents;
+using PizzaSaga.Contracts.Payment.IntegrationCommands;
+using PizzaSaga.Contracts.Stock.IntegrationCommands;
+using PizzaSaga.Shared.Infrastructure.Messaging;
 using PizzaSaga.Shared.Infrastructure.Persistence;
+using PizzaSaga.Shared.Infrastructure.Persistence.DomainEvents;
 using PizzaSaga.SharedKernel.Domain.DomainEvents;
 using PizzaSaga.SharedKernel.Messaging;
 
@@ -79,8 +80,8 @@ public static class InfrastructureServiceCollectionExtensions
 
         // Глобальные маршруты для команд, отправляемых из OrderStateMachine.
         // Должны быть зарегистрированы ДО AddMassTransit(...).
-        EndpointConvention.Map<ReserveInventoryIntegrationCommand>(new Uri("queue:Stock-ReserveInventory"));
-        EndpointConvention.Map<AuthorizePaymentIntegrationCommand>(new Uri("queue:Payment-AuthorizePayment"));
+        EndpointConvention.Map<ReserveInventoryIntegrationCommand>(new Uri($"queue:{RabbitMqQueues.StockReserveInventory}"));
+        EndpointConvention.Map<AuthorizePaymentIntegrationCommand>(new Uri($"queue:{RabbitMqQueues.PaymentAuthorizePayment}"));
 
         // Подключаем MassTransit с RabbitMQ, Saga и EF Core Outbox.
         services.AddMassTransit(x =>
@@ -114,23 +115,23 @@ public static class InfrastructureServiceCollectionExtensions
 
                 // Явное задание имен очередей для consumers Order Service
 
-                // Создал receive endpoint. Order-Saga — входная точка для сообщений, которые обрабатывает OrderStateMachine.
-                cfg.ReceiveEndpoint("Order-Saga", endpoint =>
+                // Создай RabbitMQ endpoint, через который OrderStateMachine будет получать сообщения.
+                cfg.ReceiveEndpoint(RabbitMqQueues.OrderSaga, endpoint =>
                 {
                     endpoint.ConfigureSaga<OrderSagaStateData>(context);
                 });
 
-                cfg.ReceiveEndpoint("Order-OrderCompleted", endpoint =>
+                cfg.ReceiveEndpoint(RabbitMqQueues.OrderCompleted, endpoint =>
                 {
                     endpoint.ConfigureConsumer<OrderCompletedConsumer>(context);
                 });
 
-                cfg.ReceiveEndpoint("Order-OrderCancelled", endpoint =>
+                cfg.ReceiveEndpoint(RabbitMqQueues.OrderCancelled, endpoint =>
                 {
                     endpoint.ConfigureConsumer<OrderCancelledConsumer>(context);
                 });
 
-                cfg.ReceiveEndpoint("Order-ProductCreated", endpoint =>
+                cfg.ReceiveEndpoint(RabbitMqQueues.OrderProductCreated, endpoint =>
                 {
                     endpoint.ConfigureConsumer<ProductCreatedIntegrationEventConsumer>(context);
                 });

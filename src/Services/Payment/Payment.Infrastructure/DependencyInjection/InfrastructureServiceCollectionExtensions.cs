@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Payment.Infrastructure.MassTransit.CommandConsumers;
 using Payment.Infrastructure.Persistence;
+using PizzaSaga.Shared.Infrastructure.Messaging;
 
 namespace Payment.Infrastructure.DependencyInjection;
 
@@ -49,7 +50,7 @@ public static class InfrastructureServiceCollectionExtensions
                 var uri = new Uri(rabbitMqConnectionString);
                 cfg.Host(uri);
 
-                cfg.ReceiveEndpoint("Payment-AuthorizePayment",
+                cfg.ReceiveEndpoint(RabbitMqQueues.PaymentAuthorizePayment,
                     endpoint =>
                     {
                         // Consumer Outbox: входящее сообщение, изменения БД и исходящие сообщения

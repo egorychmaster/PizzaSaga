@@ -1,6 +1,7 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using PizzaSaga.Shared.Infrastructure.Messaging;
 using Stock.Infrastructure.MassTransit.CommandConsumers;
 using Stock.Infrastructure.MassTransit.EventConsumers;
 using Stock.Infrastructure.Persistence;
@@ -52,7 +53,7 @@ public static class InfrastructureServiceCollectionExtensions
                 var uri = new Uri(rabbitMqConnectionString);
                 cfg.Host(uri);
 
-                cfg.ReceiveEndpoint("Stock-ReserveInventory",
+                cfg.ReceiveEndpoint(RabbitMqQueues.StockReserveInventory,
                     endpoint =>
                     {
                         // Consumer Outbox: входящее сообщение, изменения БД и исходящие сообщения
@@ -62,7 +63,7 @@ public static class InfrastructureServiceCollectionExtensions
                         endpoint.ConfigureConsumer<ReserveInventoryConsumer>(context);
                     });
 
-                cfg.ReceiveEndpoint("Stock-ReleaseInventory",
+                cfg.ReceiveEndpoint(RabbitMqQueues.StockReleaseInventory,
                     endpoint =>
                     {
                         // Consumer Outbox: входящее сообщение, изменения БД и исходящие сообщения, обрабатываются в рамках одной транзакционной границы.
@@ -71,7 +72,7 @@ public static class InfrastructureServiceCollectionExtensions
                         endpoint.ConfigureConsumer<ReleaseInventoryConsumer>(context);
                     });
 
-                cfg.ReceiveEndpoint("Stock-ProductCreated",
+                cfg.ReceiveEndpoint(RabbitMqQueues.StockProductCreated,
                     endpoint =>
                     {
                         // Consumer Outbox: входящее сообщение, изменения БД и исходящие сообщения, обрабатываются в рамках одной транзакционной границы.
