@@ -111,7 +111,31 @@ public static class InfrastructureServiceCollectionExtensions
             {
                 var uri = new Uri(rabbitMqConnectionString);
                 cfg.Host(uri);
-                cfg.ConfigureEndpoints(context);
+
+                // Явное задание имен очередей для consumers Order Service
+
+                // Создал receive endpoint. Order-Saga — входная точка для сообщений, которые обрабатывает OrderStateMachine.
+                cfg.ReceiveEndpoint("Order-Saga", endpoint =>
+                {
+                    endpoint.ConfigureSaga<OrderSagaStateData>(context);
+                });
+
+                cfg.ReceiveEndpoint("Order-OrderCompleted", endpoint =>
+                {
+                    endpoint.ConfigureConsumer<OrderCompletedConsumer>(context);
+                });
+
+                cfg.ReceiveEndpoint("Order-OrderCancelled", endpoint =>
+                {
+                    endpoint.ConfigureConsumer<OrderCancelledConsumer>(context);
+                });
+
+                cfg.ReceiveEndpoint("Order-ProductCreated", endpoint =>
+                {
+                    endpoint.ConfigureConsumer<ProductCreatedIntegrationEventConsumer>(context);
+                });
+
+                //cfg.ConfigureEndpoints(context);
             });
         });
 

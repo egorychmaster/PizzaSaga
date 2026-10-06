@@ -2,6 +2,7 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Stock.Infrastructure.MassTransit.CommandConsumers;
+using Stock.Infrastructure.MassTransit.EventConsumers;
 using Stock.Infrastructure.Persistence;
 
 namespace Stock.Infrastructure.DependencyInjection;
@@ -61,13 +62,25 @@ public static class InfrastructureServiceCollectionExtensions
                         endpoint.ConfigureConsumer<ReserveInventoryConsumer>(context);
                     });
 
-                //cfg.ReceiveEndpoint("ProductCreated",
-                //    endpoint =>
-                //    {
-                //        endpoint.ConfigureConsumer<ProductCreatedConsumer>(context);
-                //    });
+                cfg.ReceiveEndpoint("Stock-ReleaseInventory",
+                    endpoint =>
+                    {
+                        // Consumer Outbox: входящее сообщение, изменения БД и исходящие сообщения, обрабатываются в рамках одной транзакционной границы.
+                        endpoint.UseEntityFrameworkOutbox<StockDbContext>(context);
 
-                cfg.ConfigureEndpoints(context);
+                        endpoint.ConfigureConsumer<ReleaseInventoryConsumer>(context);
+                    });
+
+                cfg.ReceiveEndpoint("Stock-ProductCreated",
+                    endpoint =>
+                    {
+                        // Consumer Outbox: входящее сообщение, изменения БД и исходящие сообщения, обрабатываются в рамках одной транзакционной границы.
+                        endpoint.UseEntityFrameworkOutbox<StockDbContext>(context);
+
+                        endpoint.ConfigureConsumer<ProductCreatedConsumer>(context);
+                    });
+
+                //cfg.ConfigureEndpoints(context);
             });
         });
 

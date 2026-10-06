@@ -59,7 +59,8 @@ public static class InfrastructureServiceCollectionExtensions
                         endpoint.ConfigureConsumer<AuthorizePaymentConsumer>(context);
                     });
 
-                cfg.ConfigureEndpoints(context);
+                
+                //cfg.ConfigureEndpoints(context);
             });
         });
 
