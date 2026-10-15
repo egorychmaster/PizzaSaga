@@ -50,6 +50,21 @@ namespace Stock.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "InventoryReservations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrderId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InventoryReservations", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "OutboxState",
                 columns: table => new
                 {
@@ -64,6 +79,25 @@ namespace Stock.Infrastructure.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_OutboxState", x => x.OutboxId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "InventoryReservationItem",
+                columns: table => new
+                {
+                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
+                    InventoryReservationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Quantity = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InventoryReservationItem", x => new { x.InventoryReservationId, x.ProductId });
+                    table.ForeignKey(
+                        name: "FK_InventoryReservationItem_InventoryReservations_InventoryRes~",
+                        column: x => x.InventoryReservationId,
+                        principalTable: "InventoryReservations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -114,6 +148,12 @@ namespace Stock.Infrastructure.Persistence.Migrations
                 column: "Delivered");
 
             migrationBuilder.CreateIndex(
+                name: "IX_InventoryReservations_OrderId",
+                table: "InventoryReservations",
+                column: "OrderId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OutboxMessage_InboxMessageId_InboxConsumerId_SequenceNumber",
                 table: "OutboxMessage",
                 columns: new[] { "InboxMessageId", "InboxConsumerId", "SequenceNumber" },
@@ -138,7 +178,13 @@ namespace Stock.Infrastructure.Persistence.Migrations
                 name: "Inventories");
 
             migrationBuilder.DropTable(
+                name: "InventoryReservationItem");
+
+            migrationBuilder.DropTable(
                 name: "OutboxMessage");
+
+            migrationBuilder.DropTable(
+                name: "InventoryReservations");
 
             migrationBuilder.DropTable(
                 name: "InboxState");

@@ -1,6 +1,7 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Stock.Domain.AggregatesModel.Inventory;
+using Stock.Domain.AggregatesModel.InventoryReservation;
 
 namespace Stock.Infrastructure.Persistence;
 
@@ -13,6 +14,11 @@ public class StockDbContext : DbContext
     /// Инвентарь (остатки) продуктов.
     /// </summary>
     public DbSet<InventoryAggregate> Inventories => Set<InventoryAggregate>();
+
+    /// <summary>
+    /// Резервы инвентаря для заказов.
+    /// </summary>
+    public DbSet<InventoryReservationAggregate> InventoryReservations => Set<InventoryReservationAggregate>();
 
     public StockDbContext(DbContextOptions<StockDbContext> options)
         : base(options) { }

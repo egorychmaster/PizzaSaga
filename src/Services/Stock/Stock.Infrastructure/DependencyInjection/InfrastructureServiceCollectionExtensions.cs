@@ -2,9 +2,12 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PizzaSaga.Shared.Infrastructure.Messaging;
+using Stock.Domain.AggregatesModel.Inventory;
+using Stock.Domain.AggregatesModel.InventoryReservation;
 using Stock.Infrastructure.MassTransit.CommandConsumers;
 using Stock.Infrastructure.MassTransit.EventConsumers;
 using Stock.Infrastructure.Persistence;
+using Stock.Infrastructure.Persistence.Repositories;
 
 namespace Stock.Infrastructure.DependencyInjection;
 
@@ -29,6 +32,10 @@ public static class InfrastructureServiceCollectionExtensions
 
         // Регистрируем UnitOfWork — реализация IUnitOfWork для EF Core.
         //services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // Регистрируем репозитории
+        services.AddScoped<IInventoryReservationRepository, InventoryReservationRepository>();
+        services.AddScoped<IInventoryRepository, InventoryRepository>();
 
         // Регистрируем сидер БД (хотя в данном случае seed не нужен — остатки создаются через consumer)
         //services.AddScoped<IDatabaseSeeder<StockDbContext>, StockDatabaseSeeder>();
@@ -56,8 +63,7 @@ public static class InfrastructureServiceCollectionExtensions
                 cfg.ReceiveEndpoint(RabbitMqQueues.StockReserveInventory,
                     endpoint =>
                     {
-                        // Consumer Outbox: входящее сообщение, изменения БД и исходящие сообщения
-                        // обрабатываются в рамках одной транзакционной границы.
+                        // Consumer Outbox: входящее сообщение, изменения БД и исходящие сообщения, обрабатываются в рамках одной транзакционной границы.
                         endpoint.UseEntityFrameworkOutbox<StockDbContext>(context);
 
                         endpoint.ConfigureConsumer<ReserveInventoryConsumer>(context);

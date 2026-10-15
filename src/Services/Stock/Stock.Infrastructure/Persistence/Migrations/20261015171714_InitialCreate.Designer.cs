@@ -12,7 +12,7 @@ using Stock.Infrastructure.Persistence;
 namespace Stock.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(StockDbContext))]
-    [Migration("20261001160501_InitialCreate")]
+    [Migration("20261015171714_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -207,6 +207,32 @@ namespace Stock.Infrastructure.Persistence.Migrations
                     b.ToTable("Inventories", (string)null);
                 });
 
+            modelBuilder.Entity("Stock.Domain.AggregatesModel.InventoryReservation.InventoryReservation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.ToTable("InventoryReservations", (string)null);
+                });
+
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxMessage", b =>
                 {
                     b.HasOne("MassTransit.EntityFrameworkCoreIntegration.OutboxState", null)
@@ -244,6 +270,31 @@ namespace Stock.Infrastructure.Persistence.Migrations
 
                     b.Navigation("Balance")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Stock.Domain.AggregatesModel.InventoryReservation.InventoryReservation", b =>
+                {
+                    b.OwnsMany("Stock.Domain.AggregatesModel.InventoryReservation.InventoryReservationItem", "Items", b1 =>
+                        {
+                            b1.Property<Guid>("InventoryReservationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<Guid>("ProductId")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Quantity")
+                                .HasColumnType("integer");
+
+                            b1.HasKey("InventoryReservationId", "ProductId");
+
+                            b1.ToTable("InventoryReservationItem");
+
+                            b1.WithOwner()
+                                .HasForeignKey("InventoryReservationId");
+                        });
+
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }
