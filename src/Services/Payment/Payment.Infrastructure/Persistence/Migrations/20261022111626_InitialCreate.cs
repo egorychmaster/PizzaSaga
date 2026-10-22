@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Order.Infrastructure.Persistence.Migrations.OrderDbContexts
+namespace Payment.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -12,34 +12,6 @@ namespace Order.Infrastructure.Persistence.Migrations.OrderDbContexts
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "CurrencyExchangeRates",
-                columns: table => new
-                {
-                    FromCurrencyCode = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
-                    ToCurrencyCode = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
-                    Rate = table.Column<decimal>(type: "numeric(18,6)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CurrencyExchangeRates", x => new { x.FromCurrencyCode, x.ToCurrencyCode });
-                });
-
-            migrationBuilder.CreateTable(
-                name: "IdempotencyRecords",
-                columns: table => new
-                {
-                    IdempotencyKey = table.Column<Guid>(type: "uuid", nullable: false),
-                    RequestHash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    ResponseStatusCode = table.Column<int>(type: "integer", nullable: false),
-                    ResponseBody = table.Column<string>(type: "jsonb", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_IdempotencyRecords", x => x.IdempotencyKey);
-                });
-
             migrationBuilder.CreateTable(
                 name: "InboxState",
                 columns: table => new
@@ -64,23 +36,6 @@ namespace Order.Infrastructure.Persistence.Migrations.OrderDbContexts
                 });
 
             migrationBuilder.CreateTable(
-                name: "Orders",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    CustomerId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TotalAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    TotalCurrency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
-                    Version = table.Column<int>(type: "integer", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Orders", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "OutboxState",
                 columns: table => new
                 {
@@ -98,40 +53,22 @@ namespace Order.Infrastructure.Persistence.Migrations.OrderDbContexts
                 });
 
             migrationBuilder.CreateTable(
-                name: "ProductCatalogCaches",
-                columns: table => new
-                {
-                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    PriceAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    CurrencyCode = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ProductCatalogCaches", x => x.ProductId);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "OrderItems",
+                name: "PaymentReservations",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Quantity = table.Column<int>(type: "integer", nullable: false),
-                    UnitPriceAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    UnitPriceCurrency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
-                    OrderId = table.Column<Guid>(type: "uuid", nullable: true)
+                    OrderId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TotalAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    CurrencyCode = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    FailureReason = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OrderItems", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_OrderItems_Orders_OrderId",
-                        column: x => x.OrderId,
-                        principalTable: "Orders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                    table.PrimaryKey("PK_PaymentReservations", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -177,25 +114,9 @@ namespace Order.Infrastructure.Persistence.Migrations.OrderDbContexts
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_CurrencyExchangeRates_FromCurrencyCode_ToCurrencyCode",
-                table: "CurrencyExchangeRates",
-                columns: new[] { "FromCurrencyCode", "ToCurrencyCode" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_InboxState_Delivered",
                 table: "InboxState",
                 column: "Delivered");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_OrderItems_OrderId",
-                table: "OrderItems",
-                column: "OrderId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Orders_Status",
-                table: "Orders",
-                column: "Status");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OutboxMessage_InboxMessageId_InboxConsumerId_SequenceNumber",
@@ -213,28 +134,22 @@ namespace Order.Infrastructure.Persistence.Migrations.OrderDbContexts
                 name: "IX_OutboxState_BusName_Created",
                 table: "OutboxState",
                 columns: new[] { "BusName", "Created" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentReservations_OrderId",
+                table: "PaymentReservations",
+                column: "OrderId",
+                unique: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "CurrencyExchangeRates");
-
-            migrationBuilder.DropTable(
-                name: "IdempotencyRecords");
-
-            migrationBuilder.DropTable(
-                name: "OrderItems");
-
-            migrationBuilder.DropTable(
                 name: "OutboxMessage");
 
             migrationBuilder.DropTable(
-                name: "ProductCatalogCaches");
-
-            migrationBuilder.DropTable(
-                name: "Orders");
+                name: "PaymentReservations");
 
             migrationBuilder.DropTable(
                 name: "InboxState");

@@ -35,6 +35,13 @@ public sealed class InventoryReservationAggregate : AggregateRootWithId
     public ICollection<InventoryReservationItem> Items { get; private set; } = new List<InventoryReservationItem>();
 
     /// <summary>
+    /// Версия строки для оптимистичной блокировки (Optimistic Concurrency).
+    /// В PostgreSQL маппится на системный столбец xmin (row version).
+    /// EF Core обновляет это поле автоматически при сохранении изменений.
+    /// </summary>
+    public uint Version { get; private set; }
+
+    /// <summary>
     /// Конструктор для EF Core.
     /// </summary>
     private InventoryReservationAggregate() { }

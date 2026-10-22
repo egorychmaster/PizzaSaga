@@ -199,6 +199,9 @@ namespace Payment.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("FailureReason")
+                        .HasColumnType("text");
+
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
 
@@ -208,11 +211,16 @@ namespace Payment.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Version")
+                    b.Property<uint>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
 
                     b.ToTable("PaymentReservations", (string)null);
                 });

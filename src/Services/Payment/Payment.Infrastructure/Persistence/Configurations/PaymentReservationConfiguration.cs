@@ -18,6 +18,9 @@ public sealed class PaymentReservationConfiguration : IEntityTypeConfiguration<P
         // Columns
         builder.Property(x => x.OrderId).IsRequired();
 
+        // Unique index on OrderId to prevent duplicate reservations for the same order
+        builder.HasIndex(x => x.OrderId).IsUnique();
+
         // Money маппим как два поля: TotalAmount, CurrencyCode
         builder.OwnsOne(x => x.TotalAmount, money =>
         {
@@ -33,7 +36,8 @@ public sealed class PaymentReservationConfiguration : IEntityTypeConfiguration<P
                 .HasConversion<CurrencyValueConverter>();
         });
 
-        builder.Property(x => x.Version).IsConcurrencyToken(); // Optimistic Concurrency
+        // Optimistic Concurrency. Настройка xmin как токена конкурентности для PostgreSQL.
+        builder.Property(x => x.Version).IsRowVersion();
 
         // Maps to table
         builder.ToTable("PaymentReservations");

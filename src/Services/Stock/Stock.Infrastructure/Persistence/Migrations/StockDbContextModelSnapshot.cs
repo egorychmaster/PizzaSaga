@@ -204,7 +204,7 @@ namespace Stock.Infrastructure.Persistence.Migrations
                     b.ToTable("Inventories", (string)null);
                 });
 
-            modelBuilder.Entity("Stock.Domain.AggregatesModel.InventoryReservation.InventoryReservation", b =>
+            modelBuilder.Entity("Stock.Domain.AggregatesModel.InventoryReservation.InventoryReservationAggregate", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -221,6 +221,12 @@ namespace Stock.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -269,7 +275,7 @@ namespace Stock.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Stock.Domain.AggregatesModel.InventoryReservation.InventoryReservation", b =>
+            modelBuilder.Entity("Stock.Domain.AggregatesModel.InventoryReservation.InventoryReservationAggregate", b =>
                 {
                     b.OwnsMany("Stock.Domain.AggregatesModel.InventoryReservation.InventoryReservationItem", "Items", b1 =>
                         {

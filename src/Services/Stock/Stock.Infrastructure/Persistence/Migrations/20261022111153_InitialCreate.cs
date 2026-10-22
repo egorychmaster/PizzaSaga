@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Payment.Infrastructure.Persistence.Migrations
+namespace Stock.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -36,6 +36,36 @@ namespace Payment.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Inventories",
+                columns: table => new
+                {
+                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AvailableQuantity = table.Column<int>(type: "integer", nullable: false),
+                    ReservedQuantity = table.Column<int>(type: "integer", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Inventories", x => x.ProductId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "InventoryReservations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrderId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InventoryReservations", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "OutboxState",
                 columns: table => new
                 {
@@ -53,21 +83,22 @@ namespace Payment.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PaymentReservations",
+                name: "InventoryReservationItem",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    OrderId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TotalAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    CurrencyCode = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
-                    Status = table.Column<int>(type: "integer", nullable: false),
-                    Version = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
+                    InventoryReservationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Quantity = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PaymentReservations", x => x.Id);
+                    table.PrimaryKey("PK_InventoryReservationItem", x => new { x.InventoryReservationId, x.ProductId });
+                    table.ForeignKey(
+                        name: "FK_InventoryReservationItem_InventoryReservations_InventoryRes~",
+                        column: x => x.InventoryReservationId,
+                        principalTable: "InventoryReservations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -118,6 +149,12 @@ namespace Payment.Infrastructure.Persistence.Migrations
                 column: "Delivered");
 
             migrationBuilder.CreateIndex(
+                name: "IX_InventoryReservations_OrderId",
+                table: "InventoryReservations",
+                column: "OrderId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OutboxMessage_InboxMessageId_InboxConsumerId_SequenceNumber",
                 table: "OutboxMessage",
                 columns: new[] { "InboxMessageId", "InboxConsumerId", "SequenceNumber" },
@@ -139,10 +176,16 @@ namespace Payment.Infrastructure.Persistence.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "Inventories");
+
+            migrationBuilder.DropTable(
+                name: "InventoryReservationItem");
+
+            migrationBuilder.DropTable(
                 name: "OutboxMessage");
 
             migrationBuilder.DropTable(
-                name: "PaymentReservations");
+                name: "InventoryReservations");
 
             migrationBuilder.DropTable(
                 name: "InboxState");

@@ -1,6 +1,7 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using PizzaSaga.Contracts.Stock.IntegrationCommands;
 using PizzaSaga.Contracts.Stock.IntegrationEvents;
 using Stock.Domain.AggregatesModel.Inventory;
@@ -45,12 +46,19 @@ public sealed class ReserveInventoryConsumer : IConsumer<ReserveInventoryIntegra
 
         // 1. Проверка идемпотентности: резерв уже существует?
         var existingReservation = await _reservationRepo.FindByOrderIdAsync(message.OrderId, context.CancellationToken);
-        if (existingReservation is { Status: ReservationStatus.Reserved or ReservationStatus.Released })
+        if (existingReservation is not null)
         {
-            _logger.LogInformation("A reservation for OrderId={OrderId} already exists. Idempotent no-op.", message.OrderId);
-
-            // Повторно опубликовать событие
-            await context.Publish(new InventoryReservedIntegrationEvent(message.OrderId));
+            if (existingReservation.Status == ReservationStatus.Reserved)
+            {
+                _logger.LogInformation("Reservation for OrderId={OrderId} already exists. Idempotent no-op.", message.OrderId);
+                await context.Publish(new InventoryReservedIntegrationEvent(message.OrderId));
+            }
+            else // Released
+            {
+                _logger.LogWarning("Reservation for OrderId={OrderId} was already released. Reserve command ignored.", message.OrderId);
+                await context.Publish(new InventoryReservationFailedIntegrationEvent(
+                    OrderId: message.OrderId, Reason: "Reservation was already released"));
+            }
             return;
         }
 
@@ -77,13 +85,13 @@ public sealed class ReserveInventoryConsumer : IConsumer<ReserveInventoryIntegra
 
                 // Публикуем событие об отказе без сохранения резерва
                 await context.Publish(new InventoryReservationFailedIntegrationEvent(
-                    message.OrderId,
-                    item.ProductId,
-                    item.Quantity,
-                    inventory?.AvailableQuantity ?? 0,
-                    inventory is null
+                    OrderId: message.OrderId,
+                    Reason: inventory is null
                         ? $"Product with Id={item.ProductId} not found"
-                        : $"Insufficient stock. Available: {inventory.AvailableQuantity}, required: {item.Quantity}"
+                        : $"Insufficient stock. Available: {inventory.AvailableQuantity}, required: {item.Quantity}",
+                    ProductId: item.ProductId,
+                    RequestedQuantity: item.Quantity,
+                    AvailableQuantity: inventory?.AvailableQuantity ?? 0
                 ));
 
                 // Завершаем consumer без сохранения изменений
@@ -122,10 +130,20 @@ public sealed class ReserveInventoryConsumer : IConsumer<ReserveInventoryIntegra
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            _logger.LogError(ex, "Concurrency conflict while releasing inventory for OrderId={OrderId}", message.OrderId);
+            _logger.LogError(ex, "Optimistic concurrency conflict while reserving inventory for OrderId={OrderId}", message.OrderId);
 
             // Откат транзакции произойдет автоматически при Dispose
             throw; // Передать MassTransit для retry
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505" })
+        {
+            _logger.LogInformation(
+                ex,
+                "Duplicate inventory reservation for OrderId={OrderId}. Idempotent no-op, retry will find existing record.",
+                message.OrderId);
+
+            // Транзакция будет откачена. При retry новая транзакция найдёт существующую запись и обработает как no-op.
+            throw;
         }
     }
 }

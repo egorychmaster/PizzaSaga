@@ -12,40 +12,36 @@ public sealed class OrderSagaStateMap : SagaClassMap<OrderSagaStateData>
 {
     /// <inheritdoc />
     protected override void Configure(
-        EntityTypeBuilder<OrderSagaStateData> entity,
+        EntityTypeBuilder<OrderSagaStateData> builder,
         ModelBuilder model)
     {
-        entity.ToTable("OrderSagaStates");
+        builder.ToTable("OrderSagaStates");
 
-        entity.HasKey(x => x.CorrelationId);
+        builder.HasKey(x => x.CorrelationId);
 
-        entity.Property(x => x.CurrentState)
+        builder.Property(x => x.CurrentState)
             .HasMaxLength(64)
             .IsRequired();
 
-        entity.Property(x => x.OrderId)
+        builder.Property(x => x.OrderId)
             .IsRequired();
 
-        entity.Property(x => x.CustomerId)
+        builder.Property(x => x.CustomerId)
             .IsRequired();
 
-        entity.Property(x => x.TotalAmount)
+        builder.Property(x => x.TotalAmount)
             .HasPrecision(18, 2)
             .IsRequired();
 
-        entity.Property(x => x.CurrencyCode)
+        builder.Property(x => x.CurrencyCode)
             .HasMaxLength(3)
             .IsRequired();
 
-        // Настройка xmin как токена конкурентности для PostgreSQL
-        entity.Property(x => x.Version)
-              .HasColumnName("xmin")
-              .HasColumnType("xid")
-              .ValueGeneratedOnAddOrUpdate()
-              .IsConcurrencyToken();
+        // Optimistic Concurrency. Настройка xmin как токена конкурентности для PostgreSQL.
+        builder.Property(x => x.Version).IsRowVersion();
 
         // Уникальный индекс по OrderId для быстрого поиска
-        entity.HasIndex(x => x.OrderId)
+        builder.HasIndex(x => x.OrderId)
             .IsUnique();
     }
 }

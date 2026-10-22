@@ -18,5 +18,11 @@ public enum PaymentStatus
     /// <summary>
     /// Резервация отменена.
     /// </summary>
-    Cancelled
+    Cancelled,
+
+    /// <summary>
+    /// Авторизация завершилась окончательным бизнес-отказом.
+    /// Например, недостаточно средств, карта отклонена.
+    /// </summary>
+    Failed
 }

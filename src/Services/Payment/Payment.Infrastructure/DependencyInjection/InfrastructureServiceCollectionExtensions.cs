@@ -1,8 +1,10 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Payment.Domain.AggregatesModel.PaymentReservation;
 using Payment.Infrastructure.MassTransit.CommandConsumers;
 using Payment.Infrastructure.Persistence;
+using Payment.Infrastructure.Persistence.Repositories;
 using PizzaSaga.Shared.Infrastructure.Messaging;
 
 namespace Payment.Infrastructure.DependencyInjection;
@@ -64,6 +66,9 @@ public static class InfrastructureServiceCollectionExtensions
                 //cfg.ConfigureEndpoints(context);
             });
         });
+
+        // Регистрируем репозиторий платёжных резерваций
+        services.AddScoped<IPaymentReservationRepository, PaymentReservationRepository>();
 
         return services;
     }

@@ -1,4 +1,3 @@
-using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Stock.Domain.AggregatesModel.InventoryReservation;
@@ -37,6 +36,9 @@ public sealed class InventoryReservationConfiguration : IEntityTypeConfiguration
             item.Property(x => x.ProductId).IsRequired();
             item.Property(x => x.Quantity).IsRequired();
         });
+
+        // Optimistic Concurrency. Настройка xmin как токена конкурентности для PostgreSQL.
+        builder.Property(x => x.Version).IsRowVersion();
 
         // Map to table
         builder.ToTable("InventoryReservations");
