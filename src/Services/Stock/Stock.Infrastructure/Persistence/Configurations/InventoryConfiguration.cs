@@ -36,6 +36,9 @@ public sealed class InventoryConfiguration : IEntityTypeConfiguration<InventoryA
                 .IsRequired();
         });
 
+        // Optimistic concurrency token
+        builder.Property(x => x.Version).IsRowVersion();
+
         // Maps to table
         builder.ToTable("Inventories");
     }

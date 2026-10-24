@@ -30,6 +30,11 @@ public sealed class InventoryAggregate : AggregateRootWithId
     public InventoryBalance Balance { get; private set; } = InventoryBalance.Zero;
 
     /// <summary>
+    /// Токен конкурентности для optimistic concurrency control (rowversion).
+    /// </summary>
+    public uint Version { get; private set; }
+
+    /// <summary>
     /// Конструктор для EF Core.
     /// </summary>
     private InventoryAggregate() { }

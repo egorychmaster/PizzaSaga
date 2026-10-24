@@ -42,6 +42,7 @@ namespace Stock.Infrastructure.Persistence.Migrations
                     ProductId = table.Column<Guid>(type: "uuid", nullable: false),
                     AvailableQuantity = table.Column<int>(type: "integer", nullable: false),
                     ReservedQuantity = table.Column<int>(type: "integer", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     Id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>

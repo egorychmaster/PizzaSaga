@@ -12,7 +12,7 @@ using Stock.Infrastructure.Persistence;
 namespace Stock.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(StockDbContext))]
-    [Migration("20261022111153_InitialCreate")]
+    [Migration("20261024112128_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -201,6 +201,12 @@ namespace Stock.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("ProductId");
 
