@@ -1,4 +1,5 @@
 using PizzaSaga.SharedKernel.Domain;
+using Stock.Domain.AggregatesModel.Inventory.Exceptions;
 using Stock.Domain.AggregatesModel.Inventory.ValueObjects;
 
 namespace Stock.Domain.AggregatesModel.Inventory;
@@ -62,6 +63,9 @@ public sealed class InventoryAggregate : AggregateRootWithId
     /// <param name="quantity">Количество для резервирования.</param>
     public void Reserve(int quantity)
     {
+        if (AvailableQuantity < quantity)
+            throw new InsufficientAvailableQuantityException(ProductId, AvailableQuantity, quantity);
+
         Balance = Balance.Reserve(quantity);
     }
 

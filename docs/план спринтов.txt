@@ -221,12 +221,12 @@ ProductId = 1, Price = 10 USD
 - Для Stock Service: перед резервированием товара проверять, не был ли этот конкретный OrderId уже успешно обработан в данной системе (например, через связь один-к-одному «Заказ-Резерв» или через сохранение бизнес-билетов операций). Повторная обработка команды на резерв для уже зарезервированного заказа должна быть идемпотентным no-op (просто возвращать успешный ответ, не списывая остатки повторно).
 - Для Payment Service: перед транзакцией проверять статус оплаты этого OrderId в БД. Если оплата уже прошла успешно (или завершилась отказом) — повторная команда на авторизацию платежа не должна повторно дергать логику эквайринга, а должна сразу возвращать зафиксированный ранее доменный результат.
 
-2. Бизнес-логика Stock Service. Реализовать InventoryAggregate (ProductId, Balance с Available/Reserved, явный Version как токен конкурентности). Консьюмер ReserveInventoryIntegrationCommand на границе парсит сырые данные в VO (ReservationQuantity.Create), объединяет позиции с одинаковым ProductId, загружает агрегаты и в одной транзакции (MassTransit EF Consumer Outbox) вызывает inventory.Reserve(ReservationQuantity), который переводит количество из Available в Reserved. Затем сохраняет InventoryReservationAggregate.
-Резервирование атомарно: если по любой позиции не хватает остатка или продукт не найден, ни один остаток не меняется и публикуется InventoryReservationFailedIntegrationEvent.
-Ошибки: DomainException (нехватка остатка) даёт бизнес-отказ без retry. 
-Ошибка парсинга VO даёт невалидное сообщение в _error без retry. 
-DbUpdateConcurrencyException/DbUpdateException (40001, 23505) считаются transient и обрабатываются UseMessageRetry, который настроен до UseEntityFrameworkOutbox. 
-Сообщения, исчерпавшие retry, попадают в _error, а Сага обрабатывает Fault<ReserveInventoryIntegrationCommand>.
+2. Бизнес-логика Stock Service: Реализовать сущность Inventory. При получении команды ReserveInventoryIntegrationCommand консьюмер уменьшает количество товара в БД Stock. 
+Использовать Optimistic Concurrency на уровне сущности товара для защиты от состояния гонки (Race Condition) при одновременных заказах. Если товара недостаточно — публиковать InventoryReservationFailedIntegrationEvent.
+При возникновении DbUpdateConcurrencyException в консьюмере, транзакция падает, и сообщение должно уходить на Retry (настраивается через MassTransit UseMessageRetry). Это инфраструктурная transient-ошибка, а не бизнес-отказ. 
+Бизнес-отказ (InventoryReservationFailedIntegrationEvent) публикуется только в том случае, если физически на складе StockLevel меньше запрошенного.
+Stock Service использует "Parse, Don't Validate" для управления остатками: сущность Inventory (агрегат) инкапсулирует бизнес-метод Reserve(Quantity quantity). 
+Если запрашиваемое количество превышает остаток, агрегат генерирует ошибку бизнес-логики (DomainException), что приводит к публикации InventoryReservationFailedIntegrationEvent.
 
 3. Бизнес-логика Payment Service: Реализовать симуляцию списания средств. Добавить в конфигурацию сервиса управляемый флаг SimulateFailure. Если флаг активен — консьюмер публикует PaymentAuthorizationFailed, имитируя ошибку банка.
 

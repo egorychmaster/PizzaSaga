@@ -5,6 +5,7 @@ using Npgsql;
 using PizzaSaga.Contracts.Stock.IntegrationCommands;
 using PizzaSaga.Contracts.Stock.IntegrationEvents;
 using Stock.Domain.AggregatesModel.Inventory;
+using Stock.Domain.AggregatesModel.Inventory.Exceptions;
 using Stock.Domain.AggregatesModel.InventoryReservation;
 using Stock.Infrastructure.Persistence;
 
@@ -63,70 +64,63 @@ public sealed class ReserveInventoryConsumer : IConsumer<ReserveInventoryIntegra
         }
 
 
-        // 2. Получить все ProductId для продуктов и проверить доступность ДО транзакции
-        var items = message.Products.Select(p => new InventoryReservationItem(p.ProductId, p.Quantity)).ToList();
-        var inventoryIds = items.Select(i => i.ProductId).Distinct().ToArray();
-
-        var inventories = await _inventoryRepo.GetByIdsAsync(inventoryIds, context.CancellationToken);
-
-        // Проверить доступность ТЕПЕРЬ, до начала транзакции
-        foreach (var item in items)
-        {
-            var inventory = inventories.FirstOrDefault(i => i.ProductId == item.ProductId);
-            if (inventory is null || !inventory.CanReserve(item.Quantity))
-            {
-                _logger.LogWarning(
-                    "Insufficient stock for OrderId={OrderId}, ProductId={ProductId}. Available: {Available}, требуется: {Required}",
-                    message.OrderId,
-                    item.ProductId,
-                    inventory?.AvailableQuantity ?? 0,
-                    item.Quantity
-                );
-
-                // Публикуем событие об отказе без сохранения резерва
-                await context.Publish(new InventoryReservationFailedIntegrationEvent(
-                    OrderId: message.OrderId,
-                    Reason: inventory is null
-                        ? $"Product with Id={item.ProductId} not found"
-                        : $"Insufficient stock. Available: {inventory.AvailableQuantity}, required: {item.Quantity}",
-                    ProductId: item.ProductId,
-                    RequestedQuantity: item.Quantity,
-                    AvailableQuantity: inventory?.AvailableQuantity ?? 0
-                ));
-
-                // Завершаем consumer без сохранения изменений
-                return;
-            }
-        }
-
-        // 3. Зарезервировать остатки
+        // 2. Зарезервировать остатки
         // Автоматическое управление транзакцией: MassTransit сам открывает транзакцию БД перед вызовом метода Consume,
         // выполняет ваш код и автоматически делает CommitAsync() (если не было исключений) или RollbackAsync() (если вылетело исключение).
         try
-        {            
-            // 3.1 Бизнес-логика (проверка доступности и резервирование)
+        {
+            var items = message.Products.Select(p => new InventoryReservationItem(p.ProductId, p.Quantity)).ToList();
+            var inventoryIds = items.Select(i => i.ProductId).Distinct().ToArray();
+            var inventories = await _inventoryRepo.GetByIdsAsync(inventoryIds, context.CancellationToken);
+
+            // 2.1 Бизнес-логика (проверка доступности и резервирование)
             foreach (var item in items)
             {
                 var inventory = inventories.FirstOrDefault(i => i.ProductId == item.ProductId);
-                // Исключение, если товар из существующего резерва отсутствует в базе. Молча пропускать его опасно.
                 if (inventory is null)
-                    throw new InvalidOperationException($"Inventory not found for ProductId={item.ProductId}.");
+                {
+                    _logger.LogWarning("Product with Id={ProductId} not found in inventory.", item.ProductId);
+                    await context.Publish(new InventoryReservationFailedIntegrationEvent(
+                        OrderId: message.OrderId,
+                        Reason: $"Product with Id={item.ProductId} not found",
+                        ProductId: item.ProductId,
+                        RequestedQuantity: item.Quantity));
+
+                    return;
+                }
 
                 inventory.Reserve(item.Quantity);
             }
 
-            // 3.2 Создание записи резерва
+            // 2.2 Создание записи резерва
             var reservation = InventoryReservationAggregate.Create(message.OrderId, items);
             await _reservationRepo.AddAsync(reservation, context.CancellationToken);
 
-            // 3.3 Единый вызов SaveChangesAsync. 
+            // 2.3 Единый вызов SaveChangesAsync. 
             // MassTransit перехватит этот момент, запишет исходящие сообщения в таблицу OutboxMessage в рамках той же транзакции и закоммитит всё атомарно.
             await _dbContext.SaveChangesAsync(context.CancellationToken);
 
             _logger.LogInformation("The reserve has been successfully created for OrderId={OrderId}", message.OrderId);
 
-            // 3.4 Публикация успешного события
+            // 2.4 Публикация успешного события
             await context.Publish(new InventoryReservedIntegrationEvent(message.OrderId));
+        }
+        catch (InsufficientAvailableQuantityException ex)
+        {
+            _logger.LogInformation(
+                ex,
+                "Business validation failed while reserving inventory for OrderId={OrderId}, ProductId={ProductId}",
+                message.OrderId,
+                ex.ProductId);
+
+            await context.Publish(new InventoryReservationFailedIntegrationEvent(
+                OrderId: message.OrderId,
+                Reason: ex.Message,
+                ProductId: ex.ProductId,
+                RequestedQuantity: ex.RequestedQuantity,
+                AvailableQuantity: ex.AvailableQuantity));
+
+            // Не пробрасываем исключение — это ожидаемая бизнес-ошибка, retry не нужен
         }
         catch (DbUpdateConcurrencyException ex)
         {

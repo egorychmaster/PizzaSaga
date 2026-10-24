@@ -56,7 +56,7 @@ public sealed record InventoryBalance
         ValidateOperationQuantity(quantity);
 
         if (Available.Value < quantity)
-            throw new InsufficientAvailableQuantityException(Available.Value, quantity);
+            throw new InsufficientAvailableQuantityException(null, Available.Value, quantity);
 
         var requested = Quantity.Create(quantity);
 
