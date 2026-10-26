@@ -1,6 +1,6 @@
-using PizzaSaga.Contracts.Orders.Models;
+using PizzaSaga.Contracts.Order.Models;
 
-namespace PizzaSaga.Contracts.Orders.IntegrationEvents;
+namespace PizzaSaga.Contracts.Order.IntegrationEvents;
 
 /// <summary>
 /// Интеграционное событие создания заказа, публикуемое в брокер/Outbox.

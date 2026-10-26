@@ -1,4 +1,4 @@
-namespace PizzaSaga.Contracts.Orders.IntegrationEvents;
+namespace PizzaSaga.Contracts.Order.IntegrationEvents;
 
 /// <summary>
 /// Терминальное событие успешного завершения заказа.

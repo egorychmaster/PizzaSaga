@@ -1,7 +1,7 @@
 using MassTransit;
 using Mediator;
 using Order.Application.Features.Orders.UpdateOrderStatus;
-using PizzaSaga.Contracts.Orders.IntegrationEvents;
+using PizzaSaga.Contracts.Order.IntegrationEvents;
 
 namespace Order.Infrastructure.MassTransit.Consumers;
 

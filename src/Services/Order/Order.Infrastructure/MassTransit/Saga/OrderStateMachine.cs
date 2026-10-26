@@ -1,6 +1,7 @@
 using MassTransit;
-using PizzaSaga.Contracts.Orders.IntegrationEvents;
+using PizzaSaga.Contracts.Order.IntegrationEvents;
 using PizzaSaga.Contracts.Payment.IntegrationCommands;
+using PizzaSaga.Contracts.Payment.IntegrationEvents;
 using PizzaSaga.Contracts.Stock.IntegrationCommands;
 using PizzaSaga.Contracts.Stock.IntegrationEvents;
 

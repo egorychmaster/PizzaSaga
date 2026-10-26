@@ -1,4 +1,4 @@
-namespace PizzaSaga.Contracts.Orders.IntegrationEvents;
+namespace PizzaSaga.Contracts.Payment.IntegrationEvents;
 
 /// <summary>
 /// Событие об успешной авторизации платежа.

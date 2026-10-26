@@ -2,8 +2,9 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using PizzaSaga.Contracts.Orders.IntegrationEvents;
+using PizzaSaga.Contracts.Order.IntegrationEvents;
 using PizzaSaga.Contracts.Payment.IntegrationCommands;
+using PizzaSaga.Contracts.Payment.IntegrationEvents;
 using Payment.Domain.AggregatesModel.PaymentReservation;
 
 namespace Payment.Infrastructure.MassTransit.CommandConsumers;
