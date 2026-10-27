@@ -119,6 +119,7 @@ public class AuthorizePaymentConsumer : IConsumer<AuthorizePaymentIntegrationCom
             message.Amount,
             message.CurrencyCode,
             context.CancellationToken);
+
         if (!gatewayResult.IsApproved)
         {
             paymentReservation.Fail(gatewayResult.DeclineReason ?? "Payment declined by bank");
@@ -141,9 +142,21 @@ public class AuthorizePaymentConsumer : IConsumer<AuthorizePaymentIntegrationCom
         {
             await _reservationRepo.SaveChangesAsync(context.CancellationToken);
 
-            _logger.LogInformation("Payment successfully authorized for OrderId={OrderId}", message.OrderId);
+            // Публикация результата через Outbox (в рамках той же транзакции).
+            // Если статус Failed — публикуем отказ, если Authorized — успех.
+            if (!gatewayResult.IsApproved)
+            {
+                _logger.LogInformation("Payment authorization failed for OrderId={OrderId}: {Reason}", message.OrderId, gatewayResult.DeclineReason);
+                await context.Publish(new PaymentAuthorizationFailedIntegrationEvent(
+                    message.OrderId,
+                    message.Amount,
+                    message.CurrencyCode,
+                    gatewayResult.DeclineReason ?? "Payment declined by bank"));
 
-            // 5. Публикация результата через Outbox (в рамках той же транзакции)
+                return;
+            }
+
+            _logger.LogInformation("Payment successfully authorized for OrderId={OrderId}", message.OrderId);
             await context.Publish(new PaymentAuthorizedIntegrationEvent(message.OrderId));
         }
         catch (DbUpdateConcurrencyException ex)

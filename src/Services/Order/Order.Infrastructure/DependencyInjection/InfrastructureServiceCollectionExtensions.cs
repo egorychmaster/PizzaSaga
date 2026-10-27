@@ -82,6 +82,7 @@ public static class InfrastructureServiceCollectionExtensions
         // Должны быть зарегистрированы ДО AddMassTransit(...).
         EndpointConvention.Map<ReserveInventoryIntegrationCommand>(new Uri($"queue:{RabbitMqQueues.StockReserveInventory}"));
         EndpointConvention.Map<AuthorizePaymentIntegrationCommand>(new Uri($"queue:{RabbitMqQueues.PaymentAuthorizePayment}"));
+        EndpointConvention.Map<ReleaseInventoryIntegrationCommand>(new Uri($"queue:{RabbitMqQueues.StockReleaseInventory}"));
 
         // Подключаем MassTransit с RabbitMQ, Saga и EF Core Outbox.
         services.AddMassTransit(x =>
