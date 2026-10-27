@@ -2,6 +2,7 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Payment.Domain.AggregatesModel.PaymentReservation;
+using Payment.Infrastructure.PaymentGateways;
 using Payment.Infrastructure.MassTransit.CommandConsumers;
 using Payment.Infrastructure.Persistence;
 using Payment.Infrastructure.Persistence.Repositories;
@@ -69,6 +70,9 @@ public static class InfrastructureServiceCollectionExtensions
 
         // Регистрируем репозиторий платёжных резерваций
         services.AddScoped<IPaymentReservationRepository, PaymentReservationRepository>();
+
+        // Регистрируем симулятор банковского шлюза
+        services.AddSingleton<IPaymentGateway, FakePaymentGateway>();
 
         return services;
     }

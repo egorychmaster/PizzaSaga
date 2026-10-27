@@ -2,10 +2,10 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using PizzaSaga.Contracts.Order.IntegrationEvents;
+using Payment.Domain.AggregatesModel.PaymentReservation;
+using Payment.Infrastructure.PaymentGateways;
 using PizzaSaga.Contracts.Payment.IntegrationCommands;
 using PizzaSaga.Contracts.Payment.IntegrationEvents;
-using Payment.Domain.AggregatesModel.PaymentReservation;
 
 namespace Payment.Infrastructure.MassTransit.CommandConsumers;
 
@@ -16,13 +16,16 @@ namespace Payment.Infrastructure.MassTransit.CommandConsumers;
 public class AuthorizePaymentConsumer : IConsumer<AuthorizePaymentIntegrationCommand>
 {
     private readonly IPaymentReservationRepository _reservationRepo;
+    private readonly IPaymentGateway _paymentGateway;
     private readonly ILogger<AuthorizePaymentConsumer> _logger;
 
     public AuthorizePaymentConsumer(
         IPaymentReservationRepository reservationRepo,
+        IPaymentGateway paymentGateway,
         ILogger<AuthorizePaymentConsumer> logger)
     {
         _reservationRepo = reservationRepo ?? throw new ArgumentNullException(nameof(reservationRepo));
+        _paymentGateway = paymentGateway ?? throw new ArgumentNullException(nameof(paymentGateway));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -110,9 +113,20 @@ public class AuthorizePaymentConsumer : IConsumer<AuthorizePaymentIntegrationCom
             message.Amount,
             message.CurrencyCode);
 
-        // TODO: Здесь будет интеграция с реальным эквайрингом.
-        // Для MVP считаем, что авторизация всегда успешна.
-        paymentReservation.Authorize();
+        // 5. Интеграция с банковским шлюзом (с симуляцией банка).
+        var gatewayResult = await _paymentGateway.AuthorizeAsync(
+            message.OrderId,
+            message.Amount,
+            message.CurrencyCode,
+            context.CancellationToken);
+        if (!gatewayResult.IsApproved)
+        {
+            paymentReservation.Fail(gatewayResult.DeclineReason ?? "Payment declined by bank");
+        }
+        else
+        {
+            paymentReservation.Authorize();
+        }
 
         if (existingReservation is null)
         {
@@ -141,13 +155,10 @@ public class AuthorizePaymentConsumer : IConsumer<AuthorizePaymentIntegrationCom
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505" })
         {
-            _logger.LogInformation(
-                ex,
-                "Duplicate payment reservation for OrderId={OrderId}. Idempotent no-op, retry will find existing record.",
-                message.OrderId);
+            _logger.LogInformation(ex, "Duplicate payment reservation for OrderId={OrderId}. Idempotent no-op, retry will find existing record.", message.OrderId);
 
             // Транзакция будет откачена. При retry новая транзакция найдёт существующую запись и обработает как no-op.
             throw;
-        }        
+        }
     }
 }

@@ -2,14 +2,25 @@ using System.Net.Sockets;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var jwtSecret = builder.AddParameter("JwtSecretKey", secret: true);
+
+// --- 0. Параметры из кода или конфига или секрета.
+// Из appsettings.Development.json или secret.json(текущего проекта) беруются ниже параметры.
+var jwtSecret = builder.AddParameter("JwtSecretKey", "verystrongsecretkey123!1234567890ab", secret: true);
+
+// Настройка симуляции отказа банка при авторизации платежа.
+var simulatePaymentFailure = builder.AddParameter("PaymentSimulateFailure", false);
+
+// База данных PostgreSQL для Auth.Service и Order.Service (Саги)
+var pgUser = builder.AddParameter("PostgresUser", "postgres");
+var pgPassword = builder.AddParameter("PostgresPassword", "MySuperSecret123!", secret: true);
+
+// Брокер сообщений RabbitMQ для MassTransit (общение между сервисами)
+// Объявляем явные параметры для подключения
+var rabbitUser = builder.AddParameter("RabbitmqUser", "1");
+var rabbitPassword = builder.AddParameter("RabbitmqPass", "1");
 
 
 // --- 1. ОПИСАНИЕ ИНФРАСТРУКТУРЫ (КОНТЕЙНЕРЫ) ---
-
-// База данных PostgreSQL для Auth.Service и Order.Service (Саги)
-var pgUser = builder.AddParameter("postgres-user", "postgres");
-var pgPassword = builder.AddParameter("postgres-password", "MySuperSecret123!", secret: true);
 var postgres = builder.AddPostgres("postgres", pgUser, pgPassword)
     // Добавит удобную панель управления БД
     .WithPgAdmin(pg =>
@@ -26,9 +37,6 @@ var postgres = builder.AddPostgres("postgres", pgUser, pgPassword)
     }); ;
 
 // Брокер сообщений RabbitMQ для MassTransit (общение между сервисами)
-// Объявляем явные параметры для подключения
-var rabbitUser = builder.AddParameter("rabbitmq-user", "1");
-var rabbitPassword = builder.AddParameter("rabbitmq-pass", "1");
 var rabbitMq = builder.AddRabbitMQ("rabbitmq", rabbitUser, rabbitPassword)
     // Панель управления RabbitMQ
     .WithManagementPlugin()
@@ -81,6 +89,7 @@ var stockService = builder.AddProject<Projects.Stock_Api>("stock-api")
 // Сервис оплаты
 var paymentDb = postgres.AddDatabase("PaymentDb");
 var paymentService = builder.AddProject<Projects.Payment_Api>("payment-api")
+    .WithEnvironment("PaymentSimulation__SimulateFailure", simulatePaymentFailure)
     .WithReference(paymentDb)
     .WithReference(rabbitMq)
     .WaitFor(paymentDb)
@@ -97,7 +106,7 @@ var catalogService = builder.AddProject<Projects.Catalog_Api>("catalog-api")
     .WaitFor(catalogDb)
     .WaitFor(rabbitMq)
     // Ожидаем сервисы, иначе консьюиеры заказов пропустят события продуктов и их цен.
-    .WaitFor(orderService)  
+    .WaitFor(orderService)
     .WaitFor(stockService)
     ;
 

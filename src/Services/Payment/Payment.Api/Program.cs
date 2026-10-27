@@ -1,3 +1,4 @@
+using Payment.Infrastructure.Configuration;
 using Payment.Infrastructure.DependencyInjection;
 using Payment.Infrastructure.Persistence;
 using PizzaSaga.ServiceDefaults.Extensions;
@@ -24,6 +25,13 @@ try
     var dbConnectionString = builder.Configuration.GetDatabaseConnectionString("PaymentDb");
     var rabbitMqConnectionString = builder.Configuration.GetRabbitMqConnectionString();
     builder.Services.AddInfrastructure(dbConnectionString, rabbitMqConnectionString);
+
+    // Регистрация типизированной конфигурации симуляции платежей
+    builder.Services.AddOptions<PaymentSimulationOptions>()
+        .BindConfiguration(PaymentSimulationOptions.SectionName)
+        .ValidateOnStart();
+
+    builder.Services.AddLogging(logging => logging.AddConsole());
 
 
     var app = builder.Build();
