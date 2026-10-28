@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Order.Domain.AggregatesModel.Orders;
 using Order.Domain.AggregatesModel.Orders.ValueObjects;
 using Order.Domain.AggregatesModel.ProductCatalog;
+using Order.Infrastructure.MassTransit.Saga;
 using Order.Infrastructure.Persistence.Idempotency;
 
 namespace Order.Infrastructure.Persistence;
@@ -33,6 +34,12 @@ public sealed class OrderDbContext : DbContext
     /// Курсы конвертации валют.
     /// </summary>
     public DbSet<CurrencyExchangeRate> CurrencyExchangeRates => Set<CurrencyExchangeRate>();
+
+    /// <summary>
+    /// Таблица состояний саги Order. Используется MassTransit для хранения экземпляров OrderStateMachine.
+    /// Вместе с Outbox это обеспечивает атомарность: состояние саги + исходящие сообщения в одной транзакции.
+    /// </summary>
+    public DbSet<OrderSagaStateData> OrderSagaStates => Set<OrderSagaStateData>();
 
 
 

@@ -21,8 +21,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Persistence\Migrations\OrderSagaDbContexts\" />
-	  <Folder Include="Persistence\Migrations\OrderDbContexts\" />
+	  <Folder Include="Persistence\Migrations\" />
 	</ItemGroup>
 
 </Project>

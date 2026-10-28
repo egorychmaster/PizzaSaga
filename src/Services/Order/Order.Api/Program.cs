@@ -3,7 +3,6 @@ using Order.Api.Endpoints.Orders.GetOrderById;
 using Order.Api.Endpoints.Orders.GetOrders;
 using Order.Application.DependencyInjection;
 using Order.Infrastructure.DependencyInjection;
-using Order.Infrastructure.MassTransit.Saga;
 using Order.Infrastructure.Persistence;
 using PizzaSaga.ServiceDefaults.Extensions;
 using PizzaSaga.ServiceDefaults.Extensions.Aspires;
@@ -47,7 +46,6 @@ try
 
     // Автоматические миграции.
     await app.ApplyMigrationsAsync<OrderDbContext>();
-    await app.ApplyMigrationsAsync<OrderSagaDbContext>();
     // Выполняем инициализацию данных
     await app.SeedDatabaseAsync<OrderDbContext>();
 

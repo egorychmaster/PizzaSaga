@@ -21,10 +21,6 @@ public sealed class OrderCancelledConsumer : IConsumer<OrderCancelledIntegration
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<OrderCancelledIntegrationEvent> context)
     {
-        await _mediator.Send(
-            new UpdateOrderStatusCommand(
-                context.Message.OrderId,
-                OrderStatusUpdate.Cancelled),
-            context.CancellationToken);
+        await _mediator.Send(new UpdateOrderStatusCommand(context.Message.OrderId, OrderStatusUpdate.Cancelled), context.CancellationToken);
     }
 }

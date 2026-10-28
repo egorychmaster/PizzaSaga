@@ -9,10 +9,10 @@ using Order.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Order.Infrastructure.Persistence.Migrations.OrderDbContexts
+namespace Order.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(OrderDbContext))]
-    [Migration("20261022111051_InitialCreate")]
+    [Migration("20261028171444_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -283,6 +283,46 @@ namespace Order.Infrastructure.Persistence.Migrations.OrderDbContexts
                     b.HasKey("ProductId");
 
                     b.ToTable("ProductCatalogCaches", (string)null);
+                });
+
+            modelBuilder.Entity("Order.Infrastructure.MassTransit.Saga.OrderSagaStateData", b =>
+                {
+                    b.Property<Guid>("CorrelationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<string>("CurrentState")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("CorrelationId");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.ToTable("OrderSagaStates", (string)null);
                 });
 
             modelBuilder.Entity("Order.Infrastructure.Persistence.Idempotency.IdempotencyRecord", b =>

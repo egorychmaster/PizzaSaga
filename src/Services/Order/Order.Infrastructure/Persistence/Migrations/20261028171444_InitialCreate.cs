@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Order.Infrastructure.Persistence.Migrations.OrderDbContexts
+namespace Order.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -78,6 +78,23 @@ namespace Order.Infrastructure.Persistence.Migrations.OrderDbContexts
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Orders", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrderSagaStates",
+                columns: table => new
+                {
+                    CorrelationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CurrentState = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    OrderId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TotalAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    CurrencyCode = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderSagaStates", x => x.CorrelationId);
                 });
 
             migrationBuilder.CreateTable(
@@ -198,6 +215,12 @@ namespace Order.Infrastructure.Persistence.Migrations.OrderDbContexts
                 column: "Status");
 
             migrationBuilder.CreateIndex(
+                name: "IX_OrderSagaStates_OrderId",
+                table: "OrderSagaStates",
+                column: "OrderId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OutboxMessage_InboxMessageId_InboxConsumerId_SequenceNumber",
                 table: "OutboxMessage",
                 columns: new[] { "InboxMessageId", "InboxConsumerId", "SequenceNumber" },
@@ -226,6 +249,9 @@ namespace Order.Infrastructure.Persistence.Migrations.OrderDbContexts
 
             migrationBuilder.DropTable(
                 name: "OrderItems");
+
+            migrationBuilder.DropTable(
+                name: "OrderSagaStates");
 
             migrationBuilder.DropTable(
                 name: "OutboxMessage");

@@ -68,15 +68,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IDomainEventDispatcher, EfCoreDomainEventDispatcher>();
 
 
-        // Регистрируем OrderSagaDbContext для хранения состояния Saga.
-        // Использует ту же PostgreSQL базу данных, что и OrderDbContext.
-        services.AddDbContext<OrderSagaDbContext>((sp, options) =>
-        {
-            options.UseNpgsql(connectionString, npgsqlOptions =>
-            {
-                npgsqlOptions.EnableRetryOnFailure();
-            });
-        });
+
 
         // Глобальные маршруты для команд, отправляемых из OrderStateMachine.
         // Должны быть зарегистрированы ДО AddMassTransit(...).
@@ -95,7 +87,7 @@ public static class InfrastructureServiceCollectionExtensions
                 .EntityFrameworkRepository(repository =>
                 {
                     repository.ConcurrencyMode = ConcurrencyMode.Optimistic;
-                    repository.ExistingDbContext<OrderSagaDbContext>();
+                    repository.ExistingDbContext<OrderDbContext>();
                     repository.UsePostgres();
                 });
 
