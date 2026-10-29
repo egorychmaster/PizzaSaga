@@ -32,10 +32,4 @@ public sealed class InventoryReservationRepository : IInventoryReservationReposi
     {
         await _dbContext.InventoryReservations.AddAsync(reservation, ct);
     }
-
-    /// <inheritdoc />
-    public async Task UpdateAsync(InventoryReservationAggregate reservation, CancellationToken ct = default)
-    {
-        _dbContext.InventoryReservations.Update(reservation);
-    }
 }

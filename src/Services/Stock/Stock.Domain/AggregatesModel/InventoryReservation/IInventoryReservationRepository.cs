@@ -19,11 +19,4 @@ public interface IInventoryReservationRepository
     /// <param name="reservation">Резерв для добавления.</param>
     /// <param name="ct">Токен отмены.</param>
     Task AddAsync(InventoryReservationAggregate reservation, CancellationToken ct = default);
-
-    /// <summary>
-    /// Обновляет существующий резерв.
-    /// </summary>
-    /// <param name="reservation">Резерв для обновления.</param>
-    /// <param name="ct">Токен отмены.</param>
-    Task UpdateAsync(InventoryReservationAggregate reservation, CancellationToken ct = default);
 }

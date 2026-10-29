@@ -78,10 +78,6 @@ public sealed class ReleaseInventoryConsumer : IConsumer<ReleaseInventoryIntegra
             // 3.2 Перевести резерв в конечное состояние.
             reservation.Release();
 
-            // Предполагается, что сущности загружены в tracking-режиме.
-            // Поэтому отдельный UpdateAsync для reservation не требуется.
-            //await _reservationRepo.UpdateAsync(reservation, context.CancellationToken);
-
             // 3.3 Сохранить изменения остатков и резерва.
             // MassTransit перехватит его и закоммитит изменения вместе с Outbox-сообщениями в одной транзакции.
             await _dbContext.SaveChangesAsync(context.CancellationToken);
