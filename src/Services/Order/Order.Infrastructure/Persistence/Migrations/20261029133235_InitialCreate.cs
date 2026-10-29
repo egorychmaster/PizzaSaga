@@ -73,7 +73,7 @@ namespace Order.Infrastructure.Persistence.Migrations
                     CustomerId = table.Column<Guid>(type: "uuid", nullable: false),
                     TotalAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     TotalCurrency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
-                    Version = table.Column<int>(type: "integer", nullable: false)
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {

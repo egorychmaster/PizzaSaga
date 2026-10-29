@@ -12,7 +12,7 @@ using Order.Infrastructure.Persistence;
 namespace Order.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(OrderDbContext))]
-    [Migration("20261028171444_InitialCreate")]
+    [Migration("20261029133235_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -207,9 +207,11 @@ namespace Order.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<int>("Version")
+                    b.Property<uint>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 

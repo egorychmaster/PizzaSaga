@@ -31,7 +31,9 @@ public sealed class InventoryAggregate : AggregateRootWithId
     public InventoryBalance Balance { get; private set; } = InventoryBalance.Zero;
 
     /// <summary>
-    /// Токен конкурентности для optimistic concurrency control (rowversion).
+    /// Версия строки для оптимистичной блокировки (Optimistic Concurrency).
+    /// В PostgreSQL маппится на системный столбец xmin (row version).
+    /// EF Core обновляет это поле автоматически при сохранении изменений.
     /// </summary>
     public uint Version { get; private set; }
 

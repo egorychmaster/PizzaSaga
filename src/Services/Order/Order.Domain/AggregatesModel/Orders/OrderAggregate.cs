@@ -39,10 +39,11 @@ public sealed class OrderAggregate : AggregateRoot
     public Money TotalAmount { get; private set; } = null!;
 
     /// <summary>
-    /// Версия агрегата для оптимистичной блокировки (Optimistic Concurrency).
-    /// Инкрементируется при каждом изменении состояния агрегата.
+    /// Версия строки для оптимистичной блокировки (Optimistic Concurrency).
+    /// В PostgreSQL маппится на системный столбец xmin (row version).
+    /// EF Core обновляет это поле автоматически при сохранении изменений.
     /// </summary>
-    public int Version { get; private set; }
+    public uint Version { get; private set; }
 
     /// <summary>
     /// Позиции заказа.
@@ -72,8 +73,6 @@ public sealed class OrderAggregate : AggregateRoot
         CustomerId = customerId;
         Status = OrderStatus.Pending;
         CreatedAt = DateTimeOffset.UtcNow;
-        // Начальная версия
-        Version = 1;
 
         AddItems(items);
         RecalculateTotal();
@@ -112,7 +111,6 @@ public sealed class OrderAggregate : AggregateRoot
         {
             case OrderStatus.Pending:
                 Status = OrderStatus.Completed;
-                Version++;
                 return true;
 
             case OrderStatus.Completed:
@@ -138,7 +136,6 @@ public sealed class OrderAggregate : AggregateRoot
         {
             case OrderStatus.Pending:
                 Status = OrderStatus.Cancelled;
-                Version++;
                 return true;
 
             case OrderStatus.Cancelled:

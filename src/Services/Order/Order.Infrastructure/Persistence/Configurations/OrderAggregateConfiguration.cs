@@ -22,9 +22,9 @@ internal sealed class OrderAggregateConfiguration : IEntityTypeConfiguration<Ord
         // Columns
         builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
         builder.Property(o => o.CreatedAt).IsRequired();
-        // Оптимистичная блокировка (Optimistic Concurrency Control).
-        // EF Core при выполнении UPDATE будет добавлять условие: WHERE "Id" = @id AND "Version" = @oldVersion
-        builder.Property(o => o.Version).IsConcurrencyToken().IsRequired();
+        // Optimistic Concurrency. Настройка xmin как токена конкурентности для PostgreSQL.
+        // Значение поддерживается базой данных, домен его не изменяет.
+        builder.Property(o => o.Version).IsRowVersion();
 
         // Настройка CustomerId — CustomerIdentity как owned-тип (вложенный тип) в EF.
         builder.OwnsOne(o => o.CustomerId, customer =>

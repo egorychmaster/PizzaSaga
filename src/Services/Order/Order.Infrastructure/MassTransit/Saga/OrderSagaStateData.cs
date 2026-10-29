@@ -40,8 +40,9 @@ public sealed class OrderSagaStateData : SagaStateMachineInstance
     public string CurrencyCode { get; set; } = null!;
 
     /// <summary>
-    /// Версия строки Saga для оптимистической блокировки.
-    /// В PostgreSQL маппится на системный столбец xmin.
+    /// Версия строки для оптимистичной блокировки (Optimistic Concurrency).
+    /// В PostgreSQL маппится на системный столбец xmin (row version).
+    /// EF Core обновляет это поле автоматически при сохранении изменений.
     /// </summary>
     public uint Version { get; set; }
 }
