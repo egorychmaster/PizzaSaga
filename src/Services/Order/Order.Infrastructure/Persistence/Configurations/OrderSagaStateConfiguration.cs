@@ -15,31 +15,20 @@ public sealed class OrderSagaStateConfiguration : IEntityTypeConfiguration<Order
     {
         builder.ToTable("OrderSagaStates");
 
+
         builder.HasKey(x => x.CorrelationId);
 
-        builder.Property(x => x.CurrentState)
-            .HasMaxLength(64)
-            .IsRequired();
-
-        builder.Property(x => x.OrderId)
-            .IsRequired();
-
-        builder.Property(x => x.CustomerId)
-            .IsRequired();
-
-        builder.Property(x => x.TotalAmount)
-            .HasPrecision(18, 2)
-            .IsRequired();
-
-        builder.Property(x => x.CurrencyCode)
-            .HasMaxLength(3)
-            .IsRequired();
+        // Columns
+        builder.Property(x => x.CurrentState).HasMaxLength(64).IsRequired();
+        builder.Property(x => x.OrderId).IsRequired();
+        builder.Property(x => x.CustomerId).IsRequired();
+        builder.Property(x => x.TotalAmount).HasPrecision(18, 2).IsRequired();
+        builder.Property(x => x.CurrencyCode).HasMaxLength(3).IsRequired();
 
         // Optimistic Concurrency. Настройка xmin как токена конкурентности для PostgreSQL.
         builder.Property(x => x.Version).IsRowVersion();
 
         // Уникальный индекс по OrderId для быстрого поиска
-        builder.HasIndex(x => x.OrderId)
-            .IsUnique();
+        builder.HasIndex(x => x.OrderId).IsUnique();
     }
 }

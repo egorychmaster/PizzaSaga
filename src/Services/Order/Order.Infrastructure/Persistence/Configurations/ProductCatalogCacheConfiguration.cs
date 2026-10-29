@@ -19,24 +19,10 @@ public sealed class ProductCatalogCacheConfiguration : IEntityTypeConfiguration<
         builder.HasKey(e => e.ProductId);
 
         // Columns
-        builder.Property(e => e.ProductId)
-            .ValueGeneratedNever()
-            .IsRequired();
-
-        builder.Property(e => e.Name)
-            .IsRequired()
-            .HasMaxLength(200);
-
-        builder.Property(e => e.Description)
-            .IsRequired(false)
-            .HasMaxLength(1000);
-
-        builder.Property(e => e.PriceAmount)
-            .HasColumnType("decimal(18,2)")
-            .IsRequired();
-
-        builder.Property(e => e.CurrencyCode)
-            .IsRequired()
-            .HasMaxLength(3);
+        builder.Property(e => e.ProductId).ValueGeneratedNever().IsRequired();
+        builder.Property(e => e.Name).IsRequired().HasMaxLength(200);
+        builder.Property(e => e.Description).IsRequired(false).HasMaxLength(1000);
+        builder.Property(e => e.PriceAmount).HasColumnType("decimal(18,2)").IsRequired();
+        builder.Property(e => e.CurrencyCode).IsRequired().HasMaxLength(3);
     }
 }

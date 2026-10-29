@@ -102,26 +102,52 @@ public sealed class OrderAggregate : AggregateRoot
     /// Переводит заказ в состояние успешно завершённого.
     /// Вызывается Saga после успешного завершения всех этапов оформления заказа.
     /// </summary>
-    public void MarkCompleted()
+    /// <returns>
+    /// <see langword="true"/>, если статус был изменён;
+    /// <see langword="false"/>, если заказ уже находится в целевом терминальном статусе.
+    /// </returns>
+    public bool MarkCompleted()
     {
-        if (Status != OrderStatus.Pending)
-            throw new InvalidOperationException($"Order cannot be completed from status '{Status}'.");
+        switch (Status)
+        {
+            case OrderStatus.Pending:
+                Status = OrderStatus.Completed;
+                Version++;
+                return true;
 
-        Status = OrderStatus.Completed;
-        Version++;
+            case OrderStatus.Completed:
+                // Заказ уже завершён: повторный вызов не должен менять агрегат.
+                return false;
+
+            default:
+                throw new InvalidOperationException($"Order cannot be completed from status '{Status}'.");
+        }
     }
 
     /// <summary>
     /// Переводит заказ в состояние отменённого.
     /// Вызывается Saga после завершения компенсирующих операций.
     /// </summary>
-    public void MarkCancelled()
+    /// <returns>
+    /// <see langword="true"/>, если статус был изменён;
+    /// <see langword="false"/>, если заказ уже находится в целевом терминальном статусе.
+    /// </returns>
+    public bool MarkCancelled()
     {
-        if (Status != OrderStatus.Pending)
-            throw new InvalidOperationException($"Order cannot be cancelled from status '{Status}'.");
+        switch (Status)
+        {
+            case OrderStatus.Pending:
+                Status = OrderStatus.Cancelled;
+                Version++;
+                return true;
 
-        Status = OrderStatus.Cancelled;
-        Version++;
+            case OrderStatus.Cancelled:
+                // Заказ уже отменён: повторный вызов не должен менять агрегат.
+                return false;
+
+            default:
+                throw new InvalidOperationException($"Order cannot be cancelled from status '{Status}'.");
+        }
     }
 
 
