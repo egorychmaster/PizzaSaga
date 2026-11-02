@@ -101,7 +101,7 @@ public static class InfrastructureServiceCollectionExtensions
             });
 
             // Конфигурация RabbitMQ
-            x.UsingRabbitMq((context, cfg) =>
+            x.UsingRabbitMq((context, cfg) => 
             {
                 var uri = new Uri(rabbitMqConnectionString);
                 cfg.Host(uri);
@@ -109,23 +109,30 @@ public static class InfrastructureServiceCollectionExtensions
                 // Явное задание имен очередей для consumers Order Service
 
                 // Создай RabbitMQ endpoint, через который OrderStateMachine будет получать сообщения.
-                cfg.ReceiveEndpoint(RabbitMqQueues.OrderSaga, endpoint =>
+                cfg.ReceiveEndpoint(RabbitMqQueues.OrderSaga, endpoint => 
                 {
+                    // Политика повторных попыток: 3 попытки с интервалом 2 секунды
+                    // Применяется к transient ошибкам (deadlock, сетевые сбои)
+                    endpoint.UseMessageRetry(r => r.Interval(3, 2000));
+
                     endpoint.ConfigureSaga<OrderSagaStateData>(context);
                 });
 
-                cfg.ReceiveEndpoint(RabbitMqQueues.OrderCompleted, endpoint =>
+                cfg.ReceiveEndpoint(RabbitMqQueues.OrderCompleted, endpoint => 
                 {
+                    endpoint.UseMessageRetry(r => r.Interval(3, 2000));
                     endpoint.ConfigureConsumer<OrderCompletedConsumer>(context);
                 });
 
-                cfg.ReceiveEndpoint(RabbitMqQueues.OrderCancelled, endpoint =>
+                cfg.ReceiveEndpoint(RabbitMqQueues.OrderCancelled, endpoint => 
                 {
+                    endpoint.UseMessageRetry(r => r.Interval(3, 2000));
                     endpoint.ConfigureConsumer<OrderCancelledConsumer>(context);
                 });
 
-                cfg.ReceiveEndpoint(RabbitMqQueues.OrderProductCreated, endpoint =>
+                cfg.ReceiveEndpoint(RabbitMqQueues.OrderProductCreated, endpoint => 
                 {
+                    endpoint.UseMessageRetry(r => r.Interval(3, 2000));
                     endpoint.ConfigureConsumer<ProductCreatedIntegrationEventConsumer>(context);
                 });
 

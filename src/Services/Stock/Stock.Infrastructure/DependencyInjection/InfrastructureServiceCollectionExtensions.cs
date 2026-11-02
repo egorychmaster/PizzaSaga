@@ -63,15 +63,21 @@ public static class InfrastructureServiceCollectionExtensions
                 cfg.ReceiveEndpoint(RabbitMqQueues.StockReserveInventory,
                     endpoint =>
                     {
+                        // Политика повторных попыток: 3 попытки с интервалом 2 секунды
+                        // Применяется к transient ошибкам (deadlock, сетевые сбои)
+                        endpoint.UseMessageRetry(r => r.Interval(3, 2000));
+
                         // Consumer Outbox: входящее сообщение, изменения БД и исходящие сообщения, обрабатываются в рамках одной транзакционной границы.
                         endpoint.UseEntityFrameworkOutbox<StockDbContext>(context);
-
+                        
                         endpoint.ConfigureConsumer<ReserveInventoryConsumer>(context);
                     });
 
                 cfg.ReceiveEndpoint(RabbitMqQueues.StockReleaseInventory,
                     endpoint =>
                     {
+                        endpoint.UseMessageRetry(r => r.Interval(3, 2000));
+
                         // Consumer Outbox: входящее сообщение, изменения БД и исходящие сообщения, обрабатываются в рамках одной транзакционной границы.
                         endpoint.UseEntityFrameworkOutbox<StockDbContext>(context);
 
@@ -81,9 +87,10 @@ public static class InfrastructureServiceCollectionExtensions
                 cfg.ReceiveEndpoint(RabbitMqQueues.StockProductCreated,
                     endpoint =>
                     {
+                        endpoint.UseMessageRetry(r => r.Interval(3, 2000));
+
                         // Consumer Outbox: входящее сообщение, изменения БД и исходящие сообщения, обрабатываются в рамках одной транзакционной границы.
                         endpoint.UseEntityFrameworkOutbox<StockDbContext>(context);
-
                         endpoint.ConfigureConsumer<ProductCreatedConsumer>(context);
                     });
 

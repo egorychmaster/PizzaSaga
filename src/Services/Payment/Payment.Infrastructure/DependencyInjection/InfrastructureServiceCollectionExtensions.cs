@@ -56,14 +56,18 @@ public static class InfrastructureServiceCollectionExtensions
                 cfg.ReceiveEndpoint(RabbitMqQueues.PaymentAuthorizePayment,
                     endpoint =>
                     {
+                        // Политика повторных попыток: 3 попытки с интервалом 2 секунды
+                        // Применяется к transient ошибкам (deadlock, сетевые сбои)
+                        endpoint.UseMessageRetry(r => r.Interval(3, 2000));
+
                         // Consumer Outbox: входящее сообщение, изменения БД и исходящие сообщения
                         // обрабатываются в рамках одной транзакционной границы.
                         endpoint.UseEntityFrameworkOutbox<PaymentDbContext>(context);
-
+                        
                         endpoint.ConfigureConsumer<AuthorizePaymentConsumer>(context);
                     });
 
-                
+
                 //cfg.ConfigureEndpoints(context);
             });
         });

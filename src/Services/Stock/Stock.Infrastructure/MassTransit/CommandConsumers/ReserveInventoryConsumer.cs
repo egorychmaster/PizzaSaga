@@ -45,6 +45,9 @@ public sealed class ReserveInventoryConsumer : IConsumer<ReserveInventoryIntegra
 
         var message = context.Message;
 
+        // for test
+        //throw new InvalidOperationException("Simulated consumer failure.");
+
         // 1. Проверка идемпотентности: резерв уже существует?
         var existingReservation = await _reservationRepo.FindByOrderIdAsync(message.OrderId, context.CancellationToken);
         if (existingReservation is not null)
