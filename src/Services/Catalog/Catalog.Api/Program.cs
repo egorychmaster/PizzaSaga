@@ -15,7 +15,6 @@ try
 
     // Подключаем автоматический OpenTelemetry, логирование и метрики Aspire
     builder.AddServiceDefaults();
-    builder.AddProjectOpenApi();
 
     builder.AddJwtAuthentication();
 

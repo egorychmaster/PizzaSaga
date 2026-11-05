@@ -4,36 +4,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
+using PizzaSaga.ServiceDefaults.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace PizzaSaga.ServiceDefaults.Extensions;
 
 public static class ProjectOpenApiExtensions
 {
-    /// <summary>
-    /// Добавляет стандартную OpenAPI-документацию проекта и Swagger Bearer-аутентификацию.
-    /// Генерирует OpenAPI-документ версии v1 по адресу /swagger/v1/swagger.json.
-    /// Swagger UI может использовать Bearer JWT для выполнения защищённых API-запросов.
-    /// Применять в сервисах, которые ещё НЕ перешли на API Versioning.
-    /// </summary>
-    public static WebApplicationBuilder AddProjectOpenApi(this WebApplicationBuilder builder)
-    {
-        builder.Services.AddEndpointsApiExplorer();
-
-        builder.Services.AddSwaggerGen(options =>
-        {
-            options.SwaggerDoc("v1", new OpenApiInfo
-            {
-                Title = $"{builder.Environment.ApplicationName} API",
-                Version = "v1"
-            });
-
-            AddBearerJwtSecurity(options);
-        });
-
-        return builder;
-    }
-
     /// <summary>
     /// Добавляет OpenAPI-документацию вместе с API Versioning (URL Segment Versioning)
     /// и интеграцией API Explorer со Swashbuckle.
@@ -74,7 +51,10 @@ public static class ProjectOpenApiExtensions
             });
 
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services.AddSwaggerGen(options =>
+        {
+            options.OperationFilter<IdempotencyKeyOperationFilter>();
+        });
 
         // Конфигурация Swagger вынесена в IConfigureOptions, а не выполняется сразу в момент
         // регистрации служб: Minimal API endpoint'ы маппятся после builder.Build(), поэтому
