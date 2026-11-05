@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -8,14 +7,22 @@ namespace Auth.Api.Endpoints;
 
 public static class LoginEndpoint
 {
-    public static void MapLoginEndpoint(this IEndpointRouteBuilder app)
+    /// <summary>
+    /// Регистрирует POST /api/v1/auth/login внутри versioned route группы версии 1.0.
+    /// </summary>
+    /// <param name="endpoints">Группа маршрутов версии v1 (/api/v1/auth).</param>
+    /// <returns>Та же группа для дальнейшей конфигурации.</returns>
+    public static RouteGroupBuilder MapLoginEndpoint(this RouteGroupBuilder endpoints)
     {
-        app.MapPost("/api/v1/auth/login", HandleAsync)
+        // Путь относительно группы: группа уже содержит /api/v{version:apiVersion}/auth.
+        endpoints.MapPost("/login", HandleAsync)
            .WithName("Login")
            .WithTags("Auth")
            .Produces<LoginResponse>(StatusCodes.Status200OK)
            .Produces(StatusCodes.Status400BadRequest)
            .Produces(StatusCodes.Status401Unauthorized);
+
+        return endpoints;
     }
 
     private static IResult HandleAsync(LoginRequest request, IConfiguration config)

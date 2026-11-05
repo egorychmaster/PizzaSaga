@@ -12,7 +12,8 @@ try
 
     // Подключаем автоматический OpenTelemetry, логирование и метрики Aspire
     builder.AddServiceDefaults();
-    builder.AddProjectOpenApi();
+    // OpenAPI + API Versioning: отдельный Swagger-документ на каждую реализованную версию (v1).
+    builder.AddProjectOpenApiWithVersioning();
 
     builder.Services.AddGlobalProblemDetailsExceptionHandling();
 
@@ -33,7 +34,16 @@ try
     app.MapDefaultEndpoints();
 
 
-    app.MapLoginEndpoint();
+    // API Versioning: URL Segment Versioning (/api/v{version}/...), версия обязательна.
+    // Группа объявляет поддерживаемую версию 1.0 явно, поэтому endpoint аутентификации
+    // попадает в Swagger-документ v1. Добавление v2 потребует отдельную группу
+    // с HasApiVersion(2.0) и НЕ потребует менять маршруты v1.
+    var v1Auth = app
+        .NewVersionedApi()
+        .MapGroup("/api/v{version:apiVersion}/auth")
+        .HasApiVersion(1.0);
+
+    v1Auth.MapLoginEndpoint();
 
     // Быстрый способ узнать точный хеш для любого пароля:
     string validHash = BCrypt.Net.BCrypt.HashPassword("password123", workFactor: 11);
@@ -51,6 +61,4 @@ finally
     Log.CloseAndFlush();
 }
 
-
-public record LoginRequest(string Email, string Password);
 

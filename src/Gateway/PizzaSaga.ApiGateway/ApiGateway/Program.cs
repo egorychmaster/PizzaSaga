@@ -56,7 +56,9 @@ try
     // Исключаем несколько публичных путей из проверки авторизации (нет JWT-токена)
     var publicPaths = new[]
     {
-        new PathString("/api/v1/auth/login"),   // Получение токена
+        // Шаблон в синтаксисе YARP: {version} совпадает с любым сегментом версии,
+        // поэтому логин остаётся публичным и для v1, и для будущих версий API.
+        new PathString("/api/v{version}/auth/login"),   // Получение токена
         new PathString("/test"),
 
         new PathString("/swagger"),
@@ -70,13 +72,13 @@ try
     app.MapReverseProxy();
 
 
-    app.MapGet("/test", async (IHttpClientFactory factory) =>
-    {
-        throw new Exception("My test mistake.");
+    //app.MapGet("/test", async (IHttpClientFactory factory) =>
+    //{
+    //    throw new Exception("My test mistake.");
 
-        var client = factory.CreateClient();
-        return await client.GetStringAsync("http://order-service/api/orders");
-    });
+    //    var client = factory.CreateClient();
+    //    return await client.GetStringAsync("http://order-service/api/orders");
+    //});
 
 
     app.Run();
