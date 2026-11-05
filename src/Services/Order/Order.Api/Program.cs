@@ -19,7 +19,7 @@ try
 
     // Подключаем автоматический OpenTelemetry, логирование и метрики Aspire
     builder.AddServiceDefaults();
-    builder.AddProjectOpenApi();
+    builder.AddProjectOpenApiWithVersioning();
 
     builder.AddJwtAuthentication();
 
@@ -61,9 +61,18 @@ try
     app.MapDefaultEndpoints();
 
     // Зарегистрировать endpoint
-    app.MapCreateOrderEndpoint();
-    app.MapGetOrdersEndpoint();
-    app.MapGetOrderByIdEndpoint();
+    // API Versioning: URL Segment Versioning (/api/v{version}/...), версия обязательна.
+    // Группа объявляет поддерживаемую версию 1.0 явно, поэтому все endpoint'ы заказов
+    // попадают в Swagger-документ v1. Добавление v2 потребует отдельную группу
+    // с HasApiVersion(2.0) и НЕ потребует менять маршруты v1.
+    var v1Orders = app
+        .NewVersionedApi()
+        .MapGroup("/api/v{version:apiVersion}/orders")
+        .HasApiVersion(1.0);
+
+    v1Orders.MapCreateOrderEndpoint();
+    v1Orders.MapGetOrdersEndpoint();
+    v1Orders.MapGetOrderByIdEndpoint();
 
 
     app.Run();

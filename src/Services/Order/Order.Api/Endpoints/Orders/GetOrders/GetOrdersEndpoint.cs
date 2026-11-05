@@ -6,10 +6,16 @@ namespace Order.Api.Endpoints.Orders.GetOrders;
 
 public static class GetOrdersEndpoint
 {
-    public static IEndpointRouteBuilder MapGetOrdersEndpoint(this IEndpointRouteBuilder endpoints)
+    /// <summary>
+    /// Регистрирует GET /api/v1/orders внутри versioned route группы версии 1.0.
+    /// </summary>
+    /// <param name="endpoints">Группа маршрутов версии v1 (/api/v1/orders).</param>
+    /// <returns>Та же группа для дальнейшей конфигурации.</returns>
+    public static RouteGroupBuilder MapGetOrdersEndpoint(this RouteGroupBuilder endpoints)
     {
+        // Путь относительно группы: группа уже содержит /api/v{version:apiVersion}/orders.
         endpoints.MapGet(
-                "/api/v1/orders",
+                "",
                 HandleAsync)
             .WithName("GetOrders")
             .WithTags("Orders")

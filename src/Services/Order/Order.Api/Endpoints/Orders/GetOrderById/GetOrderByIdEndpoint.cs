@@ -9,13 +9,14 @@ namespace Order.Api.Endpoints.Orders.GetOrderById;
 public static class GetOrderByIdEndpoint
 {
     /// <summary>
-    /// Регистрирует GET /api/v1/orders/{Id}.
+    /// Регистрирует GET /api/v1/orders/{Id} внутри versioned route группы версии 1.0.
     /// </summary>
-    /// <param name="endpoints">Маршруты приложения.</param>
-    /// <returns>Тот же набор маршрутов для дальнейшей конфигурации.</returns>
-    public static IEndpointRouteBuilder MapGetOrderByIdEndpoint(this IEndpointRouteBuilder endpoints)
+    /// <param name="endpoints">Группа маршрутов версии v1 (/api/v1/orders).</param>
+    /// <returns>Та же группа для дальнейшей конфигурации.</returns>
+    public static RouteGroupBuilder MapGetOrderByIdEndpoint(this RouteGroupBuilder endpoints)
     {
-        endpoints.MapGet("/api/v1/orders/{Id}", HandleAsync)
+        // Путь относительно группы: группа уже содержит /api/v{version:apiVersion}/orders.
+        endpoints.MapGet("/{Id}", HandleAsync)
             .WithName("GetOrderById")
             .WithTags("Orders")
             .RequireAuthorization()

@@ -13,13 +13,14 @@ namespace Order.Api.Endpoints.Orders.CreateOrder;
 public static class CreateOrderEndpoint
 {
     /// <summary> 
-    /// Регистрирует POST /api/v1/orders. 
+    /// Регистрирует POST /api/v1/orders внутри versioned route группы версии 1.0.
     /// </summary> 
-    /// <param name="endpoints">Маршруты приложения.</param> 
-    /// <returns>Тот же набор маршрутов для дальнейшей конфигурации.</returns>
-    public static IEndpointRouteBuilder MapCreateOrderEndpoint(this IEndpointRouteBuilder endpoints)
+    /// <param name="endpoints">Группа маршрутов версии v1 (/api/v1/orders).</param> 
+    /// <returns>Та же группа для дальнейшей конфигурации.</returns>
+    public static RouteGroupBuilder MapCreateOrderEndpoint(this RouteGroupBuilder endpoints)
     {
-        endpoints.MapPost("/api/v1/orders", HandleAsync)
+        // Путь относительно группы: группа уже содержит /api/v{version:apiVersion}/orders.
+        endpoints.MapPost("", HandleAsync)
             .RequireAuthorization()
             .Produces<CreateOrderResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
