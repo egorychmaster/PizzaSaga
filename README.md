@@ -18,6 +18,7 @@
 | **Надёжность** | Optimistic Concurrency, Dead Letter Queue, Retry Policies |
 | **Наблюдаемость** | OpenTelemetry Tracing + Metrics + Structured Logging |
 | **Безопасность** | JWT Authentication + API Gateway (YARP) |
+| **API Versioning** | URL-segment versioning (`/api/v{version}/...`) с поддержкой Swagger |
 | **DevOps & Tooling** | .NET Aspire AppHost, Docker Compose, Health Checks |
 
 Проект разрабатывается по принципам **production-grade backend**: эволюционная архитектура, чёткие границы bounded contexts, отказ от распределённых транзакций в пользу eventual consistency.
@@ -89,6 +90,31 @@ sequenceDiagram
 
     RabbitMQ->>OrderService: OrderCompletedIntegrationEvent
     OrderService->>OrderService: Update Status = Completed
+```
+
+### 🔄 Отмена заказа (Compensation Flow)
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant OrderService
+    participant StockService
+    participant PaymentService
+
+    Client->>Gateway: POST /api/v1/orders/{id}/cancel
+    Gateway->>OrderService: CancelOrderCommand (Saga)
+    Note over OrderService: Saga checks state and sends compensation commands
+
+    alt If Payment was authorized
+        OrderService->>PaymentService: CancelPaymentIntegrationCommand
+        PaymentService-->>OrderService: PaymentCancelledEvent
+    end
+
+    OrderService->>StockService: ReleaseInventoryIntegrationCommand
+    StockService-->>OrderService: InventoryReleasedEvent
+
+    OrderService->>OrderService: Update Status = Cancelled
 ```
 
 ---
@@ -200,17 +226,29 @@ curl -X POST https://localhost:<gateway-port>/api/v1/orders \
 - Упрощённое тестирование и рефакторинг
 - Следование Clean Architecture без избыточной абстракции
 
+### Почему **State Machine Saga**, а не choreography?
+- Явный граф состояний заказа (Initial → AwaitingInventory → AwaitingPayment → Completed/Cancelled)
+- Централизованная логика компенсаций (ReleaseInventory, CancelPayment)
+- Транзакционная гарантия: статус заказа обновляется только после успешной фиксации всех компонентов
+
+### Почему **API Versioning через URL-segment**, а не заголовок?
+- Простота тестирования и отладки (человекочитаемые пути)
+- Поддержка параллельных версий в Gateway без изменений клиентов
+- Явное указание версии клиента снижает риск regressions при обновлениях
+
 ---
 
-## 📊 Что реализовано (Sprint 0–2)
+## 📊 Что реализовано (Sprint 0–4)
 
 | План | Статус | Описание |
 |------|--------|----------|
-| **Sprint 0** | ✅ | API Gateway (YARP), JWT, CorrelationId, OpenTelemetry, Health Checks, Auth Service (POST /login) |
+| **Sprint 0** | ✅ | API Gateway (YARP), JWT, CorrelationId propagation, OpenTelemetry, Health Checks, Auth Service (POST /login) |
 | **Sprint 1** | ✅ | Vertical Slices, CQRS + Mediator, FluentValidation, TransactionBehavior, Optimistic Concurrency, HTTP Idempotency |
-| **Sprint 2** | ✅ | Order Saga State Machine  (MassTransit), RabbitMQ integration, Catalog Service (seed), Currency Exchange Rates, Outbox pattern |
+| **Sprint 2** | ✅ | Order Saga State Machine (MassTransit), RabbitMQ integration, Catalog/Stock/Payment services skeleton, Currency Exchange Rates, Outbox pattern |
+| **Sprint 3** | ✅ | Real business logic in Stock & Payment, Idempotent Consumers, Compensation flows (ReleaseInventory, CancelPayment), Resilience policies (Retry + DLQ) |
+| **Sprint 4** | ✅ | API Versioning (`/api/v{version}/...`), read endpoints (GET orders/{id}, GET orders, stock/products/payment), order cancellation with compensation, custom metrics |
 
-> **Примечание**: Проект находится в активной разработке. Полный стек функциональности описан в `docs/план спринтов.txt`.
+> **Примечание**: Проект находится в активной разработке. Полный стек функциональности описан в `docs/план спринтов.txt`. Следующий этап — Sprint 5 (Unit / Architecture / Integration / E2E tests) и Sprint 6 (Polish, OpenAPI contracts, interview guide).
 
 ---
 
@@ -228,7 +266,18 @@ curl -X POST https://localhost:<gateway-port>/api/v1/orders \
 
 ### 3. Продемонстрировать метрики
 - В .NET Aspire Dashboard → Metrics
-- Показать кастомные счетчики (orders-created-count, sagas-completed-count)
+- Показать кастомные счетчики (orders-created-count, sagas-completed-count, sagas-compensated-count)
+
+### 4. Продемонстрировать отмену заказа и компенсации
+- Создать заказ через Gateway
+- Вызвать POST /api/v1/orders/{id}/cancel через Gateway (с JWT)
+- Проверить в .NET Aspire Dashboard: цепочка Gateway → Order.Api (HTTP) → MassTransit → Stock.Consumer (ReleaseInventory) + Payment.Consumer (CancelPayment)
+- Убедиться, что статус заказа стал Cancelled и остатки восстановились
+
+### 5. Продемонстрировать API Versioning
+- Открыть Swagger UI через Gateway
+- Выбрать документ Order Service v1 — увидеть endpoints только /api/v1/...
+- Убедиться, что путь без сегмента версии (например, /orders) возвращает 404
 
 ---
 
@@ -240,6 +289,7 @@ curl -X POST https://localhost:<gateway-port>/api/v1/orders \
 | `docs/api.md` | Спецификация публичного HTTP API (RFC 9457, ProblemDetails) |
 | `docs/задание на пет-проект.txt` | Техническое задание с целями и критериями приемки |
 | `docs/план спринтов.txt` | Эволюционный план разработки (Sprint 0–6) |
+| `contracts/*.json` | Auto-generated OpenAPI contracts (Swagger JSON) для автогенерации клиентов |
 
 ---
 
@@ -247,10 +297,13 @@ curl -X POST https://localhost:<gateway-port>/api/v1/orders \
 
 Этот проект показывает **Senior-level компетенции**:
 
-- ✅ Глубокое понимание распределённых систем (Saga, Outbox, Idempotency)
+- ✅ Глубокое понимание распределённых систем (Saga, Outbox, Inbox, Idempotency)
 - ✅ Умение проектировать эволюционную архитектуру (Clean + DDD + Vertical Slices)
-- ✅ Опыт работы с production-инструментами (.NET Aspire, OpenTelemetry, RabbitMQ)
+- ✅ Опыт работы с production-инструментами (.NET Aspire, OpenTelemetry, RabbitMQ, PostgreSQL)
+- ✅ Реализация read models и публичных endpoints: GET orders/{id}, GET orders, stock/products/payment
+- ✅ Управление отменой заказов через компенсации (ReleaseInventory, CancelPayment)
 - ✅ Понимание trade-offs: eventual consistency vs. distributed transactions
 - ✅ Готовность к масштабированию (Database per Service, stateless services)
+- ✅ API Versioning с Swagger и backward-compatibility
 
 > **Целевая позиция**: Senior Backend Developer / Distributed Systems Engineer / .NET Specialist
